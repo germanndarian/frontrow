@@ -1,26 +1,256 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ───────────────────────────────────────────────────────────────────────────
+   FRONTROW — design tokens
+   Mood: floodlit night game seen from the press box. Deep midnight slate,
+   broadcast-grade overlays, cobalt as the brand voice, a single live-red pulse,
+   amber reserved for leaders. The surface stays dark; color lives in the
+   brand + typography, never smeared across the background.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Surfaces — a tight ramp of midnight slate (cool, barely-tinted) */
+  --color-bg: oklch(0.158 0.012 256);
+  --color-bg-2: oklch(0.182 0.013 256);
+  --color-surface: oklch(0.205 0.014 256);
+  --color-surface-2: oklch(0.246 0.016 256);
+  --color-surface-3: oklch(0.292 0.018 256);
+
+  /* Lines */
+  --color-line: oklch(0.30 0.018 256);
+  --color-line-soft: oklch(0.26 0.016 256);
+
+  /* Ink ramp */
+  --color-ink: oklch(0.975 0.006 256);
+  --color-muted: oklch(0.745 0.014 256);
+  --color-faint: oklch(0.625 0.016 256);
+
+  /* Brand — cobalt, lifted for dark surfaces */
+  --color-primary: oklch(0.645 0.168 257);
+  --color-primary-bright: oklch(0.72 0.158 256);
+  --color-primary-ink: oklch(0.99 0.01 256);
+
+  /* Signals */
+  --color-live: oklch(0.645 0.232 23);
+  --color-win: oklch(0.755 0.158 156);
+  --color-loss: oklch(0.66 0.205 23);
+  --color-gold: oklch(0.81 0.13 84);
+
+  /* Typography — set from next/font variables on <html> */
+  --font-display: var(--font-archivo), "Archivo", system-ui, sans-serif;
+  --font-sans: var(--font-hanken), "Hanken Grotesk", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  /* Radius scale */
+  --radius-xs: 6px;
+  --radius-sm: 9px;
+  --radius-md: 13px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  /* Motion — strong, exponential ease-outs (no bounce) */
+  --ease-out-quart: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Semantic z-scale */
+  --z-sticky: 30;
+  --z-dropdown: 40;
+  --z-overlay: 50;
+  --z-modal: 60;
+  --z-toast: 70;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  * {
+    border-color: var(--color-line-soft);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01";
+    /* Stadium-night atmosphere: two faint cobalt floodlights bleeding from the
+       top corners over the midnight base. Set once, fixed, no repaint cost. */
+    background-image:
+      radial-gradient(
+        58rem 38rem at 8% -8%,
+        oklch(0.645 0.168 257 / 0.16),
+        transparent 60%
+      ),
+      radial-gradient(
+        52rem 34rem at 102% 0%,
+        oklch(0.66 0.14 280 / 0.12),
+        transparent 58%
+      );
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  ::selection {
+    background-color: oklch(0.645 0.168 257 / 0.32);
+    color: var(--color-ink);
+  }
+
+  /* Focus — one consistent, visible ring */
+  :focus-visible {
+    outline: 2px solid var(--color-primary-bright);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Numeric data should never shift width */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Scrollbars — quiet, on-brand */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-surface-3) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--color-surface-3);
+    border-radius: 99px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-faint);
+    background-clip: content-box;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+
+@keyframes bx-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 oklch(0.645 0.232 23 / 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 7px oklch(0.645 0.232 23 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.645 0.232 23 / 0);
+  }
+}
+
+@keyframes bx-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes bx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@layer utilities {
+  .live-dot {
+    position: relative;
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 99px;
+    background-color: var(--color-live);
+    animation: bx-pulse-ring 1.8s var(--ease-out-quart) infinite;
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-surface-2);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      oklch(1 0 0 / 0.06),
+      transparent
+    );
+    animation: bx-shimmer 1.5s infinite;
+  }
+
+  .rise {
+    animation: bx-rise 0.5s var(--ease-out-expo) both;
+  }
+
+  .edge-fade-x {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 1.5rem,
+      #000 calc(100% - 1.5rem),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 1.5rem,
+      #000 calc(100% - 1.5rem),
+      transparent
+    );
+  }
+
+  .hairline {
+    border: 1px solid var(--color-line);
+  }
+
+  .spin {
+    animation: bx-spin 0.7s linear infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .live-dot {
+    animation: none;
+  }
+  .skeleton::after {
+    animation: none;
+  }
 }
