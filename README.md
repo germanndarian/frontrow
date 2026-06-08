@@ -1,127 +1,163 @@
-# Frontrow
+<div align="center">
 
-A personal sports companion for **NFL, college football, NHL and MLB**. Follow your
-teams and players, and get one beautiful, broadcast-grade dashboard: live scores,
-recent form, next fixtures, standings, and season stats — only for what you care about.
+<img src="./.github/banner.svg" alt="Frontrow — your teams, one screen" width="100%" />
 
-> Status: **fully live.** Dashboard, multi-step onboarding, and all data are wired to
-> ESPN's public endpoints through server-side route handlers (see
-> [Live data](#live-data-espn)). Set `NEXT_PUBLIC_USE_MOCK=true` to run offline.
+<br/>
+
+[![CI](https://github.com/germanndarian/frontrow/actions/workflows/ci.yml/badge.svg)](https://github.com/germanndarian/frontrow/actions/workflows/ci.yml)
+&nbsp;![Next.js](https://img.shields.io/badge/Next.js-16-000?logo=next.js&logoColor=white&style=flat-square)
+&nbsp;![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white&style=flat-square)
+&nbsp;![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white&style=flat-square)
+&nbsp;![Tailwind](https://img.shields.io/badge/Tailwind-v4-38BDF8?logo=tailwindcss&logoColor=white&style=flat-square)
+&nbsp;![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white&style=flat-square)
+&nbsp;![Vercel](https://img.shields.io/badge/Vercel-000?logo=vercel&logoColor=white&style=flat-square)
+
+**[Live demo ↗](https://frontrow-ten.vercel.app)** &nbsp;·&nbsp; the only scores, standings and stats that matter — *yours*.
+
+</div>
 
 ---
 
-## Quick start
+<table>
+<tr>
+<td width="60%" valign="top">
+
+Most sports apps drown you in every game on earth. **Frontrow** does the opposite:
+pick your teams and players once, and get a single, broadcast-grade dashboard that
+shows *only* what you follow — live scores, recent form, next fixtures, standings,
+and season stats.
+
+Real accounts keep it in sync across devices, and the whole thing is yours to
+re-skin. No noise. No clutter. Front-row seats.
+
+</td>
+<td width="40%" valign="top">
+
+> **Mood:** a floodlit night game from the press box. Midnight slate,
+> broadcast overlays, cobalt as the brand voice, a single live-red pulse,
+> amber for the leaders.
+
+</td>
+</tr>
+</table>
+
+## ✨ Highlights
+
+|  |  |
+| --- | --- |
+| 🎟️ **A dashboard that's only yours** | No firehose — just live & upcoming, your teams, your players, and the standings around them. |
+| 🔴 **Live, but quiet** | Auto-refresh polls *only while a game is actually live.* The rest of the time it's still and fast. |
+| 🎨 **Make it yours** | 7 accent themes, corner roundness, density, motion & glow toggles, a custom greeting, default league, and per-section visibility. |
+| 🔐 **Real accounts** | Supabase email + password auth with confirmation, Row-Level Security, and cross-device sync. |
+| 📊 **Stats with shape** | Season-trend charts, output sparklines, recent form, and league-ranked player numbers. |
+| 🌒 **Considered everywhere** | Loading, empty & error states on every surface; mobile-first; honors `prefers-reduced-motion`. |
+
+## 🚀 Quick start
 
 ```bash
+git clone https://github.com/germanndarian/frontrow.git
+cd frontrow
 npm install
-cp .env.example .env.local   # optional — see below, there is NO API key to set
-npm run dev
+cp .env.example .env.local     # add the two public Supabase values (below)
+npm run dev                     # → http://localhost:3000
 ```
-
-Open **http://localhost:3000**.
 
 ```bash
-npm run build && npm run start   # production build
+npm run build && npm run start  # production build  ·  Node 18.18+ (built on 24)
 ```
 
-Requires Node 18.18+ (developed on Node 24).
+## 🔑 Environment
 
-## Environment & API key
+ESPN needs **no API key** — it's read through keyless public endpoints, server-side.
+Accounts need **Supabase**: in production the Vercel integration injects everything;
+for local dev, add the two browser-safe values to `.env.local`.
 
-**There is no API key to configure.** Frontrow reads from ESPN's public, keyless
-endpoints, so it runs with zero setup. `.env.local` is entirely optional and holds only
-non-secret config. All ESPN calls run through Next.js **server-side route handlers**
-(`src/app/api/*`), so nothing sensitive is shipped to the browser and many followers
-share one cached upstream call.
+| Variable | Purpose | Required |
+| --- | --- | :---: |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | ✅ |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (RLS-guarded) | ✅ |
+| `SUPABASE_SERVICE_ROLE_KEY` | Server-only — account deletion | — |
+| `NEXT_PUBLIC_LIVE_POLL_MS` | Live-game refresh cadence | `30000` |
+| `NEXT_PUBLIC_USE_MOCK` | Run fully offline on the demo dataset | `false` |
 
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `ESPN_SITE_API` | Scoreboard / teams / schedule / roster | ESPN site API |
-| `ESPN_STANDINGS_API` | Division standings | ESPN v2 API |
-| `ESPN_WEB_API` | Athlete season stats + game logs | ESPN web API |
-| `NEXT_PUBLIC_LIVE_POLL_MS` | Live-game refresh cadence (only while live) | `30000` |
-| `NEXT_PUBLIC_USE_MOCK` | Run fully offline on the bundled demo dataset | `false` |
+Apply the schema once from [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql)
+(Supabase → SQL Editor) — it creates `profiles` / `preferences` / `settings`,
+Row-Level Security so a user only ever touches their own rows, and a trigger that
+seeds defaults on signup.
 
-## What's in the box
+## 🧱 How it works
 
-- **First-run onboarding** — a four-step setup (sport → league → team → player) with a
-  progress bar, animated step transitions, searchable selectors, and loading/empty
-  states. Choices persist to `localStorage`; returning visitors skip straight to the
-  dashboard. Re-runnable from Settings, with a one-tap "sample lineup" shortcut.
-- **Live & Upcoming** — a horizontally scrolling scoreboard with clear
-  `live / upcoming / final` states, the live game's situation + last play, and
-  auto-refresh that only polls while something is actually live.
-- **Your Teams** — recent form, next fixture, standings position, and a scoring
-  trend, with a team-colored card header.
-- **Your Players** — position-aware season stats with league ranks, plus a recent
-  game log and an output sparkline.
-- **Season Stats** — a per-game scoring trend chart (Recharts) for your spotlight team.
-- **Around the League** — full standings tables with an inline strength bar; your
-  team is highlighted.
-- **Settings** — review and unfollow teams/players; restore or clear your follows.
-- Considered **loading, empty, and error** states everywhere; fully responsive and
-  mobile-first; respects `prefers-reduced-motion`.
+```
+            ┌───────────────┐     ┌─────────────────────┐     ┌──────────────┐
+ Browser ──▶│ /api/* handlers│ ──▶ │ ESPN  (cached · 8s   │ ──▶ │  normalizer  │ ──▶ UI
+            │   (server)     │     │ timeout · retry-once)│     │ (defensive)  │
+            └───────────────┘     └─────────────────────┘     └──────────────┘
 
-## Tech
+ Accounts ─▶ Supabase Auth (cookies · @supabase/ssr) ─▶ Postgres + RLS  ◀─ follows & settings
+```
 
-- **Next.js 16** (App Router) + **TypeScript**
-- **Tailwind CSS v4** with an OKLCH design-token system (`src/app/globals.css`)
-- **TanStack Query** — caching + live polling
-- **Motion** — page/section reveals and the live-score micro-interactions
-- **Recharts** — the season-trend chart
-- **Zustand** (+ `persist`) — follow preferences in `localStorage`
+The browser never calls ESPN directly. Each surface is cached server-side
+(scoreboard 20s · team/standings/player 5m · teams/rosters 24h) and the client polls
+**only while a game is live.** Every normalizer is defensive, so an upstream field
+change degrades to a placeholder instead of a crash.
 
-## Project structure
+| Route | Source |
+| --- | --- |
+| `GET /api/scoreboard?leagues=` | `{sport}/{league}/scoreboard` |
+| `GET /api/team/[id]?league=` | team detail + `teams/{id}/schedule` |
+| `GET /api/standings/[league]` | `v2/.../standings?level=3` |
+| `GET /api/player/[id]?league=` | `athletes/{id}` + `athletes/{id}/gamelog` |
+| `GET /api/teams` · `/api/roster` | onboarding selectors |
+| `GET /auth/confirm` · `DELETE /api/account` | email confirm · account deletion |
+
+## 🛠️ Built with
+
+<div align="center">
+
+`Next.js 16` · `React 19` · `TypeScript` · `Tailwind CSS v4` (OKLCH tokens)
+`Supabase` (Auth · Postgres · RLS) · `TanStack Query` · `Zustand` · `Motion` · `Recharts`
+`Vitest` · `GitHub Actions` · `Vercel` (Analytics · Speed Insights)
+
+</div>
+
+## 🗂️ Structure
 
 ```
 src/
   app/
-    layout.tsx          Fonts (Archivo / Hanken Grotesk / Geist Mono) + providers
-    page.tsx            Dashboard entry
-    settings/page.tsx   Manage follows
-    globals.css         Design tokens, base styles, keyframes
+    layout.tsx              Fonts + providers + Analytics / Speed Insights
+    page.tsx                Dashboard (auth-gated)
+    login/ · setup/         Email auth · four-step onboarding
+    settings/               Profile · appearance · dashboard · follows
+    auth/confirm/route.ts   Email-confirmation handler
+    api/                    ESPN route handlers + /api/account
+    globals.css             OKLCH design tokens, base styles, keyframes
   lib/
-    types.ts            Normalized domain models (mirror ESPN's shapes)
-    leagues.ts          League/sport config (ESPN slugs, standings columns, season state)
-    mock.ts             Realistic mock dataset (real logos/headshots)
-    data.ts             Data facade  <-- swap this to go live
-    queries.ts          TanStack Query hooks (live polling lives here)
-    store.ts            Zustand preferences (persisted)
-    utils.ts            cn(), time/format helpers
-  components/
-    ui/                 Primitives: TeamLogo, Headshot, Card, Badge, Sparkline, States
-    brand/Wordmark.tsx
-    dashboard/          Header, ScoreboardStrip, GameCard, Team/Player/Standings cards
-  lib/espn/             ESPN integration (server-only)
-    endpoints.ts        URL builders + per-surface cache lifetimes
-    client.ts           fetch wrapper: timeout, retry-once, revalidate cache
-    raw.ts              minimal types for the ESPN JSON we read
-    normalize.ts        raw ESPN -> lib/types.ts shapes (defensive)
-  app/api/              Route handlers (one per surface)
+    supabase/               Browser + server clients (@supabase/ssr)
+    auth.ts · sync.ts       Supabase Auth store · follows & settings ⇄ Postgres
+    store.ts · settings.ts  In-memory working state (DB-backed)
+    espn/                   Server-only ESPN integration
+    leagues.ts · types.ts   League config + normalized domain models
+  components/               dashboard · setup · ui · system · brand
+supabase/migrations/        SQL schema + Row-Level Security
 ```
 
-## Live data (ESPN)
+## ✅ Quality
 
-Data flows: **client hook → `/api/*` route handler (server) → ESPN (cached) →
-normalizer → component**. The browser never calls ESPN directly.
+`main` is protected — nothing merges red. Every PR runs:
 
-| Route | ESPN source |
-| --- | --- |
-| `GET /api/scoreboard?leagues=` | `.../{sport}/{league}/scoreboard` |
-| `GET /api/team/[id]?league=` | team detail + `.../teams/{id}/schedule` |
-| `GET /api/standings/[league]?teamId=` | `.../v2/.../standings?level=3` (division) |
-| `GET /api/player/[id]?league=` | `athletes/{id}` (`statsSummary`) + `athletes/{id}/gamelog` |
-| `GET /api/teams?leagues=` | `.../teams` (onboarding) |
-| `GET /api/roster?league=&teamId=` | `.../teams/{id}/roster` (onboarding) |
+```bash
+npm run lint        #  ESLint
+npx tsc --noEmit    #  type-check
+npm test            #  Vitest
+npm run build       #  production build
+```
 
-**Rate-limit posture.** ESPN's endpoints are unofficial with an informal ~2.5k/day
-ceiling; we stay well under it. Each surface is cached server-side
-(`endpoints.ts` → `REVALIDATE`): scoreboard 20s, team/standings/player 5min,
-teams/rosters 24h. The client polls **only while a game is live**, every 30s.
+<div align="center">
+<br/>
 
-**Resilience.** `client.ts` retries once and times out at 8s; route handlers return
-`502` on hard failure and TanStack Query keeps the last good data; every normalizer is
-defensive, so an ESPN field change degrades to a placeholder rather than crashing.
+*Frontrow · unofficial data via ESPN's public endpoints, refreshed as games unfold.*
 
-To work offline, set `NEXT_PUBLIC_USE_MOCK=true` — the facade in `src/lib/data.ts`
-delegates to the bundled dataset in `src/lib/data.mock.ts` with zero UI changes.
+**Built for the only seats worth having — front row.** 🏟️
+
+</div>
