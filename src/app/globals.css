@@ -25,10 +25,15 @@
   --color-muted: oklch(0.745 0.014 256);
   --color-faint: oklch(0.625 0.016 256);
 
-  /* Brand — cobalt, lifted for dark surfaces */
+  /* Brand — cobalt, lifted for dark surfaces. Overridden at runtime by the
+     chosen accent (see lib/settings.ts → applySettings). */
   --color-primary: oklch(0.645 0.168 257);
   --color-primary-bright: oklch(0.72 0.158 256);
   --color-primary-ink: oklch(0.99 0.01 256);
+
+  /* Floodlight washes bled over the page background. Accent overrides these. */
+  --glow-1: oklch(0.645 0.168 257 / 0.16);
+  --glow-2: oklch(0.66 0.14 280 / 0.12);
 
   /* Signals */
   --color-live: oklch(0.645 0.232 23);
@@ -81,18 +86,15 @@
     /* Stadium-night atmosphere: two faint cobalt floodlights bleeding from the
        top corners over the midnight base. Set once, fixed, no repaint cost. */
     background-image:
-      radial-gradient(
-        58rem 38rem at 8% -8%,
-        oklch(0.645 0.168 257 / 0.16),
-        transparent 60%
-      ),
-      radial-gradient(
-        52rem 34rem at 102% 0%,
-        oklch(0.66 0.14 280 / 0.12),
-        transparent 58%
-      );
+      radial-gradient(58rem 38rem at 8% -8%, var(--glow-1), transparent 60%),
+      radial-gradient(52rem 34rem at 102% 0%, var(--glow-2), transparent 58%);
     background-attachment: fixed;
     background-repeat: no-repeat;
+  }
+
+  /* Glow off — quiet, flat midnight surface. */
+  html[data-glow="off"] body {
+    background-image: none;
   }
 
   ::selection {
@@ -253,4 +255,20 @@
   .skeleton::after {
     animation: none;
   }
+}
+
+/* User opt-in "reduce motion" setting — same treatment, driven from settings. */
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-reduce-motion="true"] .live-dot {
+  animation: none;
+}
+html[data-reduce-motion="true"] .skeleton::after {
+  animation: none;
 }

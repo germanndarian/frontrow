@@ -6,6 +6,8 @@ import {
   QueryClientProvider,
   isServer,
 } from "@tanstack/react-query";
+import { ThemeController } from "@/components/system/ThemeController";
+import { SessionBridge } from "@/components/system/SessionBridge";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -36,6 +38,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(getQueryClient);
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeController />
+      <SessionBridge />
+      {children}
+    </QueryClientProvider>
   );
 }
