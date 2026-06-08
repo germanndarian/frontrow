@@ -32,8 +32,8 @@ function Avatar({
 export function AccountMenu() {
   const router = useRouter();
   const user = useCurrentUser();
-  const guest = useAuth((s) => s.guest);
-  const logOut = useAuth((s) => s.logOut);
+  const guest = useAuth((s) => s.status === "guest");
+  const signOut = useAuth((s) => s.signOut);
 
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -54,14 +54,14 @@ export function AccountMenu() {
     };
   }, [open]);
 
-  function signOut() {
+  async function handleSignOut() {
     setOpen(false);
-    logOut();
+    await signOut();
     router.replace("/login");
   }
 
   const label = user ? user.displayName : "Guest";
-  const sub = user ? `@${user.username}` : "Browsing without an account";
+  const sub = user ? user.email : "Browsing without an account";
 
   return (
     <div ref={ref} className="relative">
@@ -73,7 +73,7 @@ export function AccountMenu() {
         className="grid h-9 w-9 place-items-center rounded-full border border-line/70 bg-surface/60 transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-2 active:scale-95"
       >
         {user ? (
-          <Avatar emoji={user.avatar.emoji} color={user.avatar.color} size={28} />
+          <Avatar emoji={user.avatarEmoji} color={user.avatarColor} size={28} />
         ) : (
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted">
             <circle cx="12" cy="8" r="4" />
@@ -90,7 +90,7 @@ export function AccountMenu() {
         >
           <div className="flex items-center gap-3 border-b border-line-soft/70 px-4 py-3.5">
             {user ? (
-              <Avatar emoji={user.avatar.emoji} color={user.avatar.color} />
+              <Avatar emoji={user.avatarEmoji} color={user.avatarColor} />
             ) : (
               <span className="grid h-[34px] w-[34px] place-items-center rounded-full bg-surface-2 text-muted">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -134,7 +134,7 @@ export function AccountMenu() {
               </Link>
             )}
             <button
-              onClick={signOut}
+              onClick={handleSignOut}
               role="menuitem"
               className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13.5px] font-medium text-muted transition-colors hover:bg-loss/10 hover:text-loss"
             >

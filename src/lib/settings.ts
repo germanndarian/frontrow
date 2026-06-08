@@ -1,7 +1,6 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { LeagueId } from "./types";
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -225,23 +224,20 @@ interface SettingsState extends AppSettings {
   load: (next: AppSettings) => void;
 }
 
-export const useSettings = create<SettingsState>()(
-  persist(
-    (set) => ({
-      ...DEFAULT_SETTINGS,
-      set: (key, value) => set({ [key]: value } as Partial<AppSettings>),
-      toggleSection: (id) =>
-        set((s) => ({
-          hiddenSections: s.hiddenSections.includes(id)
-            ? s.hiddenSections.filter((x) => x !== id)
-            : [...s.hiddenSections, id],
-        })),
-      reset: () => set({ ...DEFAULT_SETTINGS }),
-      load: (next) => set({ ...next }),
-    }),
-    { name: "frontrow.settings", version: 1 },
-  ),
-);
+// In-memory working copy. The DB is the source of truth: the auth layer loads
+// these on sign-in and writes changes back to Postgres.
+export const useSettings = create<SettingsState>()((set) => ({
+  ...DEFAULT_SETTINGS,
+  set: (key, value) => set({ [key]: value } as Partial<AppSettings>),
+  toggleSection: (id) =>
+    set((s) => ({
+      hiddenSections: s.hiddenSections.includes(id)
+        ? s.hiddenSections.filter((x) => x !== id)
+        : [...s.hiddenSections, id],
+    })),
+  reset: () => set({ ...DEFAULT_SETTINGS }),
+  load: (next) => set({ ...next }),
+}));
 
 /** Plain snapshot of just the persisted fields (no methods). */
 export function snapshotSettings(s: AppSettings): AppSettings {
