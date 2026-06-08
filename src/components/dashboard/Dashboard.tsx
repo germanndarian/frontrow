@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePreferences, useHasHydrated } from "@/lib/store";
+import { useCurrentUser } from "@/lib/auth";
 import { useSettings, type SectionId } from "@/lib/settings";
 import { useScoreboard } from "@/lib/queries";
 import { LEAGUES } from "@/lib/leagues";
@@ -52,6 +53,9 @@ export function Dashboard() {
   const hydrated = useHasHydrated();
   const { teams, players, leagues } = usePreferences();
   const greetingName = useSettings((s) => s.greetingName);
+  const user = useCurrentUser();
+  // A custom greeting name wins; otherwise greet by the account's display name.
+  const name = greetingName.trim() || user?.displayName?.trim() || "";
   const hiddenSections = useSettings((s) => s.hiddenSections);
   const isHidden = (id: SectionId) => hiddenSections.includes(id);
 
@@ -123,7 +127,7 @@ export function Dashboard() {
           <div>
             <h1 className="font-display text-[28px] font-extrabold leading-none tracking-[-0.02em] text-ink sm:text-[34px]">
               {greeting()}
-              {greetingName.trim() ? `, ${greetingName.trim()}` : ""}.
+              {name ? `, ${name}` : ""}.
             </h1>
             <p className="mt-2 text-[14px] text-muted">
               {liveCount > 0 ? (
