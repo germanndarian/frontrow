@@ -9,6 +9,53 @@ import { Spinner } from "@/components/ui/States";
 
 type Mode = "signin" | "signup";
 
+/** Reveal/hide toggle: the eye blinks open and a slash draws across when hidden. */
+function EyeToggle({ shown, onClick }: { shown: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={shown ? "Hide password" : "Show password"}
+      aria-pressed={shown}
+      className="absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-faint transition-[color,background-color,transform] duration-150 hover:bg-surface-2 hover:text-ink active:scale-90"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <g
+          style={{
+            transformOrigin: "12px 12px",
+            transform: shown ? "scaleY(1)" : "scaleY(0.78)",
+            transition: "transform .28s cubic-bezier(.16,1,.3,1)",
+          }}
+        >
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+          <circle
+            cx="12"
+            cy="12"
+            r="3"
+            style={{
+              transformOrigin: "12px 12px",
+              transform: shown ? "scale(1)" : "scale(0.6)",
+              transition: "transform .28s cubic-bezier(.16,1,.3,1)",
+            }}
+          />
+        </g>
+        <line
+          x1="3"
+          y1="3"
+          x2="21"
+          y2="21"
+          pathLength={1}
+          style={{
+            strokeDasharray: 1,
+            strokeDashoffset: shown ? 0 : 1,
+            transition: "stroke-dashoffset .3s ease",
+          }}
+        />
+      </svg>
+    </button>
+  );
+}
+
 function Field({
   label,
   type = "text",
@@ -26,20 +73,30 @@ function Field({
   autoComplete?: string;
   autoFocus?: boolean;
 }) {
+  const [show, setShow] = useState(false);
+  const isPassword = type === "password";
+  const inputType = isPassword ? (show ? "text" : "password") : type;
+
   return (
     <label className="block">
       <span className="mb-1.5 block text-[12px] font-semibold uppercase tracking-[0.1em] text-faint">
         {label}
       </span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        autoFocus={autoFocus}
-        className="w-full rounded-md border border-line/70 bg-bg-2/60 px-3.5 py-2.5 text-[14px] text-ink placeholder:text-faint/70 transition-colors focus:border-primary/60 focus:bg-bg-2"
-      />
+      <div className="relative">
+        <input
+          type={inputType}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          autoFocus={autoFocus}
+          className={cn(
+            "w-full rounded-md border border-line/70 bg-bg-2/60 px-3.5 py-2.5 text-[14px] text-ink placeholder:text-faint/70 transition-colors focus:border-primary/60 focus:bg-bg-2",
+            isPassword && "pr-11",
+          )}
+        />
+        {isPassword && <EyeToggle shown={show} onClick={() => setShow((s) => !s)} />}
+      </div>
     </label>
   );
 }
