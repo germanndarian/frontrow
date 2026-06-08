@@ -1,10 +1,12 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import type { FollowedTeam, LeagueId } from "./types";
+import type { FollowedTeam, LeagueId, PlayoffBracket } from "./types";
+import { LEAGUES } from "./leagues";
 import {
   getCatalogTeams,
   getPlayer,
+  getPlayoffBracket,
   getRostersForTeams,
   getSchedule,
   getScoreboard,
@@ -51,6 +53,26 @@ export function useSchedule(league: LeagueId, teamId: string, enabled: boolean) 
     enabled,
     staleTime: 5 * 60_000,
   });
+}
+
+/** Shared, deduped per league: every team card + the modal read one fetch.
+    Only leagues currently in season can have a live bracket. */
+export function usePlayoffBracket(league: LeagueId) {
+  return useQuery({
+    queryKey: ["playoff-bracket", league],
+    queryFn: () => getPlayoffBracket(league),
+    enabled: LEAGUES[league].inSeason,
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** True when the team appears anywhere in the bracket. */
+export function teamInBracket(bracket: PlayoffBracket | undefined, teamId: string): boolean {
+  return Boolean(
+    bracket?.rounds.some((r) =>
+      r.matchups.some((m) => m.home.teamId === teamId || m.away.teamId === teamId),
+    ),
+  );
 }
 
 export function useStandings(league: LeagueId, teamId?: string) {

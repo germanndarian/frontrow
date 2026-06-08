@@ -15,6 +15,9 @@ function seg(league: LeagueId): string {
 
 export const espnUrl = {
   scoreboard: (l: LeagueId) => `${SITE}/${seg(l)}/scoreboard`,
+  /** Playoff games over a date window, "YYYYMMDD-YYYYMMDD". */
+  playoffScoreboard: (l: LeagueId, dates: string) =>
+    `${SITE}/${seg(l)}/scoreboard?dates=${dates}&limit=400`,
   team: (l: LeagueId, id: string) => `${SITE}/${seg(l)}/teams/${id}`,
   schedule: (l: LeagueId, id: string, seasontype?: number) =>
     `${SITE}/${seg(l)}/teams/${id}/schedule${seasontype ? `?seasontype=${seasontype}` : ""}`,
@@ -30,6 +33,7 @@ export const espnUrl = {
     informal ~2.5k/day budget even with several followed leagues. */
 export const REVALIDATE = {
   scoreboard: 20,
+  bracket: 300,
   team: 300,
   standings: 300,
   player: 300,

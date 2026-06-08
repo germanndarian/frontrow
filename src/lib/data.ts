@@ -1,6 +1,7 @@
 import type {
   Game,
   LeagueId,
+  PlayoffBracket,
   Player,
   ScheduleGame,
   StandingsGroup,
@@ -77,6 +78,11 @@ export async function getRostersForTeams(
     ),
   );
   return lists.flat();
+}
+
+export async function getPlayoffBracket(league: LeagueId): Promise<PlayoffBracket> {
+  if (USE_MOCK) return (await import("./data.mock")).getPlayoffBracket(league);
+  return get<PlayoffBracket>(`/api/playoffs/${league}`);
 }
 
 /** True if any game in a set is currently live (drives poll cadence). */

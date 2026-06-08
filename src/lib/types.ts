@@ -168,8 +168,55 @@ export interface TeamCard {
   } | null;
   /** Runs/points/goals scored across the recent stretch, oldest → newest. */
   scoring: number[];
+  /** True when this team is in its league's current playoff bracket. */
+  inPlayoffs?: boolean;
   /** True for a followed team we have no rich mock data for yet. */
   placeholder?: boolean;
+}
+
+/* ── Playoff bracket ────────────────────────────────────────────────────── */
+
+export type MatchupFormat = "series" | "game";
+
+export interface PlayoffSide {
+  teamId: string;
+  abbreviation: string;
+  displayName: string;
+  logo: string;
+  color: string;
+  seed?: number;
+  /** Series: games won. Single game: the team's score. null until played. */
+  score: number | null;
+  winner: boolean;
+}
+
+export interface PlayoffMatchup {
+  id: string;
+  /** 0-based round index (0 = first round). */
+  round: number;
+  format: MatchupFormat;
+  /** Best-of-N for series; omitted for single-game. */
+  bestOf?: number;
+  state: GameState;
+  home: PlayoffSide;
+  away: PlayoffSide;
+  /** Short status line, e.g. "VGK leads series 2-1 · Game 4". */
+  summary: string;
+  winnerTeamId?: string | null;
+  /** Matchup this winner advances into — drives the connector lines. */
+  nextMatchupId?: string | null;
+}
+
+export interface PlayoffRound {
+  id: string;
+  name: string; // "1st Round", "Conference Finals", "Final"
+  matchups: PlayoffMatchup[];
+}
+
+export interface PlayoffBracket {
+  league: LeagueId;
+  name: string; // "Stanley Cup Playoffs"
+  rounds: PlayoffRound[];
 }
 
 /* ── Persisted user preferences ─────────────────────────────────────────── */

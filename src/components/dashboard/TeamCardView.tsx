@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FollowedTeam } from "@/lib/types";
 import { LEAGUES } from "@/lib/leagues";
-import { useTeamCard } from "@/lib/queries";
+import { useTeamCard, usePlayoffBracket, teamInBracket } from "@/lib/queries";
 import { cn, relativeTime, clockTime } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -12,6 +12,7 @@ import { TeamLogo } from "@/components/ui/TeamLogo";
 import { OutcomeChip } from "@/components/ui/Badge";
 import { BarSparkline } from "@/components/ui/Sparkline";
 import { ScheduleModal } from "./ScheduleModal";
+import { BracketModal } from "./BracketModal";
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -31,8 +32,11 @@ export function TeamCardView({
   onSelect?: () => void;
 }) {
   const { data, isPending, isError, refetch } = useTeamCard(follow.league, follow.teamId);
+  const { data: bracket } = usePlayoffBracket(follow.league);
+  const inPlayoffs = teamInBracket(bracket, follow.teamId);
   const league = LEAGUES[follow.league];
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [bracketOpen, setBracketOpen] = useState(false);
 
   if (isPending) {
     return (
@@ -163,19 +167,38 @@ export function TeamCardView({
       </div>
       )}
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setScheduleOpen(true);
-        }}
-        className="flex w-full items-center justify-center gap-1.5 border-t border-line-soft/70 px-4 py-2.5 text-[12.5px] font-semibold text-muted transition-colors duration-150 hover:bg-bg-2/50 hover:text-ink"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M16 2v4M8 2v4M3 10h18" />
-        </svg>
-        View full schedule
-      </button>
+      <div className="flex border-t border-line-soft/70">
+        {inPlayoffs && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setBracketOpen(true);
+            }}
+            className="flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-[12.5px] font-semibold text-primary-bright transition-colors duration-150 hover:bg-primary/10"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+            </svg>
+            Playoff bracket
+          </button>
+        )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setScheduleOpen(true);
+          }}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 px-3 py-2.5 text-[12.5px] font-semibold text-muted transition-colors duration-150 hover:bg-bg-2/50 hover:text-ink",
+            inPlayoffs && "border-l border-line-soft/70",
+          )}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+          {inPlayoffs ? "Schedule" : "View full schedule"}
+        </button>
+      </div>
     </Card>
 
     <ScheduleModal
@@ -186,6 +209,13 @@ export function TeamCardView({
       teamName={team.displayName}
       teamLogo={team.logo}
       teamAbbr={team.abbreviation}
+      teamColor={team.color}
+    />
+    <BracketModal
+      open={bracketOpen}
+      onClose={() => setBracketOpen(false)}
+      league={team.league}
+      teamId={team.id}
       teamColor={team.color}
     />
     </>
