@@ -27,6 +27,7 @@ export interface RawRecordItem {
 }
 
 export interface RawCompetitor {
+  id?: string;
   homeAway?: string;
   winner?: boolean;
   team?: RawTeam;
@@ -54,6 +55,15 @@ export interface RawSituation {
   lastPlay?: { text?: string };
 }
 
+export interface RawSeries {
+  type?: string;
+  title?: string;
+  summary?: string; // "VGK leads series 2-1"
+  completed?: boolean;
+  totalCompetitions?: number; // best-of-N
+  competitors?: { id?: string; wins?: number }[];
+}
+
 export interface RawCompetition {
   competitors?: RawCompetitor[];
   status?: { type?: RawStatusType };
@@ -61,6 +71,8 @@ export interface RawCompetition {
   broadcasts?: { names?: string[] }[];
   geoBroadcasts?: { media?: { shortName?: string } }[];
   situation?: RawSituation;
+  series?: RawSeries;
+  notes?: { headline?: string }[];
 }
 
 export interface RawEvent {
@@ -68,6 +80,8 @@ export interface RawEvent {
   date?: string;
   status?: { type?: RawStatusType };
   competitions?: RawCompetition[];
+  /** Postseason = type 3. */
+  season?: { type?: number };
   seasonType?: { type?: number };
 }
 

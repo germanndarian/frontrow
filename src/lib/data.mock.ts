@@ -1,6 +1,8 @@
 import type {
   Game,
   LeagueId,
+  PlayoffBracket,
+  PlayoffSide,
   Player,
   ScheduleGame,
   StandingsGroup,
@@ -167,4 +169,82 @@ export async function getRostersForTeams(
   return Object.values(PLAYERS_BY_LEAGUE)
     .flat()
     .filter((p) => ids.has(p.teamId));
+}
+
+/* ── Playoff bracket (demo) ─────────────────────────────────────────────── */
+
+function nhlLogo(abbr: string) {
+  return `https://a.espncdn.com/i/teamlogos/nhl/500/scoreboard/${abbr.toLowerCase()}.png`;
+}
+function side(
+  teamId: string,
+  abbreviation: string,
+  displayName: string,
+  color: string,
+  score: number,
+  winner = false,
+): PlayoffSide {
+  return { teamId, abbreviation, displayName, logo: nhlLogo(abbreviation), color: `#${color}`, score, winner };
+}
+
+const NHL_BRACKET: PlayoffBracket = {
+  league: "nhl",
+  name: "Stanley Cup Playoffs",
+  rounds: [
+    {
+      id: "r0",
+      name: "1st Round",
+      matchups: [
+        {
+          id: "nhl-1st_round-bos-tor",
+          round: 0,
+          format: "series",
+          bestOf: 7,
+          state: "post",
+          home: side("6", "BOS", "Boston Bruins", "FFB81C", 4, true),
+          away: side("10", "TOR", "Toronto Maple Leafs", "00205B", 3),
+          summary: "BOS wins series 4-3",
+          winnerTeamId: "6",
+          nextMatchupId: "nhl-final-bos-fla",
+        },
+        {
+          id: "nhl-1st_round-fla-tbl",
+          round: 0,
+          format: "series",
+          bestOf: 7,
+          state: "post",
+          home: side("26", "FLA", "Florida Panthers", "C8102E", 4, true),
+          away: side("20", "TBL", "Tampa Bay Lightning", "002868", 1),
+          summary: "FLA wins series 4-1",
+          winnerTeamId: "26",
+          nextMatchupId: "nhl-final-bos-fla",
+        },
+      ],
+    },
+    {
+      id: "r1",
+      name: "Stanley Cup Final",
+      matchups: [
+        {
+          id: "nhl-final-bos-fla",
+          round: 1,
+          format: "series",
+          bestOf: 7,
+          state: "in",
+          home: side("6", "BOS", "Boston Bruins", "FFB81C", 2),
+          away: side("26", "FLA", "Florida Panthers", "C8102E", 1),
+          summary: "BOS leads series 2-1 · Game 4 tonight",
+          winnerTeamId: null,
+          nextMatchupId: null,
+        },
+      ],
+    },
+  ],
+};
+
+const MOCK_BRACKETS: Partial<Record<LeagueId, PlayoffBracket>> = { nhl: NHL_BRACKET };
+
+export async function getPlayoffBracket(league: LeagueId): Promise<PlayoffBracket> {
+  await sleep(jitter());
+  return MOCK_BRACKETS[league] ?? { league, name: "Playoffs", rounds: [] };
 }
