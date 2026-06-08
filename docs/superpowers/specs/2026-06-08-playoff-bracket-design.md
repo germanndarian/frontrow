@@ -13,10 +13,13 @@ path through the bracket highlighted.
 
 ## Decisions (locked)
 
-- **Data source:** Demo data now, built live-ready. Bundled bracket data that always
-  renders, shaped exactly how a live ESPN feed would later fill it. Mirrors the
-  existing `data.ts` facade + `data.mock.ts` pattern; swapping to live ESPN is a
-  config/normalizer change with **zero UI changes**.
+- **Data source:** **Live ESPN data.** The bracket is reconstructed server-side from
+  ESPN's playoff scoreboard (date-ranged over the postseason window): games are
+  grouped into series by round + team-pair, the series score comes from each series'
+  latest game's `series` object, round names come from the game `notes` headline, and
+  `nextMatchupId` is inferred by which winners advance into the next round. Verified
+  against the live NHL Stanley Cup playoffs. The bundled mock dataset is retained only
+  as the offline fallback behind `NEXT_PUBLIC_USE_MOCK`, same as every other surface.
 - **Detail level:** Series tally only (e.g. "Series 2–1 · Game 4 tonight" or
   "Final · BOS 27–24"). No per-game expansion in v1.
 - **League scope:** All four. NHL + MLB render as best-of-N **series**; NFL +
@@ -95,19 +98,26 @@ TeamCardView (inPlayoffs?) ──▶ button ──▶ BracketModal
                                           data.ts facade ──▶ data.mock.ts  (ESPN normalizer later)
 ```
 
+- **ESPN normalizer:** `src/lib/espn/bracket.ts` — reads the postseason date window
+  from the league's scoreboard `calendar` (season type 3), fetches
+  `scoreboard?dates=START-END&limit=400`, keeps games with a `series` object, groups
+  into series by `(roundNote, sortedTeamPair)`, takes each series' latest game for the
+  current score, maps round notes → ordered rounds, and links `nextMatchupId` by
+  matching advancing winners. NFL/CFB postseason games have no `series` → each is a
+  single `format: "game"` matchup. Defensive: unknown shapes degrade to an empty
+  bracket rather than throwing.
+- **Endpoints:** `espnUrl.playoffScoreboard(league, start, end)` in `endpoints.ts`;
+  `REVALIDATE.bracket` ≈ 300s.
 - **Route handler:** `src/app/api/playoffs/[league]/route.ts` returns the
-  `PlayoffBracket` for the league (or `404`/empty when no active bracket). Cached
-  server-side with a REVALIDATE entry (~5 min).
-- **Query hook:** `usePlayoffBracket(league, enabled)` in `src/lib/queries.ts`,
-  modeled on `useSchedule` (only fetches when the modal is open).
-- **Facade:** `getPlayoffBracket(league)` in `src/lib/data.ts`; `inPlayoffs` is
-  derived where the team card is assembled (team appears in the league bracket).
-- **Mock:** `src/lib/data.mock.ts` provides:
-  - An **active NHL** bracket (best-of-7 series) as the primary showcase.
-  - At least one **single-game** bracket (e.g. College Football Playoff) to exercise
-    the `format: "game"` path.
-  - Teams present in an active bracket are flagged `inPlayoffs: true`.
-  - Leagues with no active bracket return none → no button.
+  `PlayoffBracket` (empty `rounds: []` when the league isn't in the postseason).
+- **Query hook:** `usePlayoffBracket(league)` in `src/lib/queries.ts`. Enabled only
+  for `LEAGUES[league].inSeason` leagues (offseason has no live bracket). React-Query
+  dedupes by league, so all team cards of a league + the modal share **one** fetch.
+- **`inPlayoffs` detection:** `TeamCardView` reads `usePlayoffBracket(team.league)`
+  and shows the button when its `teamId` appears in the bracket — no separate
+  endpoint, served from the shared cache.
+- **Mock fallback:** `src/lib/data.mock.ts` provides a representative bracket (NHL
+  series + one single-game example) used only when `NEXT_PUBLIC_USE_MOCK=true`.
 
 ## Components
 
@@ -168,17 +178,25 @@ Offline unit tests (Vitest, no network):
 - `bracket-layout.ts`: positions are correct for a known bracket; connector segments
   link each matchup to its `nextMatchupId`; the on-path segments match the followed
   team's chain.
-- Mock shape: every `nextMatchupId` resolves to a real matchup; rounds are ordered;
-  `inPlayoffs` is true exactly for teams present in an active bracket.
+- `espn/bracket.ts` normalizer: run against a **captured ESPN scoreboard fixture**
+  (real NHL playoff JSON, trimmed) — series are grouped correctly, the latest game
+  drives the series score, rounds are ordered, `nextMatchupId` links advancing teams,
+  and a non-playoff fixture yields an empty bracket.
 - A small render smoke test of `MatchupCard` (series vs game summary) if it adds value.
 
 ## Out of scope (v1)
 
-- Live ESPN bracket parsing (the normalizer is stubbed; mock powers it now).
 - Per-game score expansion within a series.
 - Bracket predictions / "what if" interactions.
 
+## Verification reality
+
+The NHL path is verifiable now against the live Stanley Cup playoffs. MLB (series)
+and NFL/CFB (single-game) reuse the same code path but can't be exercised against live
+data until those postseasons (offseason in June), so they're best-effort + a captured
+fixture/mock, and degrade to an empty bracket (no button) when there's nothing live.
+
 ## Future
 
-- Swap `data.mock.ts` for a live ESPN normalizer (`src/lib/espn/`) — no UI change.
 - Optional per-game breakdown on matchup tap.
+- Tighten MLB/NFL/CFB round-name maps once their postseasons are live to validate.
