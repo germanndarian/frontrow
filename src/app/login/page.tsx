@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth, useAppReady, useIsAuthed } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -48,25 +48,15 @@ export default function LoginPage() {
   const router = useRouter();
   const ready = useAppReady();
   const authed = useIsAuthed();
-  const { logIn, signUp, continueAsGuest } = useAuth();
-  const accountCount = useAuth((s) => Object.keys(s.accounts).length);
+  const { signIn, signUp, continueAsGuest } = useAuth();
 
   const [mode, setMode] = useState<Mode>("signin");
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // New visitors land on "create account"; returning ones default to sign in.
-  const decided = useRef(false);
-  useEffect(() => {
-    if (ready && !decided.current) {
-      decided.current = true;
-      setMode(accountCount === 0 ? "signup" : "signin");
-    }
-  }, [ready, accountCount]);
+  const [confirmSent, setConfirmSent] = useState(false);
 
   useEffect(() => {
     if (ready && authed) router.replace("/");
@@ -79,11 +69,18 @@ export default function LoginPage() {
     setPending(true);
     const result =
       mode === "signin"
-        ? await logIn({ username, password, remember })
-        : await signUp({ username, displayName, password, remember });
+        ? await signIn({ email, password })
+        : await signUp({ email, displayName, password });
     setPending(false);
-    if (result.ok) router.replace("/");
-    else setError(result.error ?? "Something went wrong.");
+    if (!result.ok) {
+      setError(result.error ?? "Something went wrong.");
+      return;
+    }
+    if (result.needsConfirm) {
+      setConfirmSent(true);
+      return;
+    }
+    router.replace("/");
   }
 
   function switchMode(next: Mode) {
@@ -94,6 +91,39 @@ export default function LoginPage() {
   function asGuest() {
     continueAsGuest();
     router.replace("/");
+  }
+
+  if (confirmSent) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-12">
+        <div className="w-full max-w-[400px] text-center">
+          <Wordmark />
+          <div className="mx-auto mt-8 grid h-14 w-14 place-items-center rounded-full border border-primary/40 bg-primary/12 text-primary-bright">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m3 7 9 6 9-6" />
+            </svg>
+          </div>
+          <h1 className="mt-5 font-display text-[22px] font-extrabold tracking-[-0.02em] text-ink">
+            Check your inbox
+          </h1>
+          <p className="mt-2 text-[14px] leading-relaxed text-muted">
+            We sent a confirmation link to{" "}
+            <span className="font-semibold text-ink">{email}</span>. Click it to
+            finish creating your account, then sign in.
+          </p>
+          <button
+            onClick={() => {
+              setConfirmSent(false);
+              setMode("signin");
+            }}
+            className="mt-6 rounded-full border border-line bg-surface/60 px-5 py-2.5 text-[13.5px] font-semibold text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -107,7 +137,7 @@ export default function LoginPage() {
           <p className="mt-1.5 max-w-[32ch] text-[13.5px] leading-relaxed text-muted">
             {mode === "signin"
               ? "Sign in to load your teams, players and tuned-in look."
-              : "Your follows and settings stay saved to this profile."}
+              : "Your follows and settings sync to your account."}
           </p>
         </div>
 
@@ -132,11 +162,12 @@ export default function LoginPage() {
 
         <form onSubmit={onSubmit} className="space-y-3.5">
           <Field
-            label="Username"
-            value={username}
-            onChange={setUsername}
-            placeholder="e.g. courtside"
-            autoComplete="username"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={setEmail}
+            placeholder="you@example.com"
+            autoComplete="email"
             autoFocus
           />
           {mode === "signup" && (
@@ -156,28 +187,6 @@ export default function LoginPage() {
             placeholder={mode === "signup" ? "At least 6 characters" : "••••••••"}
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
           />
-
-          <label className="flex cursor-pointer items-center gap-2.5 pt-0.5 text-[13px] text-muted">
-            <button
-              type="button"
-              role="checkbox"
-              aria-checked={remember}
-              onClick={() => setRemember((v) => !v)}
-              className={cn(
-                "grid h-[18px] w-[18px] place-items-center rounded-[5px] border transition-colors",
-                remember
-                  ? "border-primary bg-primary text-primary-ink"
-                  : "border-line bg-bg-2/60",
-              )}
-            >
-              {remember && (
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              )}
-            </button>
-            Keep me signed in for 30 days
-          </label>
 
           {error && (
             <p className="rounded-md border border-loss/30 bg-loss/10 px-3 py-2 text-[12.5px] font-medium text-loss">
@@ -216,8 +225,8 @@ export default function LoginPage() {
           Continue as guest
         </button>
         <p className="mt-3 text-center text-[11.5px] leading-relaxed text-faint">
-          Accounts live only in this browser. Passwords are hashed locally — this
-          is a personal profile, not cloud sign-in.
+          Guest mode doesn&apos;t save — your picks reset on reload. Create an
+          account to keep them.
         </p>
       </div>
     </div>
