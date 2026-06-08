@@ -204,40 +204,42 @@ function SectionToggle({ open, onClick, label }: { open: boolean; onClick: () =>
 
 function ProfileCard() {
   const user = useCurrentUser();
-  const guest = useAuth((s) => s.guest);
-  const { updateProfile, changePassword, deleteAccount, logOut } = useAuth();
+  const guest = useAuth((s) => s.status === "guest");
+  const { updateProfile, changePassword, deleteAccount, signOut } = useAuth();
   const router = useRouter();
 
   const [pwOpen, setPwOpen] = useState(false);
-  const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pwBusy, setPwBusy] = useState(false);
+  const [delBusy, setDelBusy] = useState(false);
 
-  function signOut() {
-    logOut();
+  async function handleSignOut() {
+    await signOut();
     router.replace("/login");
   }
 
-  function removeAccount() {
+  async function removeAccount() {
     if (
-      window.confirm(
+      !window.confirm(
         "Delete this account and everything saved to it? This can't be undone.",
       )
-    ) {
-      deleteAccount();
-      router.replace("/login");
-    }
+    )
+      return;
+    setDelBusy(true);
+    const res = await deleteAccount();
+    setDelBusy(false);
+    if (res.ok) router.replace("/login");
+    else window.alert(res.error ?? "Couldn't delete the account.");
   }
 
   async function submitPassword() {
     setPwMsg(null);
     setPwBusy(true);
-    const res = await changePassword(current, next);
+    const res = await changePassword(next);
     setPwBusy(false);
     if (res.ok) {
       setPwMsg({ ok: true, text: "Password updated." });
-      setCurrent("");
       setNext("");
       setPwOpen(false);
     } else {
@@ -261,7 +263,7 @@ function ProfileCard() {
             Create an account
           </Link>
           <button
-            onClick={signOut}
+            onClick={handleSignOut}
             className="rounded-full border border-line bg-surface-2 px-4 py-2 text-[13px] font-semibold text-muted transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-3 hover:text-ink active:scale-[0.97]"
           >
             Exit guest mode
@@ -276,15 +278,15 @@ function ProfileCard() {
       <div className="flex items-center gap-4">
         <span
           className="grid h-14 w-14 shrink-0 place-items-center rounded-full text-[26px]"
-          style={{ backgroundColor: user.avatar.color }}
+          style={{ backgroundColor: user.avatarColor }}
         >
-          {user.avatar.emoji}
+          {user.avatarEmoji}
         </span>
         <div className="min-w-0">
           <h2 className="font-display text-[18px] font-extrabold text-ink">
             {user.displayName}
           </h2>
-          <p className="text-[12.5px] text-faint">@{user.username}</p>
+          <p className="truncate text-[12.5px] text-faint">{user.email}</p>
         </div>
       </div>
 
@@ -298,11 +300,11 @@ function ProfileCard() {
             {AVATAR_EMOJIS.map((e) => (
               <button
                 key={e}
-                onClick={() => updateProfile({ avatar: { ...user.avatar, emoji: e } })}
-                aria-pressed={user.avatar.emoji === e}
+                onClick={() => updateProfile({ avatarEmoji: e })}
+                aria-pressed={user.avatarEmoji === e}
                 className={cn(
                   "grid h-9 w-9 place-items-center rounded-md border text-[18px] transition-[transform,border-color,background-color] duration-150 active:scale-90",
-                  user.avatar.emoji === e
+                  user.avatarEmoji === e
                     ? "border-primary/60 bg-primary/12"
                     : "border-line/60 bg-bg-2/40 hover:border-line",
                 )}
@@ -315,12 +317,12 @@ function ProfileCard() {
             {AVATAR_COLORS.map((c) => (
               <button
                 key={c}
-                onClick={() => updateProfile({ avatar: { ...user.avatar, color: c } })}
+                onClick={() => updateProfile({ avatarColor: c })}
                 aria-label="Avatar color"
-                aria-pressed={user.avatar.color === c}
+                aria-pressed={user.avatarColor === c}
                 className={cn(
                   "h-7 w-7 rounded-full transition-transform duration-150 active:scale-90",
-                  user.avatar.color === c
+                  user.avatarColor === c
                     ? "ring-2 ring-ink ring-offset-2 ring-offset-surface"
                     : "ring-1 ring-line-soft",
                 )}
@@ -342,41 +344,28 @@ function ProfileCard() {
           />
         </label>
 
-        {/* Email (optional) */}
-        <label className="block">
-          <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.12em] text-faint">
-            Email <span className="font-medium normal-case text-faint">· optional</span>
-          </span>
-          <input
-            type="email"
-            value={user.email ?? ""}
-            placeholder="you@example.com"
-            onChange={(e) => updateProfile({ email: e.target.value })}
-            className="w-full rounded-md border border-line/70 bg-bg-2/60 px-3.5 py-2.5 text-[14px] text-ink placeholder:text-faint/70 transition-colors focus:border-primary/60"
-          />
-        </label>
+        {/* Email — read-only sign-in identity */}
+        <div>
+          <div className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-faint">
+            Email
+          </div>
+          <div className="flex items-center justify-between gap-3 rounded-md border border-line/60 bg-bg-2/40 px-3.5 py-2.5">
+            <span className="truncate text-[14px] text-muted">{user.email}</span>
+            <span className="shrink-0 text-[11px] font-semibold text-faint">Sign-in email</span>
+          </div>
+        </div>
 
         {/* Password */}
         {pwOpen ? (
           <div className="rounded-md border border-line-soft/70 bg-bg-2/40 p-3.5">
-            <div className="space-y-2.5">
-              <input
-                type="password"
-                value={current}
-                onChange={(e) => setCurrent(e.target.value)}
-                placeholder="Current password"
-                autoComplete="current-password"
-                className="w-full rounded-md border border-line/70 bg-bg/60 px-3 py-2 text-[13.5px] text-ink placeholder:text-faint/70 focus:border-primary/60"
-              />
-              <input
-                type="password"
-                value={next}
-                onChange={(e) => setNext(e.target.value)}
-                placeholder="New password (min 6 characters)"
-                autoComplete="new-password"
-                className="w-full rounded-md border border-line/70 bg-bg/60 px-3 py-2 text-[13.5px] text-ink placeholder:text-faint/70 focus:border-primary/60"
-              />
-            </div>
+            <input
+              type="password"
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+              placeholder="New password (min 6 characters)"
+              autoComplete="new-password"
+              className="w-full rounded-md border border-line/70 bg-bg/60 px-3 py-2 text-[13.5px] text-ink placeholder:text-faint/70 focus:border-primary/60"
+            />
             {pwMsg && (
               <p
                 className={cn(
@@ -400,7 +389,6 @@ function ProfileCard() {
                 onClick={() => {
                   setPwOpen(false);
                   setPwMsg(null);
-                  setCurrent("");
                   setNext("");
                 }}
                 className="rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold text-faint transition-colors hover:text-ink"
@@ -428,8 +416,10 @@ function ProfileCard() {
         </button>
         <button
           onClick={removeAccount}
-          className="rounded-full border border-loss/30 bg-loss/8 px-4 py-2 text-[13px] font-semibold text-loss transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-loss/15 active:scale-[0.97]"
+          disabled={delBusy}
+          className="inline-flex items-center gap-2 rounded-full border border-loss/30 bg-loss/8 px-4 py-2 text-[13px] font-semibold text-loss transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-loss/15 active:scale-[0.97] disabled:opacity-60"
         >
+          {delBusy && <Spinner className="!h-3.5 !w-3.5" />}
           Delete account
         </button>
       </div>
