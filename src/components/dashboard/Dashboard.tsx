@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePreferences, useHasHydrated } from "@/lib/store";
+import { useSettings, type SectionId } from "@/lib/settings";
 import { useScoreboard } from "@/lib/queries";
 import { LEAGUES } from "@/lib/leagues";
 import type { FollowedTeam } from "@/lib/types";
@@ -50,7 +51,17 @@ function DashboardLoading() {
 export function Dashboard() {
   const hydrated = useHasHydrated();
   const { teams, players, leagues } = usePreferences();
-  const [selected, setSelected] = useState<LeagueFilterValue>("all");
+  const greetingName = useSettings((s) => s.greetingName);
+  const hiddenSections = useSettings((s) => s.hiddenSections);
+  const isHidden = (id: SectionId) => hiddenSections.includes(id);
+
+  // Seed the league filter from the user's saved default, but only honor it if
+  // they actually follow that league — otherwise fall back to "All".
+  const [selected, setSelected] = useState<LeagueFilterValue>(() => {
+    const pref = useSettings.getState().defaultLeague;
+    const followed = usePreferences.getState().leagues;
+    return pref !== "all" && followed.includes(pref) ? pref : "all";
+  });
 
   // Shared scoreboard query (header live count + strip read the same cache).
   const scoreboard = useScoreboard(leagues);
@@ -111,7 +122,8 @@ export function Dashboard() {
         <div className="mb-7 flex flex-col gap-4 sm:mb-9 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="font-display text-[28px] font-extrabold leading-none tracking-[-0.02em] text-ink sm:text-[34px]">
-              {greeting()}.
+              {greeting()}
+              {greetingName.trim() ? `, ${greetingName.trim()}` : ""}.
             </h1>
             <p className="mt-2 text-[14px] text-muted">
               {liveCount > 0 ? (
@@ -147,16 +159,18 @@ export function Dashboard() {
         ) : (
           <div className="space-y-10">
             {/* Live & upcoming */}
-            <Section title="Live & Upcoming" className="rise">
-              <ScoreboardStrip
-                leagues={leagues}
-                only={selected === "all" ? undefined : selected}
-                followedKeys={followedKeys}
-              />
-            </Section>
+            {!isHidden("scoreboard") && (
+              <Section title="Live & Upcoming" className="rise">
+                <ScoreboardStrip
+                  leagues={leagues}
+                  only={selected === "all" ? undefined : selected}
+                  followedKeys={followedKeys}
+                />
+              </Section>
+            )}
 
             {/* Teams */}
-            {shownTeams.length > 0 && (
+            {!isHidden("teams") && shownTeams.length > 0 && (
               <Section
                 title="Your Teams"
                 count={shownTeams.length}
@@ -186,14 +200,14 @@ export function Dashboard() {
             )}
 
             {/* Season trend (chart) — driven by the selected team */}
-            {spotlightTeam && (
+            {!isHidden("trend") && spotlightTeam && (
               <Section title="Season Stats" className="rise">
                 <SeasonTrendCard follow={spotlightTeam} />
               </Section>
             )}
 
             {/* Players */}
-            {shownPlayers.length > 0 && (
+            {!isHidden("players") && shownPlayers.length > 0 && (
               <Section title="Your Players" count={shownPlayers.length} className="rise">
                 <div className="grid gap-4 sm:grid-cols-2">
                   {shownPlayers.map((p) => (
@@ -204,7 +218,7 @@ export function Dashboard() {
             )}
 
             {/* Standings */}
-            {visibleLeagues.length > 0 && (
+            {!isHidden("standings") && visibleLeagues.length > 0 && (
               <Section title="Around the League" id="standings" className="rise">
                 <div className="grid gap-4 lg:grid-cols-2">
                   {visibleLeagues.map((l) => (

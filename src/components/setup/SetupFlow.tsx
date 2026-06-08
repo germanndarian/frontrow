@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { usePreferences } from "@/lib/store";
+import { useAppReady, useIsAuthed } from "@/lib/auth";
 import { DEFAULT_PREFERENCES } from "@/lib/mock";
 import { LEAGUES, SPORTS, SPORT_ORDER, leaguesForSports } from "@/lib/leagues";
 import type {
@@ -59,6 +60,13 @@ const variants = {
 export function SetupFlow() {
   const router = useRouter();
   const store = usePreferences();
+
+  // Setup sits behind the gate: bounce anyone who isn't signed in (or a guest).
+  const ready = useAppReady();
+  const authed = useIsAuthed();
+  useEffect(() => {
+    if (ready && !authed) router.replace("/login");
+  }, [ready, authed, router]);
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);

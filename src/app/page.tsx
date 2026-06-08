@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePreferences, useHasHydrated } from "@/lib/store";
+import { usePreferences } from "@/lib/store";
+import { useAppReady, useIsAuthed } from "@/lib/auth";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { Spinner } from "@/components/ui/States";
@@ -19,16 +20,20 @@ function Splash() {
 }
 
 export default function Home() {
-  const hydrated = useHasHydrated();
+  const ready = useAppReady();
+  const authed = useIsAuthed();
   const onboarded = usePreferences((s) => s.onboarded);
   const router = useRouter();
 
   useEffect(() => {
-    if (hydrated && !onboarded) router.replace("/setup");
-  }, [hydrated, onboarded, router]);
+    if (!ready) return;
+    if (!authed) router.replace("/login");
+    else if (!onboarded) router.replace("/setup");
+  }, [ready, authed, onboarded, router]);
 
-  // Hold a branded splash until we know whether to show setup or the dashboard.
-  if (!hydrated || !onboarded) return <Splash />;
+  // Hold a branded splash until we know whether to show login, setup or the
+  // dashboard — so a returning, signed-in user never flashes the wrong screen.
+  if (!ready || !authed || !onboarded) return <Splash />;
 
   return <Dashboard />;
 }
