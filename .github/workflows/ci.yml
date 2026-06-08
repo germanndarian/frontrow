@@ -1,12 +1,12 @@
 name: CI
 
 # Quality gate for the codebase. Vercel handles deploys on push to main via its
-# Git integration, so this workflow only lints, type-checks, and builds.
+# Git integration, so this workflow only lints, type-checks, tests, and builds.
+# Runs on every pull request (any base branch) so faulty code can't merge.
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 # Cancel superseded runs on the same branch/PR to save minutes.
 concurrency:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build:
-    name: Lint, type-check, build
+    name: Lint, type-check, test, build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,6 +35,9 @@ jobs:
 
       - name: Type-check
         run: npx tsc --noEmit
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
