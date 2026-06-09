@@ -129,7 +129,7 @@ export function SetupFlow() {
     store.setTeams(teams.filter((t) => leagues.includes(t.league)));
     store.setPlayers(players.filter((p) => leagues.includes(p.league)));
     store.complete();
-    router.replace("/");
+    router.replace("/dashboard");
   }
 
   function useSample() {
@@ -138,7 +138,7 @@ export function SetupFlow() {
     store.setTeams(DEFAULT_PREFERENCES.teams);
     store.setPlayers(DEFAULT_PREFERENCES.players);
     store.complete();
-    router.replace("/");
+    router.replace("/dashboard");
   }
 
   const progress = ((step + 1) / STEPS.length) * 100;

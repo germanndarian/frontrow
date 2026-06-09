@@ -627,11 +627,11 @@ export default function SettingsPage() {
     <>
       <header className="sticky top-0 z-30 border-b border-line/60 bg-bg/72 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link href="/" className="rounded-md transition-opacity hover:opacity-85">
+          <Link href="/dashboard" className="rounded-md transition-opacity hover:opacity-85">
             <Wordmark />
           </Link>
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-[13px] font-bold text-primary-ink transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-bright active:scale-[0.97]"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
