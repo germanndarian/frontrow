@@ -48,7 +48,7 @@ export default function LoginPage() {
   const router = useRouter();
   const ready = useAppReady();
   const authed = useIsAuthed();
-  const { signIn, signUp, continueAsGuest } = useAuth();
+  const { signIn, signUp, signInWithApple, continueAsGuest } = useAuth();
 
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
@@ -91,6 +91,13 @@ export default function LoginPage() {
   function asGuest() {
     continueAsGuest();
     router.replace("/");
+  }
+
+  async function onApple() {
+    setError(null);
+    // On success the browser redirects to Apple, so this only returns on error.
+    const result = await signInWithApple();
+    if (!result.ok) setError(result.error ?? "Couldn't start Apple sign-in.");
   }
 
   if (confirmSent) {
@@ -217,13 +224,25 @@ export default function LoginPage() {
           <span className="h-px flex-1 bg-line-soft" />
         </div>
 
-        <button
-          type="button"
-          onClick={asGuest}
-          className="w-full rounded-full border border-line bg-surface/60 px-5 py-2.5 text-[13.5px] font-semibold text-muted transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-2 hover:text-ink active:scale-[0.98]"
-        >
-          Continue as guest
-        </button>
+        <div className="space-y-2.5">
+          <button
+            type="button"
+            onClick={onApple}
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[13.5px] font-semibold text-bg transition-[transform,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:opacity-90 active:scale-[0.98]"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="-mt-0.5">
+              <path d="M16.365 1.43c0 1.14-.42 2.2-1.26 3.06-.9.93-2.04 1.47-3.18 1.38-.12-1.1.45-2.28 1.2-3.06.84-.87 2.22-1.5 3.24-1.5.06.36.06.72 0 .12zM20.7 17.04c-.36.84-.54 1.2-1.02 1.95-.66 1.05-1.59 2.34-2.76 2.34-.99 0-1.26-.66-2.61-.66-1.35 0-1.65.66-2.61.66-1.17 0-1.98-1.17-2.64-2.22-1.83-2.88-2.04-6.27-.9-8.07.81-1.29 2.07-2.04 3.27-2.04 1.2 0 1.95.66 2.94.66.96 0 1.56-.66 2.94-.66 1.05 0 2.16.57 2.97 1.56-2.61 1.41-2.19 5.1.42 6.18z" />
+            </svg>
+            Sign in with Apple
+          </button>
+          <button
+            type="button"
+            onClick={asGuest}
+            className="w-full rounded-full border border-line bg-surface/60 px-5 py-2.5 text-[13.5px] font-semibold text-muted transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-2 hover:text-ink active:scale-[0.98]"
+          >
+            Continue as guest
+          </button>
+        </div>
         <p className="mt-3 text-center text-[11.5px] leading-relaxed text-faint">
           Guest mode doesn&apos;t save — your picks reset on reload. Create an
           account to keep them.

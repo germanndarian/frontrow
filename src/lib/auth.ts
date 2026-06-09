@@ -55,6 +55,7 @@ interface AuthState {
   init: () => void;
   signUp: (i: { email: string; password: string; displayName?: string }) => Promise<AuthResult>;
   signIn: (i: { email: string; password: string }) => Promise<AuthResult>;
+  signInWithApple: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   updateProfile: (
@@ -169,6 +170,21 @@ export const useAuth = create<AuthState>()((set, get) => ({
 
   signIn: async ({ email, password }) => {
     const { error } = await sb().auth.signInWithPassword({ email: email.trim(), password });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  },
+
+  signInWithApple: async () => {
+    // Redirects the browser to Apple; on return, /auth/confirm exchanges the
+    // code for a session. So a successful call navigates away — the result is
+    // really only meaningful on error.
+    const { error } = await sb().auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo:
+          typeof window !== "undefined" ? `${window.location.origin}/auth/confirm` : undefined,
+      },
+    });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   },
