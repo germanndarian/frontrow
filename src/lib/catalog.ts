@@ -165,6 +165,8 @@ const NCAAF: CatalogTeam[] = [
 ];
 
 export const TEAMS_BY_LEAGUE: Record<LeagueId, CatalogTeam[]> = {
+  // NBA onboarding is served live from ESPN; the offline catalog stays empty.
+  nba: [],
   mlb: MLB,
   nhl: NHL,
   nfl: NFL,
@@ -194,6 +196,7 @@ function p(
 }
 
 export const PLAYERS_BY_LEAGUE: Record<LeagueId, CatalogPlayer[]> = {
+  nba: [],
   mlb: [
     p("mlb", "mlb", "33192", "Aaron Judge", "10", "NYY", "RF"),
     p("mlb", "mlb", "39832", "Shohei Ohtani", "19", "LAD", "DH"),

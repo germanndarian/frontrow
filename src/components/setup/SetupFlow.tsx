@@ -42,6 +42,13 @@ function SportGlyph({ sport }: { sport: SportId }) {
         <path d="M6.5 5.8c2 1.6 3 4 3 6.2s-1 4.6-3 6.2M17.5 5.8c-2 1.6-3 4-3 6.2s1 4.6 3 6.2" />
       </svg>
     );
+  if (sport === "basketball")
+    return (
+      <svg {...common}>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3v18M3 12h18M5.6 5.6c2.4 2 3.9 4.8 3.9 6.4s-1.5 4.4-3.9 6.4M18.4 5.6c-2.4 2-3.9 4.8-3.9 6.4s1.5 4.4 3.9 6.4" />
+      </svg>
+    );
   return (
     <svg {...common}>
       <ellipse cx="12" cy="15" rx="8" ry="3" />
