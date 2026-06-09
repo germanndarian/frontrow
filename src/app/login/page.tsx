@@ -48,7 +48,7 @@ export default function LoginPage() {
   const router = useRouter();
   const ready = useAppReady();
   const authed = useIsAuthed();
-  const { signIn, signUp, continueAsGuest } = useAuth();
+  const { signIn, signUp, signInWithGoogle, continueAsGuest } = useAuth();
 
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
@@ -91,6 +91,13 @@ export default function LoginPage() {
   function asGuest() {
     continueAsGuest();
     router.replace("/");
+  }
+
+  async function onGoogle() {
+    setError(null);
+    // On success the browser redirects to Google, so this only returns on error.
+    const result = await signInWithGoogle();
+    if (!result.ok) setError(result.error ?? "Couldn't start Google sign-in.");
   }
 
   if (confirmSent) {
@@ -217,13 +224,28 @@ export default function LoginPage() {
           <span className="h-px flex-1 bg-line-soft" />
         </div>
 
-        <button
-          type="button"
-          onClick={asGuest}
-          className="w-full rounded-full border border-line bg-surface/60 px-5 py-2.5 text-[13.5px] font-semibold text-muted transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-2 hover:text-ink active:scale-[0.98]"
-        >
-          Continue as guest
-        </button>
+        <div className="space-y-2.5">
+          <button
+            type="button"
+            onClick={onGoogle}
+            className="flex w-full items-center justify-center gap-2.5 rounded-full bg-ink px-5 py-2.5 text-[13.5px] font-semibold text-bg transition-[transform,opacity] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:opacity-90 active:scale-[0.98]"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.11A6.6 6.6 0 0 1 5.49 12c0-.73.13-1.45.35-2.11V7.05H2.18A11 11 0 0 0 1 12c0 1.77.42 3.45 1.18 4.95l3.66-2.84z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.29 9.14 5.38 12 5.38z" />
+            </svg>
+            Continue with Google
+          </button>
+          <button
+            type="button"
+            onClick={asGuest}
+            className="w-full rounded-full border border-line bg-surface/60 px-5 py-2.5 text-[13.5px] font-semibold text-muted transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-2 hover:text-ink active:scale-[0.98]"
+          >
+            Continue as guest
+          </button>
+        </div>
         <p className="mt-3 text-center text-[11.5px] leading-relaxed text-faint">
           Guest mode doesn&apos;t save — your picks reset on reload. Create an
           account to keep them.

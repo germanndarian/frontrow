@@ -55,6 +55,7 @@ interface AuthState {
   init: () => void;
   signUp: (i: { email: string; password: string; displayName?: string }) => Promise<AuthResult>;
   signIn: (i: { email: string; password: string }) => Promise<AuthResult>;
+  signInWithGoogle: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   updateProfile: (
@@ -169,6 +170,20 @@ export const useAuth = create<AuthState>()((set, get) => ({
 
   signIn: async ({ email, password }) => {
     const { error } = await sb().auth.signInWithPassword({ email: email.trim(), password });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  },
+
+  signInWithGoogle: async () => {
+    // Redirects to Google; on return, /auth/confirm exchanges the code for a
+    // session. A successful call navigates away, so the result matters on error.
+    const { error } = await sb().auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo:
+          typeof window !== "undefined" ? `${window.location.origin}/auth/confirm` : undefined,
+      },
+    });
     if (error) return { ok: false, error: error.message };
     return { ok: true };
   },
