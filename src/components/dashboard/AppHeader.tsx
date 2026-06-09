@@ -16,7 +16,7 @@ export function AppHeader({ liveCount }: { liveCount: number }) {
   return (
     <header className="sticky top-0 z-30 border-b border-line/60 bg-bg/72 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="rounded-md transition-opacity hover:opacity-85">
+        <Link href="/dashboard" className="rounded-md transition-opacity hover:opacity-85">
           <Wordmark />
         </Link>
 

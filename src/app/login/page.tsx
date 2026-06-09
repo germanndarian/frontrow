@@ -115,8 +115,14 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmSent, setConfirmSent] = useState(false);
 
+  // Open straight into sign-up when the homepage links here with ?mode=signup.
   useEffect(() => {
-    if (ready && authed) router.replace("/");
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mode") === "signup") setMode("signup");
+  }, []);
+
+  useEffect(() => {
+    if (ready && authed) router.replace("/dashboard");
   }, [ready, authed, router]);
 
   async function onSubmit(e: React.FormEvent) {
@@ -137,7 +143,7 @@ export default function LoginPage() {
       setConfirmSent(true);
       return;
     }
-    router.replace("/");
+    router.replace("/dashboard");
   }
 
   function switchMode(next: Mode) {
@@ -147,7 +153,7 @@ export default function LoginPage() {
 
   function asGuest() {
     continueAsGuest();
-    router.replace("/");
+    router.replace("/dashboard");
   }
 
   async function onGoogle() {
