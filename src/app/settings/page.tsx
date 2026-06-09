@@ -22,7 +22,6 @@ import {
   type Density,
   type Radius,
 } from "@/lib/settings";
-import { DEFAULT_PREFERENCES } from "@/lib/mock";
 import { LEAGUES, LEAGUE_ORDER, SPORTS, SPORT_ORDER } from "@/lib/leagues";
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/brand/Wordmark";
@@ -619,26 +618,10 @@ export default function SettingsPage() {
     toggleLeague,
     toggleTeam,
     togglePlayer,
-    setSports,
-    setLeagues,
-    setTeams,
-    setPlayers,
   } = usePreferences();
 
   const [editor, setEditor] = useState<Editor>(null);
   const toggle = (e: Editor) => setEditor((cur) => (cur === e ? null : e));
-
-  function restoreDefaults() {
-    setSports(DEFAULT_PREFERENCES.sports);
-    setLeagues(DEFAULT_PREFERENCES.leagues);
-    setTeams(DEFAULT_PREFERENCES.teams);
-    setPlayers(DEFAULT_PREFERENCES.players);
-  }
-
-  function clearAll() {
-    setTeams([]);
-    setPlayers([]);
-  }
 
   return (
     <>
@@ -649,12 +632,12 @@ export default function SettingsPage() {
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 rounded-full border border-line/70 bg-surface/60 px-3.5 py-1.5 text-[13px] font-semibold text-muted transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-2 hover:text-ink active:scale-[0.97]"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-[13px] font-bold text-primary-ink transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-bright active:scale-[0.97]"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m15 18-6-6 6-6" />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6 9 17l-5-5" />
             </svg>
-            Dashboard
+            Done
           </Link>
         </div>
       </header>
@@ -809,40 +792,6 @@ export default function SettingsPage() {
                   )}
                 </div>
               )}
-            </Card>
-
-            {/* Data controls */}
-            <Card className="p-5">
-              <h2 className="font-display text-[15px] font-bold text-ink">Manage data</h2>
-              <p className="mt-0.5 text-[13px] text-muted">
-                Follows and settings are saved to your profile in this browser.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2.5">
-                <button
-                  onClick={restoreDefaults}
-                  className="rounded-full bg-primary px-4 py-2 text-[13px] font-semibold text-primary-ink transition-transform duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-bright active:scale-[0.97]"
-                >
-                  Restore demo defaults
-                </button>
-                <Link
-                  href="/setup"
-                  className="rounded-full border border-line bg-surface-2 px-4 py-2 text-[13px] font-semibold text-muted transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-3 hover:text-ink active:scale-[0.97]"
-                >
-                  Re-run setup
-                </Link>
-                <button
-                  onClick={clearAll}
-                  className="rounded-full border border-line bg-surface-2 px-4 py-2 text-[13px] font-semibold text-muted transition-[transform,background-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface-3 hover:text-ink active:scale-[0.97]"
-                >
-                  Clear all follows
-                </button>
-                <button
-                  onClick={() => router.push("/")}
-                  className="rounded-full px-4 py-2 text-[13px] font-semibold text-faint transition-colors hover:text-ink"
-                >
-                  Done
-                </button>
-              </div>
             </Card>
           </div>
         )}

@@ -16,7 +16,7 @@ import { loadUserData, pushPreferences, pushSettings } from "./sync";
    ─────────────────────────────────────────────────────────────────────────── */
 
 export const AVATAR_EMOJIS = [
-  "🏈", "⚾️", "🏒", "🥎", "🔥", "⚡️", "🦅", "🐂", "🦈", "🐺", "🐉", "👑",
+  "🏈", "🏀", "⚾️", "🏒", "🥎", "🔥", "⚡️", "🦅", "🐂", "🦈", "🐺", "🐉", "👑",
 ];
 
 export const AVATAR_COLORS = [
