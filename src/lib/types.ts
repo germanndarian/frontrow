@@ -5,8 +5,8 @@
    live ESPN data later means filling these same types — no component changes.
    ─────────────────────────────────────────────────────────────────────────── */
 
-export type LeagueId = "nfl" | "college-football" | "mlb" | "nhl";
-export type SportId = "football" | "baseball" | "hockey";
+export type LeagueId = "nfl" | "college-football" | "mlb" | "nhl" | "nba";
+export type SportId = "football" | "baseball" | "hockey" | "basketball";
 export type GameState = "pre" | "in" | "post";
 export type Outcome = "W" | "L" | "T";
 

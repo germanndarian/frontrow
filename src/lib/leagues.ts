@@ -12,9 +12,10 @@ export const SPORTS: Record<SportId, SportMeta> = {
   },
   baseball: { id: "baseball", name: "Baseball", leagues: ["mlb"] },
   hockey: { id: "hockey", name: "Hockey", leagues: ["nhl"] },
+  basketball: { id: "basketball", name: "Basketball", leagues: ["nba"] },
 };
 
-export const SPORT_ORDER: SportId[] = ["football", "baseball", "hockey"];
+export const SPORT_ORDER: SportId[] = ["football", "basketball", "baseball", "hockey"];
 
 export const LEAGUES: Record<LeagueId, LeagueMeta> = {
   mlb: {
@@ -26,6 +27,24 @@ export const LEAGUES: Record<LeagueId, LeagueMeta> = {
     fullName: "Major League Baseball",
     inSeason: true,
     seasonHint: "Regular season",
+    groupNoun: "Division",
+    standingsColumns: [
+      { key: "wins", label: "W" },
+      { key: "losses", label: "L" },
+      { key: "winPercent", label: "PCT", emphasis: true },
+      { key: "gamesBehind", label: "GB" },
+      { key: "streak", label: "STRK" },
+    ],
+  },
+  nba: {
+    id: "nba",
+    sport: "basketball",
+    espnSport: "basketball",
+    espnLeague: "nba",
+    name: "NBA",
+    fullName: "National Basketball Association",
+    inSeason: true,
+    seasonHint: "Playoffs",
     groupNoun: "Division",
     standingsColumns: [
       { key: "wins", label: "W" },
@@ -90,7 +109,7 @@ export const LEAGUES: Record<LeagueId, LeagueMeta> = {
   },
 };
 
-export const LEAGUE_ORDER: LeagueId[] = ["mlb", "nhl", "nfl", "college-football"];
+export const LEAGUE_ORDER: LeagueId[] = ["nba", "mlb", "nhl", "nfl", "college-football"];
 
 export function leaguesForSports(sports: SportId[]): LeagueId[] {
   return LEAGUE_ORDER.filter((id) => sports.includes(LEAGUES[id].sport));

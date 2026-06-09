@@ -27,6 +27,7 @@ const BRACKET_NAME: Record<LeagueId, string> = {
   mlb: "MLB Postseason",
   nfl: "NFL Playoffs",
   "college-football": "College Football Playoff",
+  nba: "NBA Playoffs",
 };
 
 function toState(s?: string): GameState {
@@ -54,7 +55,9 @@ function canonicalRound(note: string): string {
   if (/national championship/.test(n)) return "National Championship";
   if (/wild ?card/.test(n)) return "Wild Card";
   if (/divisional/.test(n)) return "Divisional Round";
-  if (/conference final|conf final|conference championship|^(eastern|western|east|west)\s+final\b/.test(n))
+  if (/conference semifinal|conf semifinal|^(eastern|western|east|west)\s+semifinals?\b/.test(n))
+    return "Conference Semifinals";
+  if (/conference final|conf final|conference championship|^(eastern|western|east|west)\s+finals?\b/.test(n))
     return "Conference Finals";
   if (/division series/.test(n)) return "Division Series";
   if (/championship series/.test(n)) return "Championship Series";
