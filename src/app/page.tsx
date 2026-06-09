@@ -665,12 +665,6 @@ export default function Home() {
                 </span>
                 Lakers<span className="x">＋</span>
               </span>
-              <span className="fav-chip" style={{ opacity: 0.55 }}>
-                <span className="mark" style={{ width: 26, height: 26, fontSize: 8, background: "#6CABDD" }}>
-                  MCI
-                </span>
-                Man City<span className="x">＋</span>
-              </span>
             </div>
           </div>
         </article>
