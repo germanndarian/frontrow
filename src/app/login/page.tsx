@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useAppReady, useIsAuthed } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/brand/Wordmark";
@@ -101,25 +101,23 @@ function Field({
   );
 }
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
   const ready = useAppReady();
   const authed = useIsAuthed();
   const { signIn, signUp, signInWithGoogle, signInWithGithub, continueAsGuest } = useAuth();
 
-  const [mode, setMode] = useState<Mode>("signin");
+  // Open straight into sign-up when the homepage links here with ?mode=signup.
+  const searchParams = useSearchParams();
+  const [mode, setMode] = useState<Mode>(
+    searchParams.get("mode") === "signup" ? "signup" : "signin",
+  );
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmSent, setConfirmSent] = useState(false);
-
-  // Open straight into sign-up when the homepage links here with ?mode=signup.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("mode") === "signup") setMode("signup");
-  }, []);
 
   useEffect(() => {
     if (ready && authed) router.replace("/dashboard");
@@ -332,5 +330,14 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// useSearchParams (read for ?mode=signup) requires a Suspense boundary.
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
   );
 }
