@@ -7,7 +7,6 @@ import { useAuth, useAppReady, useIsAuthed } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { Spinner } from "@/components/ui/States";
-import { ShaderBackdrop } from "@/components/system/ShaderBackdrop";
 
 type Mode = "signin" | "signup";
 
@@ -172,8 +171,7 @@ function LoginPageInner() {
 
   if (confirmSent) {
     return (
-      <div className="relative flex min-h-dvh flex-col items-center justify-center px-4 py-12">
-        <ShaderBackdrop />
+      <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-[400px] text-center">
           <Wordmark />
           <div className="mx-auto mt-8 grid h-14 w-14 place-items-center rounded-full border border-primary/40 bg-primary/12 text-primary-bright">
@@ -206,7 +204,6 @@ function LoginPageInner() {
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-4 py-12">
-      <ShaderBackdrop />
       <Link
         href="/"
         className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-line/60 bg-surface/50 px-3 py-1.5 text-[13px] font-semibold text-muted transition-colors hover:bg-surface-2 hover:text-ink sm:left-6 sm:top-6"
