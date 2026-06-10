@@ -317,6 +317,7 @@ export const TEAM_CARDS: Record<string, TeamCard> = {
       date: "2026-06-06T17:05:00Z",
     },
     scoring: [3, 6, 1, 8, 5, 2, 7, 4, 6, 4],
+    conceded: [2, 4, 3, 1, 6, 5, 1, 3, 2, 3],
   },
   edm: {
     team: TEAMS.edm,
@@ -335,6 +336,7 @@ export const TEAM_CARDS: Record<string, TeamCard> = {
       date: "2026-06-05T23:00:00Z",
     },
     scoring: [6, 1, 4, 2, 5, 3, 4, 1, 5, 2],
+    conceded: [3, 2, 2, 4, 1, 5, 3, 2, 3, 3],
   },
   phi: {
     team: TEAMS.phi,

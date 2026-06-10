@@ -220,7 +220,9 @@ export function normalizeTeamCard(
       };
     });
 
-  const scoring = completed.slice(-10).map((ev) => parseScore(pick(ev).me?.score) ?? 0);
+  const recent = completed.slice(-10);
+  const scoring = recent.map((ev) => parseScore(pick(ev).me?.score) ?? 0);
+  const conceded = recent.map((ev) => parseScore(pick(ev).opp?.score) ?? 0);
 
   const nextEv = upcoming[0];
   let next: TeamCard["next"] = null;
@@ -235,7 +237,7 @@ export function normalizeTeamCard(
     };
   }
 
-  return { team, form, next, scoring, placeholder: false };
+  return { team, form, next, scoring, conceded, placeholder: false };
 }
 
 /* ── schedule → ScheduleGame[] (full season, chronological) ─────────────── */

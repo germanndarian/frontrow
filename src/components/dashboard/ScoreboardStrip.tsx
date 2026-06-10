@@ -1,15 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Game, GameState, LeagueId } from "@/lib/types";
+import type { FollowedTeam, Game, LeagueId } from "@/lib/types";
 import { LEAGUES } from "@/lib/leagues";
-import { useScoreboard } from "@/lib/queries";
+import { useTeamSlate } from "@/lib/queries";
 import { GameCard } from "./GameCard";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState, ErrorState, Spinner } from "@/components/ui/States";
-
-const STATE_ORDER: Record<GameState, number> = { in: 0, pre: 1, post: 2 };
 
 function GameCardSkeleton() {
   return (
@@ -33,28 +31,21 @@ function GameCardSkeleton() {
 }
 
 export function ScoreboardStrip({
-  leagues,
+  teams,
   only,
   followedKeys,
 }: {
-  leagues: LeagueId[];
+  teams: FollowedTeam[];
   only?: LeagueId;
   followedKeys: Set<string>;
 }) {
-  const { data, isPending, isError, refetch, isFetching } = useScoreboard(leagues);
+  // Live + upcoming for the user's teams only, already in chronological order.
+  const { games, liveCount, isPending, isError, refetch, isFetching } = useTeamSlate(teams);
 
-  const sorted = useMemo<Game[]>(() => {
-    if (!data) return [];
-    return [...data]
-      .filter((g) => (only ? g.league === only : true))
-      .sort((a, b) => {
-        const s = STATE_ORDER[a.state] - STATE_ORDER[b.state];
-        if (s !== 0) return s;
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
-      });
-  }, [data, only]);
-
-  const liveCount = sorted.filter((g) => g.state === "in").length;
+  const sorted = useMemo<Game[]>(
+    () => (only ? games.filter((g) => g.league === only) : games),
+    [games, only],
+  );
 
   // Fade an edge only when there's actually hidden content past it, so the
   // resting first/last card keeps its border instead of bleeding into the mask.
@@ -110,7 +101,8 @@ export function ScoreboardStrip({
   }
 
   if (sorted.length === 0) {
-    const hints = (only ? [only] : leagues).map((l) => LEAGUES[l].name).join(" · ");
+    const teamLeagues = only ? [only] : [...new Set(teams.map((t) => t.league))];
+    const hints = teamLeagues.map((l) => LEAGUES[l].name).join(" · ");
     return (
       <Card>
         <EmptyState
@@ -120,8 +112,8 @@ export function ScoreboardStrip({
               <path d="M3 10h18M8 4v16" />
             </svg>
           }
-          title="No games on the slate"
-          body={`Nothing scheduled for ${hints} right now. Live scores will appear here the moment the next one starts.`}
+          title="No games for your teams"
+          body={`Nothing live or upcoming for your ${hints} teams right now. Their next games will appear here as they're scheduled.`}
         />
       </Card>
     );
