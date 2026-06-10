@@ -180,6 +180,8 @@ export interface TeamCard {
   } | null;
   /** Runs/points/goals scored across the recent stretch, oldest → newest. */
   scoring: number[];
+  /** Runs/points/goals allowed across the same stretch, oldest → newest. */
+  conceded?: number[];
   /** True when this team is in its league's current playoff bracket. */
   inPlayoffs?: boolean;
   /** True for a followed team we have no rich mock data for yet. */

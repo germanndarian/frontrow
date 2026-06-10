@@ -45,12 +45,19 @@ export function ScoreboardStrip({
 
   const sorted = useMemo<Game[]>(() => {
     if (!data) return [];
+    const time = (g: Game) => {
+      const t = new Date(g.date).getTime();
+      return Number.isNaN(t) ? Infinity : t; // dateless games sink to the end
+    };
     return [...data]
       .filter((g) => (only ? g.league === only : true))
       .sort((a, b) => {
+        // Live first, then upcoming, then final.
         const s = STATE_ORDER[a.state] - STATE_ORDER[b.state];
         if (s !== 0) return s;
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
+        // Live & upcoming read chronologically (soonest first); finished games
+        // show most-recent first so the latest results lead.
+        return a.state === "post" ? time(b) - time(a) : time(a) - time(b);
       });
   }, [data, only]);
 
