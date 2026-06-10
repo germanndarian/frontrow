@@ -79,12 +79,12 @@ export const ACCENTS: Record<AccentId, Accent> = {
   cobalt: {
     id: "cobalt",
     name: "Cobalt",
-    swatch: "oklch(0.645 0.168 257)",
+    swatch: "oklch(0.68 0.16 257)",
     vars: {
-      "--color-primary": "oklch(0.645 0.168 257)",
-      "--color-primary-bright": "oklch(0.72 0.158 256)",
+      "--color-primary": "oklch(0.68 0.16 257)",
+      "--color-primary-bright": "oklch(0.755 0.15 256)",
       "--color-primary-ink": LIGHT_INK,
-      "--glow-1": "oklch(0.645 0.168 257 / 0.16)",
+      "--glow-1": "oklch(0.68 0.16 257 / 0.16)",
       "--glow-2": "oklch(0.66 0.14 280 / 0.12)",
     },
   },

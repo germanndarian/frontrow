@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import "./home.css";
 
 /** A small arrow used on the accent CTAs. */
@@ -26,7 +27,7 @@ function Tick() {
 
 const Brand = () => (
   <a className="brand" href="#top">
-    <span className="brand__mark" />
+    <Image className="brand__mark" src="/stadium-logo.png" alt="FrontRow" width={28} height={28} />
     <span className="brand__word">
       FRONT<span>ROW</span>
     </span>
@@ -298,13 +299,13 @@ export default function Home() {
                 <svg className="ch-svg" viewBox="0 0 240 96" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF4D2E" stopOpacity="0.26" />
-                      <stop offset="100%" stopColor="#FF4D2E" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#3c82e6" stopOpacity="0.26" />
+                      <stop offset="100%" stopColor="#3c82e6" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                   <path d="M6 78 L6 70 L24 64 L42 66 L60 54 L78 44 L96 50 L114 40 L132 30 L150 36 L168 26 L186 18 L204 24 L222 14 L234 12 L234 78 Z" fill="url(#hg)" />
-                  <path d="M6 70 L24 64 L42 66 L60 54 L78 44 L96 50 L114 40 L132 30 L150 36 L168 26 L186 18 L204 24 L222 14 L234 12" fill="none" stroke="#FF4D2E" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                  <circle cx="234" cy="12" r="4" fill="#FF4D2E" stroke="#fff" strokeWidth="2" />
+                  <path d="M6 70 L24 64 L42 66 L60 54 L78 44 L96 50 L114 40 L132 30 L150 36 L168 26 L186 18 L204 24 L222 14 L234 12" fill="none" stroke="#3c82e6" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                  <circle cx="234" cy="12" r="4" fill="#3c82e6" stroke="#fff" strokeWidth="2" />
                 </svg>
               </article>
             </div>
@@ -317,7 +318,7 @@ export default function Home() {
         <div className="leagues__inner">
           <span className="leagues__label">All your leagues, one feed</span>
           <div className="leagues__list">
-            {["NFL", "NHL", "MLB", "NBA", "MLS", "NCAA", "EPL"].map((l) => (
+            {["NFL", "NHL", "MLB", "NBA", "NCAA"].map((l) => (
               <span className="league-name" key={l}>
                 {l}
               </span>
