@@ -64,6 +64,15 @@ export interface RawSeries {
   competitors?: { id?: string; wins?: number }[];
 }
 
+export interface RawOdds {
+  provider?: { name?: string; priority?: number };
+  /** Ready-made line, e.g. "DAL -3.5", "EVEN". */
+  details?: string;
+  /** Over/under total. */
+  overUnder?: number;
+  spread?: number;
+}
+
 export interface RawCompetition {
   competitors?: RawCompetitor[];
   status?: { type?: RawStatusType };
@@ -73,6 +82,7 @@ export interface RawCompetition {
   situation?: RawSituation;
   series?: RawSeries;
   notes?: { headline?: string }[];
+  odds?: RawOdds[];
 }
 
 export interface RawEvent {

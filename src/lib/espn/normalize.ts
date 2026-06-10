@@ -5,6 +5,7 @@ import type {
   Game,
   GameSide,
   LeagueId,
+  OddsLine,
   Outcome,
   Player,
   ScheduleGame,
@@ -108,6 +109,30 @@ function buildSituation(
   return { situation: undefined, lastPlay };
 }
 
+/**
+ * Pick the best pre-game betting line from the scoreboard's `odds` array.
+ * Prefers the priority-1 provider (ESPN BET), else the first entry with a
+ * usable `details` line. Returns undefined when there's nothing meaningful.
+ */
+function extractOdds(comp: RawCompetition): OddsLine | undefined {
+  const list = comp.odds ?? [];
+  if (list.length === 0) return undefined;
+  const chosen =
+    list.find((o) => o.provider?.priority === 1 && o.details?.trim()) ??
+    list.find((o) => o.details?.trim()) ??
+    list[0];
+
+  const details = chosen.details?.trim();
+  const overUnder = typeof chosen.overUnder === "number" ? chosen.overUnder : null;
+  if (!details && overUnder == null) return undefined;
+
+  return {
+    details: details || "Even",
+    overUnder,
+    provider: chosen.provider?.name?.trim() || undefined,
+  };
+}
+
 export function normalizeScoreboard(raw: RawScoreboard, league: LeagueId): Game[] {
   const sport = LEAGUES[league].espnSport;
   return (raw.events ?? []).map((ev): Game => {
@@ -135,6 +160,8 @@ export function normalizeScoreboard(raw: RawScoreboard, league: LeagueId): Game[
       situation: sit.situation,
       lastPlay: sit.lastPlay,
       period: state === "in" ? st.shortDetail ?? "" : undefined,
+      // Odds are a pre-game concept; skip them once a game is live/final.
+      odds: state === "pre" ? extractOdds(comp) : undefined,
     };
   });
 }

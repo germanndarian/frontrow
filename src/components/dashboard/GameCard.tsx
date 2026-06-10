@@ -134,11 +134,24 @@ export function GameCard({
           </div>
         )}
         {game.state === "pre" && (
-          <div className="flex items-center justify-between text-[12px]">
-            <span className="font-semibold text-ink">{relativeTime(game.date)}</span>
-            <span className="truncate pl-2 text-faint">
-              {[game.broadcast, game.venue].filter(Boolean).join(" · ")}
-            </span>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between text-[12px]">
+              <span className="font-semibold text-ink">{relativeTime(game.date)}</span>
+              <span className="truncate pl-2 text-faint">
+                {[game.broadcast, game.venue].filter(Boolean).join(" · ")}
+              </span>
+            </div>
+            {game.odds && (
+              <div className="flex items-center gap-2 text-[12px]">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-[0.1em] text-faint">
+                  Odds
+                </span>
+                <span className="font-semibold text-ink">{game.odds.details}</span>
+                {game.odds.overUnder != null && (
+                  <span className="text-muted">O/U {game.odds.overUnder}</span>
+                )}
+              </div>
+            )}
           </div>
         )}
         {game.state === "post" && (
