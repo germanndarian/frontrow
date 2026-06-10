@@ -62,6 +62,16 @@ export interface GameSide {
   rank?: number; // AP rank for college football
 }
 
+/** Pre-game betting line, sourced from the ESPN scoreboard's `odds`. */
+export interface OddsLine {
+  /** Favorite + spread, e.g. "DAL -3.5" (or "EVEN"/"PK" for a pick'em). */
+  details: string;
+  /** Over/under total points, when available. */
+  overUnder: number | null;
+  /** Sportsbook name, e.g. "ESPN BET". */
+  provider?: string;
+}
+
 export interface Game {
   id: string;
   league: LeagueId;
@@ -78,6 +88,8 @@ export interface Game {
   situation?: string;
   lastPlay?: string;
   period?: string;
+  /** Pre-game only: betting line when the scoreboard provides one. */
+  odds?: OddsLine;
 }
 
 export interface StandingRow {
