@@ -19,6 +19,7 @@ import { SeasonTrendCard } from "./SeasonTrendCard";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
+import { ShaderBackdrop } from "@/components/system/ShaderBackdrop";
 
 function greeting() {
   const h = new Date().getHours();
@@ -109,6 +110,7 @@ export function Dashboard() {
   if (!hydrated) {
     return (
       <>
+        <ShaderBackdrop />
         <AppHeader liveCount={0} />
         <DashboardLoading />
       </>
@@ -119,6 +121,7 @@ export function Dashboard() {
 
   return (
     <>
+      <ShaderBackdrop />
       <AppHeader liveCount={liveCount} />
 
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-7 sm:px-6">
