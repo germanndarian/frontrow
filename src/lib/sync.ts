@@ -7,6 +7,7 @@ import {
   DEFAULT_SETTINGS,
   useSettings,
   type AccentId,
+  type Appearance,
   type AppSettings,
   type Density,
   type Radius,
@@ -33,6 +34,7 @@ interface PreferencesRow {
 
 interface SettingsRow {
   user_id: string;
+  appearance: Appearance;
   accent: AccentId;
   radius: Radius;
   density: Density;
@@ -45,6 +47,7 @@ interface SettingsRow {
 
 function settingsFromRow(r: SettingsRow): AppSettings {
   return {
+    appearance: r.appearance ?? DEFAULT_SETTINGS.appearance,
     accent: r.accent ?? DEFAULT_SETTINGS.accent,
     radius: r.radius ?? DEFAULT_SETTINGS.radius,
     density: r.density ?? DEFAULT_SETTINGS.density,
@@ -59,6 +62,7 @@ function settingsFromRow(r: SettingsRow): AppSettings {
 function settingsToRow(s: AppSettings, userId: string): SettingsRow {
   return {
     user_id: userId,
+    appearance: s.appearance,
     accent: s.accent,
     radius: s.radius,
     density: s.density,

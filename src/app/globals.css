@@ -66,6 +66,35 @@
   --z-toast: 70;
 }
 
+/* ───────────────────────────────────────────────────────────────────────────
+   LIGHT THEME (default) — the cobalt theme that matches the marketing homepage.
+   The dark midnight slate above is the base; the "dark" appearance setting just
+   removes this override. Surfaces/lines/ink mirror the homepage palette exactly
+   (cream bg, white cards, #131313 ink); signals are darkened for contrast on
+   light. Unlayered so it always wins over the @theme defaults. The accent
+   (cobalt) and radii are identical in both themes, so they aren't repeated here.
+   ─────────────────────────────────────────────────────────────────────────── */
+html[data-appearance="light"] {
+  --color-bg: #f1f1ec;
+  --color-bg-2: #eae9e4;
+  --color-surface: #ffffff;
+  --color-surface-2: #f8f7f3;
+  --color-surface-3: #f1f0ea;
+
+  --color-line: #e6e5df;
+  --color-line-soft: #eeede8;
+
+  --color-ink: #131313;
+  --color-muted: #46464a;
+  --color-faint: #8c8c86;
+
+  /* Signals, darkened so they stay legible on white */
+  --color-live: oklch(0.58 0.225 25);
+  --color-win: oklch(0.6 0.16 158);
+  --color-loss: oklch(0.58 0.21 25);
+  --color-gold: oklch(0.66 0.13 74);
+}
+
 @layer base {
   * {
     border-color: var(--color-line-soft);
