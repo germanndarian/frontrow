@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useAppReady, useIsAuthed } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -203,6 +204,15 @@ function LoginPageInner() {
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-4 py-12">
+      <Link
+        href="/"
+        className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full border border-line/60 bg-surface/50 px-3 py-1.5 text-[13px] font-semibold text-muted transition-colors hover:bg-surface-2 hover:text-ink sm:left-6 sm:top-6"
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M19 12H5M11 18l-6-6 6-6" />
+        </svg>
+        Home
+      </Link>
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
           <Wordmark />

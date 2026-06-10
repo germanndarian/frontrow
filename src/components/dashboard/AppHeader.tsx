@@ -30,6 +30,17 @@ export function AppHeader({ liveCount }: { liveCount: number }) {
           <span className="hidden text-[13px] font-medium text-faint md:inline">
             {todayLabel()}
           </span>
+          <Link
+            href="/"
+            title="Back to home page"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line/60 bg-surface/50 px-2.5 py-1.5 text-[13px] font-semibold text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M3 10.5 12 3l9 7.5" />
+              <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
+            </svg>
+            <span className="hidden sm:inline">Home</span>
+          </Link>
           <AccountMenu />
         </div>
       </div>
