@@ -22,6 +22,8 @@ export type AccentId =
 
 export type Radius = "sharp" | "default" | "round";
 export type Density = "comfortable" | "compact";
+/** Light = the cobalt theme matching the homepage; dark = the original midnight look. */
+export type Appearance = "light" | "dark";
 
 /** Dashboard sections, in default display order. */
 export type SectionId =
@@ -33,6 +35,7 @@ export type SectionId =
 
 export interface AppSettings {
   /* Appearance */
+  appearance: Appearance;
   accent: AccentId;
   radius: Radius;
   density: Density;
@@ -45,6 +48,7 @@ export interface AppSettings {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
+  appearance: "light",
   accent: "cobalt",
   radius: "default",
   density: "comfortable",
@@ -242,6 +246,7 @@ export const useSettings = create<SettingsState>()((set) => ({
 /** Plain snapshot of just the persisted fields (no methods). */
 export function snapshotSettings(s: AppSettings): AppSettings {
   return {
+    appearance: s.appearance,
     accent: s.accent,
     radius: s.radius,
     density: s.density,
@@ -270,6 +275,7 @@ export function applySettings(s: AppSettings) {
   // Compact density gently scales the whole rem-based type + spacing ramp.
   el.style.fontSize = s.density === "compact" ? "15px" : "16px";
 
+  el.dataset.appearance = s.appearance;
   el.dataset.reduceMotion = s.reduceMotion ? "true" : "false";
   el.dataset.glow = s.backgroundGlow ? "on" : "off";
 }

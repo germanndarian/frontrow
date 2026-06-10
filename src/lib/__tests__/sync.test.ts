@@ -93,6 +93,7 @@ describe("loadUserData", () => {
 describe("pushSettings", () => {
   it("maps store fields to snake_case columns", async () => {
     useSettings.getState().load({
+      appearance: "dark",
       accent: "emerald",
       radius: "sharp",
       density: "compact",
@@ -110,6 +111,7 @@ describe("pushSettings", () => {
     expect(upserts[0].table).toBe("settings");
     expect(upserts[0].row).toMatchObject({
       user_id: "u1",
+      appearance: "dark",
       accent: "emerald",
       reduce_motion: true,
       background_glow: false,

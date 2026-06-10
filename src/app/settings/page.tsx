@@ -19,6 +19,7 @@ import {
   SECTION_LABELS,
   SECTION_ORDER,
   type AccentId,
+  type Appearance,
   type Density,
   type Radius,
 } from "@/lib/settings";
@@ -429,6 +430,7 @@ function ProfileCard() {
 /* ── Appearance ──────────────────────────────────────────────────────────── */
 
 function AppearanceCard() {
+  const appearance = useSettings((s) => s.appearance);
   const accent = useSettings((s) => s.accent);
   const radius = useSettings((s) => s.radius);
   const density = useSettings((s) => s.density);
@@ -440,6 +442,24 @@ function AppearanceCard() {
     <Card className="p-5">
       <h2 className="font-display text-[15px] font-bold text-ink">Appearance</h2>
       <p className="mt-0.5 text-[13px] text-muted">Tune the look to taste — changes apply instantly.</p>
+
+      {/* Theme */}
+      <div className="mt-4">
+        <SettingRow
+          label="Theme"
+          hint="Light matches the homepage; dark is the original midnight look."
+          control={
+            <Segmented
+              value={appearance}
+              onChange={(v) => set("appearance", v as Appearance)}
+              options={[
+                { label: "Light", value: "light" },
+                { label: "Dark", value: "dark" },
+              ]}
+            />
+          }
+        />
+      </div>
 
       {/* Accent */}
       <div className="mt-4">

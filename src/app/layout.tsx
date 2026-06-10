@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#11151d",
+  themeColor: "#f1f1ec",
   width: "device-width",
   initialScale: 1,
 };
@@ -50,6 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-appearance="light"
       className={`${archivo.variable} ${hanken.variable} ${geistMono.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
