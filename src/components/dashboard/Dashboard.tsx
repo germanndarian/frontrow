@@ -16,6 +16,7 @@ import { TeamCardView } from "./TeamCardView";
 import { PlayerCardView } from "./PlayerCardView";
 import { StandingsCard } from "./StandingsCard";
 import { SeasonTrendCard } from "./SeasonTrendCard";
+import { TeamStatCards } from "./TeamStatCards";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
@@ -67,15 +68,21 @@ export function Dashboard() {
     return pref !== "all" && followed.includes(pref) ? pref : "all";
   });
 
-  // Shared scoreboard query (header live count + strip read the same cache).
-  const scoreboard = useScoreboard(leagues);
-  const liveCount =
-    scoreboard.data?.filter((g) => g.state === "in").length ?? 0;
-
   const followedKeys = useMemo(
     () => new Set(teams.map((t) => `${t.league}:${t.teamId}`)),
     [teams],
   );
+
+  // Shared scoreboard query (header live count + strip read the same cache).
+  // Count only the user's own teams that are live, matching the strip + copy.
+  const scoreboard = useScoreboard(leagues);
+  const liveCount =
+    scoreboard.data?.filter(
+      (g) =>
+        g.state === "in" &&
+        (followedKeys.has(`${g.league}:${g.home.teamId}`) ||
+          followedKeys.has(`${g.league}:${g.away.teamId}`)),
+    ).length ?? 0;
 
   const visibleLeagues = useMemo(
     () => (selected === "all" ? leagues : leagues.filter((l) => l === selected)),
@@ -166,7 +173,7 @@ export function Dashboard() {
             {!isHidden("scoreboard") && (
               <Section title="Live & Upcoming" className="rise">
                 <ScoreboardStrip
-                  leagues={leagues}
+                  teams={teams}
                   only={selected === "all" ? undefined : selected}
                   followedKeys={followedKeys}
                 />
@@ -203,10 +210,13 @@ export function Dashboard() {
               </Section>
             )}
 
-            {/* Season trend (chart) — driven by the selected team */}
+            {/* Season stats — driven by the selected team */}
             {!isHidden("trend") && spotlightTeam && (
               <Section title="Season Stats" className="rise">
-                <SeasonTrendCard follow={spotlightTeam} />
+                <div className="space-y-4">
+                  <TeamStatCards follow={spotlightTeam} />
+                  <SeasonTrendCard follow={spotlightTeam} />
+                </div>
               </Section>
             )}
 
