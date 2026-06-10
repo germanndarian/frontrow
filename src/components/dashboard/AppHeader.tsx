@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { AccountMenu } from "./AccountMenu";
 
@@ -13,6 +15,15 @@ function todayLabel() {
 }
 
 export function AppHeader({ liveCount }: { liveCount: number }) {
+  const router = useRouter();
+  const signOut = useAuth((s) => s.signOut);
+
+  // Leaving the dashboard for the homepage ends the session, by design.
+  async function goHome() {
+    await signOut();
+    router.replace("/");
+  }
+
   return (
     <header className="sticky top-0 z-30 border-b border-line/60 bg-bg/72 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -30,9 +41,10 @@ export function AppHeader({ liveCount }: { liveCount: number }) {
           <span className="hidden text-[13px] font-medium text-faint md:inline">
             {todayLabel()}
           </span>
-          <Link
-            href="/"
-            title="Back to home page"
+          <button
+            type="button"
+            onClick={goHome}
+            title="Log out and return to the home page"
             className="inline-flex items-center gap-1.5 rounded-full border border-line/60 bg-surface/50 px-2.5 py-1.5 text-[13px] font-semibold text-muted transition-colors hover:bg-surface-2 hover:text-ink"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -40,7 +52,7 @@ export function AppHeader({ liveCount }: { liveCount: number }) {
               <path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" />
             </svg>
             <span className="hidden sm:inline">Home</span>
-          </Link>
+          </button>
           <AccountMenu />
         </div>
       </div>

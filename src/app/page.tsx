@@ -162,7 +162,6 @@ export default function Home() {
           <a href="#features">Features</a>
           <a href="#how">How it works</a>
           <a href="#leagues">Leagues</a>
-          <Link href="/dashboard">Dashboard</Link>
         </nav>
         <div className="nav__right">
           <Link className="nav__login" href="/login">
