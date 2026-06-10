@@ -27,12 +27,12 @@
 
   /* Brand — cobalt, lifted for dark surfaces. Overridden at runtime by the
      chosen accent (see lib/settings.ts → applySettings). */
-  --color-primary: oklch(0.645 0.168 257);
-  --color-primary-bright: oklch(0.72 0.158 256);
+  --color-primary: oklch(0.68 0.16 257);
+  --color-primary-bright: oklch(0.755 0.15 256);
   --color-primary-ink: oklch(0.99 0.01 256);
 
   /* Floodlight washes bled over the page background. Accent overrides these. */
-  --glow-1: oklch(0.645 0.168 257 / 0.16);
+  --glow-1: oklch(0.68 0.16 257 / 0.16);
   --glow-2: oklch(0.66 0.14 280 / 0.12);
 
   /* Signals */
@@ -98,7 +98,7 @@
   }
 
   ::selection {
-    background-color: oklch(0.645 0.168 257 / 0.32);
+    background-color: oklch(0.68 0.16 257 / 0.32);
     color: var(--color-ink);
   }
 
