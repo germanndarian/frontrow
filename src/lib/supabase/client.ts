@@ -13,6 +13,15 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  */
 let browserClient: SupabaseClient | undefined;
 
+/** Whether the public Supabase env vars are present. When they're not (e.g. a
+    local checkout with no `.env.local`), the app degrades to demo mode instead
+    of crashing on client creation. */
+export function isSupabaseConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  );
+}
+
 export function createClient(): SupabaseClient {
   if (!browserClient) {
     browserClient = createBrowserClient(

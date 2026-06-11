@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useDemoTap } from "@/lib/useDemoTap";
 import "./home.css";
 
 /** A small arrow used on the accent CTAs. */
@@ -25,14 +26,18 @@ function Tick() {
   );
 }
 
-const Brand = () => (
-  <a className="brand" href="#top">
-    <Image className="brand__mark" src="/stadium-logo.png" alt="FrontRow" width={28} height={28} />
-    <span className="brand__word">
-      FRONT<span>ROW</span>
-    </span>
-  </a>
-);
+const Brand = () => {
+  // Tap the logo five times to slip into demo mode (no account needed).
+  const demoTap = useDemoTap();
+  return (
+    <a className="brand" href="#top" onClick={demoTap}>
+      <Image className="brand__mark" src="/stadium-logo.png" alt="FrontRow" width={28} height={28} />
+      <span className="brand__word">
+        FRONT<span>ROW</span>
+      </span>
+    </a>
+  );
+};
 
 export default function Home() {
   const rootRef = useRef<HTMLDivElement>(null);

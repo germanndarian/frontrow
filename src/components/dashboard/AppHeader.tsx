@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { isDemoMode } from "@/lib/demo";
+import { useHasHydrated } from "@/lib/store";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { AccountMenu } from "./AccountMenu";
 
@@ -17,6 +19,8 @@ function todayLabel() {
 export function AppHeader({ liveCount }: { liveCount: number }) {
   const router = useRouter();
   const signOut = useAuth((s) => s.signOut);
+  const hydrated = useHasHydrated();
+  const demo = hydrated && isDemoMode();
 
   // Leaving the dashboard for the homepage ends the session, by design.
   async function goHome() {
@@ -32,6 +36,14 @@ export function AppHeader({ liveCount }: { liveCount: number }) {
         </Link>
 
         <div className="flex items-center gap-2.5 sm:gap-3.5">
+          {demo && (
+            <span
+              title="Previewing the offline demo dataset — no account, sample data"
+              className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 bg-gold/12 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-gold"
+            >
+              Demo
+            </span>
+          )}
           {liveCount > 0 && (
             <span className="hidden items-center gap-1.5 rounded-full bg-live/12 px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.08em] text-live sm:inline-flex">
               <span className="live-dot" />

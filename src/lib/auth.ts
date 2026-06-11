@@ -2,10 +2,12 @@
 
 import { create } from "zustand";
 import type { User } from "@supabase/supabase-js";
-import { createClient } from "./supabase/client";
+import { createClient, isSupabaseConfigured } from "./supabase/client";
 import { usePreferences } from "./store";
 import { useSettings } from "./settings";
 import { loadUserData, pushPreferences, pushSettings } from "./sync";
+import { isDemoMode, setDemoFlag } from "./demo";
+import { DEFAULT_PREFERENCES } from "./mock";
 
 /* ───────────────────────────────────────────────────────────────────────────
    Auth on Supabase. The session is a signed JWT kept in cookies by
@@ -98,6 +100,20 @@ export const useAuth = create<AuthState>()((set, get) => ({
   init: () => {
     if (initialized) return;
     initialized = true;
+
+    // Demo mode (the logo easter egg or NEXT_PUBLIC_USE_MOCK) — and the graceful
+    // path when Supabase isn't configured locally: skip real auth and run as a
+    // seeded guest against the mock dataset instead of crashing on client init.
+    if (isDemoMode()) {
+      usePreferences.setState({ ...DEFAULT_PREFERENCES });
+      set({ status: "guest", dataReady: true });
+      return;
+    }
+    if (!isSupabaseConfigured()) {
+      set({ status: "out" });
+      return;
+    }
+
     const supabase = sb();
 
     // Fetch the profile row + follows + settings, then mark the session ready.
@@ -204,7 +220,16 @@ export const useAuth = create<AuthState>()((set, get) => ({
   },
 
   signOut: async () => {
-    await sb().auth.signOut();
+    // Leaving demo mode, or signing out for real — never let a missing client
+    // throw on the way out.
+    if (isSupabaseConfigured()) {
+      try {
+        await sb().auth.signOut();
+      } catch {
+        /* ignore — we're tearing the session down regardless */
+      }
+    }
+    setDemoFlag(false);
     clearStores();
     set({ user: null, profile: null, dataReady: false, status: "out" });
   },
