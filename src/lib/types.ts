@@ -188,6 +188,91 @@ export interface TeamCard {
   placeholder?: boolean;
 }
 
+/* ── Game Center (single-game live detail) ──────────────────────────────── */
+
+/** One sample on the win-probability curve, plotted in sequence order. */
+export interface WinProbPoint {
+  /** 0-based index along the game's play sequence (the x-axis). */
+  i: number;
+  /** Home team's win probability, 0–100. */
+  home: number;
+}
+
+/** A scoring event for the scoring timeline. */
+export interface ScoringPlay {
+  id: string;
+  period: number;
+  periodLabel: string; // "Q2", "P3", "9th"
+  clock: string; // "13:58"
+  teamAbbr: string;
+  teamLogo: string;
+  text: string; // "Harrison Butker 32 Yd Field Goal"
+  scoreType?: string; // "FG", "TD"
+  homeScore: number;
+  awayScore: number;
+}
+
+/** A single play in the play-by-play feed. */
+export interface PlayByPlay {
+  id: string;
+  seq: number;
+  period: number;
+  periodLabel: string;
+  clock: string;
+  text: string;
+  scoring: boolean;
+  teamAbbr: string | null;
+  homeScore: number | null;
+  awayScore: number | null;
+}
+
+/** A football possession, for the drive/possession indicator. */
+export interface DriveSummary {
+  id: string;
+  teamAbbr: string;
+  teamLogo: string;
+  description: string; // "8 plays, 75 yards, 4:12"
+  result: string; // "Touchdown", "Punt"
+  isScore: boolean;
+}
+
+/** A per-team statistical leader (points/rebounds/passing/etc.). */
+export interface GameLeader {
+  category: string; // "Points"
+  teamAbbr: string;
+  playerName: string;
+  headshot: string;
+  position: string;
+  statValue: string; // "40"
+  detail?: string; // "40 PTS, 6 REB, 5 AST"
+}
+
+/** The full single-game payload behind the Game Center view. */
+export interface GameSummary {
+  id: string;
+  league: LeagueId;
+  state: GameState;
+  statusDetail: string;
+  shortDetail: string;
+  date: string; // ISO
+  home: GameSide;
+  away: GameSide;
+  venue?: string;
+  broadcast?: string;
+  /** Football-only: the abbr of the team with the ball while live, else null. */
+  possession: string | null;
+  /** Whether a usable win-probability curve is available. */
+  hasWinProb: boolean;
+  winProbability: WinProbPoint[];
+  /** Scoring events, chronological (oldest → newest). */
+  scoringPlays: ScoringPlay[];
+  /** Play-by-play, most-recent-first, capped for payload size. */
+  plays: PlayByPlay[];
+  /** Football drives, most-recent-first; empty for other sports. */
+  drives: DriveSummary[];
+  leaders: GameLeader[];
+}
+
 /* ── Playoff bracket ────────────────────────────────────────────────────── */
 
 export type MatchupFormat = "series" | "game";

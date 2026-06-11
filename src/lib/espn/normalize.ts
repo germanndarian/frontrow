@@ -2,30 +2,43 @@ import { LEAGUES } from "@/lib/leagues";
 import { hex } from "@/lib/utils";
 import type { CatalogPlayer, CatalogTeam } from "@/lib/catalog";
 import type {
+  DriveSummary,
   Game,
+  GameLeader,
   GameSide,
+  GameState,
+  GameSummary,
   LeagueId,
   OddsLine,
   Outcome,
+  PlayByPlay,
   Player,
   ScheduleGame,
+  ScoringPlay,
   StandingsGroup,
   Team,
   TeamCard,
+  WinProbPoint,
 } from "@/lib/types";
 import type {
   RawAthlete,
   RawCompetition,
   RawCompetitor,
+  RawDrive,
   RawEvent,
   RawGamelog,
+  RawPeriod,
+  RawPlay,
   RawRoster,
   RawRosterPlayer,
   RawScore,
   RawScoreboard,
   RawSchedule,
+  RawScoringPlay,
   RawStandingNode,
   RawStandings,
+  RawSummary,
+  RawSummaryCompetitor,
   RawTeam,
   RawTeamDetail,
   RawTeamsList,
@@ -447,4 +460,176 @@ export function normalizeRoster(raw: RawRoster, league: LeagueId): CatalogPlayer
       position: p.position?.abbreviation ?? "",
       headshot: p.headshot?.href ?? "",
     }));
+}
+
+/* ── summary → GameSummary (single-game Game Center) ─────────────────────── */
+
+/** A short period label that reads the same across sports the chart serves. */
+function periodLabel(sport: string, p?: RawPeriod): string {
+  const n = p?.number;
+  if (n == null) return "";
+  if (sport === "hockey") return n > 3 ? (n === 4 ? "OT" : `OT${n - 3}`) : `P${n}`;
+  if (sport === "baseball") return ordinal(n);
+  // football & basketball both run in numbered quarters, then overtime.
+  return n > 4 ? (n === 5 ? "OT" : `OT${n - 4}`) : `Q${n}`;
+}
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
+}
+
+function clampPct(v: number): number {
+  return Math.round(Math.max(0, Math.min(100, v)) * 10) / 10;
+}
+
+function summarySide(c?: RawSummaryCompetitor): GameSide {
+  const t = c?.team ?? {};
+  return {
+    teamId: t.id ?? "",
+    abbreviation: t.abbreviation ?? "",
+    displayName: t.displayName ?? "",
+    shortName: t.shortDisplayName ?? t.name ?? t.displayName ?? "",
+    logo: teamLogo(t),
+    color: hex(t.color),
+    score: parseScore(c?.score),
+    record:
+      c?.records?.find((r) => r.type === "total")?.summary ??
+      c?.records?.[0]?.summary ??
+      c?.record?.find((r) => r.type === "total")?.summary ??
+      c?.record?.[0]?.summary ??
+      null,
+    winner: !!c?.winner,
+  };
+}
+
+export function normalizeSummary(
+  raw: RawSummary,
+  league: LeagueId,
+  eventId: string,
+): GameSummary {
+  const sport = LEAGUES[league].espnSport;
+  const comp = raw.header?.competitions?.[0] ?? {};
+  const cs = comp.competitors ?? [];
+  const homeC = cs.find((c) => c.homeAway === "home") ?? cs[0];
+  const awayC = cs.find((c) => c.homeAway === "away") ?? cs[1];
+  const st = comp.status?.type ?? {};
+  const state: GameState = st.state === "in" || st.state === "post" ? st.state : "pre";
+
+  const broadcast =
+    comp.broadcasts?.find((b) => b.media?.shortName)?.media?.shortName ??
+    comp.broadcasts?.find((b) => b.names?.length)?.names?.[0];
+
+  const winProbability: WinProbPoint[] = (raw.winprobability ?? []).map((w, i) => ({
+    i,
+    home: clampPct((w.homeWinPercentage ?? 0) * 100),
+  }));
+
+  // Football/hockey/baseball ship a dedicated scoringPlays list; basketball
+  // doesn't, so fall back to the flagged scoring plays in the play-by-play.
+  const scoringSource: RawScoringPlay[] = raw.scoringPlays?.length
+    ? raw.scoringPlays
+    : (raw.plays ?? [])
+        .filter((p) => p.scoringPlay)
+        .map((p) => ({
+          id: p.id,
+          text: p.text,
+          period: p.period,
+          clock: p.clock,
+          team: p.team,
+          homeScore: p.homeScore,
+          awayScore: p.awayScore,
+        }));
+
+  const scoringPlays: ScoringPlay[] = scoringSource.map((sp) => ({
+    id: sp.id ?? "",
+    period: sp.period?.number ?? 0,
+    periodLabel: periodLabel(sport, sp.period),
+    clock: sp.clock?.displayValue ?? "",
+    teamAbbr: sp.team?.abbreviation ?? "",
+    teamLogo: teamLogo(sp.team),
+    text: sp.text ?? sp.shortText ?? "",
+    scoreType: sp.scoringType?.abbreviation ?? sp.type?.abbreviation,
+    homeScore: typeof sp.homeScore === "number" ? sp.homeScore : 0,
+    awayScore: typeof sp.awayScore === "number" ? sp.awayScore : 0,
+  }));
+
+  // Most-recent-first, capped — the feed only ever shows the latest stretch.
+  const plays: PlayByPlay[] = (raw.plays ?? [])
+    .map(
+      (p: RawPlay): PlayByPlay => ({
+        id: p.id ?? "",
+        seq: Number(p.sequenceNumber) || 0,
+        period: p.period?.number ?? 0,
+        periodLabel: periodLabel(sport, p.period),
+        clock: p.clock?.displayValue ?? "",
+        text: p.text ?? p.shortText ?? "",
+        scoring: !!p.scoringPlay,
+        teamAbbr: p.team?.abbreviation ?? null,
+        homeScore: typeof p.homeScore === "number" ? p.homeScore : null,
+        awayScore: typeof p.awayScore === "number" ? p.awayScore : null,
+      }),
+    )
+    .reverse()
+    .slice(0, 100);
+
+  // Drives are football-only. Current (live) drive first, then prior ones newest-first.
+  const driveSource: RawDrive[] = [];
+  if (raw.drives?.current) driveSource.push(raw.drives.current);
+  driveSource.push(...[...(raw.drives?.previous ?? [])].reverse());
+  const drives: DriveSummary[] = driveSource
+    .map((d) => ({
+      id: d.id ?? "",
+      teamAbbr: d.team?.abbreviation ?? "",
+      teamLogo: teamLogo(d.team),
+      description: d.description ?? "",
+      result: d.displayResult ?? d.result ?? "",
+      isScore: !!d.isScore,
+    }))
+    .slice(0, 24);
+
+  const possession =
+    sport === "football" && state === "in"
+      ? raw.drives?.current?.team?.abbreviation ?? null
+      : null;
+
+  const leaders: GameLeader[] = (raw.leaders ?? []).flatMap((tl) => {
+    const teamAbbr = tl.team?.abbreviation ?? "";
+    return (tl.leaders ?? [])
+      .map((cat): GameLeader => {
+        const top = cat.leaders?.[0];
+        const ath = top?.athlete;
+        return {
+          category: cat.displayName ?? cat.name ?? "",
+          teamAbbr,
+          playerName: ath?.displayName ?? ath?.shortName ?? "",
+          headshot: ath?.headshot?.href ?? "",
+          position: ath?.position?.abbreviation ?? "",
+          statValue: top?.displayValue ?? "",
+          detail: top?.summary,
+        };
+      })
+      .filter((l) => l.playerName);
+  });
+
+  return {
+    id: raw.header?.id ?? eventId,
+    league,
+    state,
+    statusDetail: st.detail ?? "",
+    shortDetail: st.shortDetail ?? st.detail ?? "",
+    date: comp.date ?? "",
+    home: summarySide(homeC),
+    away: summarySide(awayC),
+    venue: raw.gameInfo?.venue?.fullName,
+    broadcast: broadcast || undefined,
+    possession,
+    hasWinProb: winProbability.length > 1,
+    winProbability,
+    scoringPlays,
+    plays,
+    drives,
+    leaders,
+  };
 }

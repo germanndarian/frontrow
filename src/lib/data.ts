@@ -1,5 +1,6 @@
 import type {
   Game,
+  GameSummary,
   LeagueId,
   PlayoffBracket,
   Player,
@@ -83,6 +84,11 @@ export async function getRostersForTeams(
 export async function getPlayoffBracket(league: LeagueId): Promise<PlayoffBracket> {
   if (USE_MOCK) return (await import("./data.mock")).getPlayoffBracket(league);
   return get<PlayoffBracket>(`/api/playoffs/${league}`);
+}
+
+export async function getSummary(league: LeagueId, id: string): Promise<GameSummary> {
+  if (USE_MOCK) return (await import("./data.mock")).getSummary(league, id);
+  return get<GameSummary>(`/api/summary/${league}/${id}`);
 }
 
 /** True if any game in a set is currently live (drives poll cadence). */

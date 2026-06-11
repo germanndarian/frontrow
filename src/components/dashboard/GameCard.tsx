@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import type { Game, GameSide } from "@/lib/types";
 import { LEAGUES } from "@/lib/leagues";
@@ -90,11 +91,14 @@ export function GameCard({
       : false;
 
   return (
-    <div
+    <Link
+      href={`/game/${game.league}/${game.id}`}
+      aria-label={`${game.away.displayName} at ${game.home.displayName} — open game center`}
       className={cn(
-        "flex w-[270px] shrink-0 snap-start flex-col rounded-md border bg-surface/70 p-3.5",
-        "transition-colors duration-200",
-        isFollowed ? "border-primary/35" : "border-line/60",
+        "group flex w-[270px] shrink-0 snap-start flex-col rounded-md border bg-surface/70 p-3.5",
+        "transition-[transform,border-color,background-color] duration-200",
+        "hover:-translate-y-0.5 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+        isFollowed ? "border-primary/35 hover:border-primary/60" : "border-line/60 hover:border-line",
       )}
     >
       <div className="mb-2.5 flex items-center justify-between">
@@ -161,6 +165,6 @@ export function GameCard({
           </div>
         )}
       </div>
-    </div>
+    </Link>
   );
 }

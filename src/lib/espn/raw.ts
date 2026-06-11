@@ -188,3 +188,122 @@ export interface RawRoster {
 export interface RawTeamsList {
   sports?: { leagues?: { teams?: { team?: RawTeam }[] }[] }[];
 }
+
+/* ── summary (single-game Game Center) ──────────────────────────────────────
+   Win probability, play-by-play, drives (football), and per-team leaders.
+   As elsewhere, every field is optional — ESPN purges plays/drives from old
+   games and omits whole sections per sport, so the normalizer defaults around
+   anything missing. */
+
+export interface RawPeriod {
+  number?: number;
+  displayValue?: string;
+  type?: string;
+}
+
+export interface RawClock {
+  value?: number;
+  displayValue?: string;
+}
+
+export interface RawWinProbability {
+  homeWinPercentage?: number;
+  tiePercentage?: number;
+  playId?: string;
+}
+
+export interface RawScoringPlay {
+  id?: string;
+  text?: string;
+  shortText?: string;
+  period?: RawPeriod;
+  clock?: RawClock;
+  team?: RawTeam;
+  scoringType?: { abbreviation?: string; displayName?: string };
+  type?: { abbreviation?: string; text?: string };
+  homeScore?: number;
+  awayScore?: number;
+}
+
+export interface RawPlay {
+  id?: string;
+  sequenceNumber?: string;
+  text?: string;
+  shortText?: string;
+  period?: RawPeriod;
+  clock?: RawClock;
+  scoringPlay?: boolean;
+  team?: RawTeam; // sometimes only { id }, sometimes null
+  homeScore?: number;
+  awayScore?: number;
+}
+
+export interface RawDrive {
+  id?: string;
+  description?: string;
+  team?: RawTeam;
+  result?: string;
+  displayResult?: string;
+  shortDisplayResult?: string;
+  isScore?: boolean;
+}
+
+export interface RawDrives {
+  current?: RawDrive;
+  previous?: RawDrive[];
+}
+
+export interface RawLeaderItem {
+  displayValue?: string;
+  value?: number;
+  summary?: string; // "40 PTS, 6 REB, 5 AST"
+  athlete?: {
+    displayName?: string;
+    shortName?: string;
+    headshot?: { href?: string };
+    position?: { abbreviation?: string };
+    jersey?: string;
+  };
+}
+
+export interface RawLeaderCategory {
+  name?: string;
+  displayName?: string;
+  leaders?: RawLeaderItem[];
+}
+
+export interface RawTeamLeaders {
+  team?: RawTeam;
+  leaders?: RawLeaderCategory[];
+}
+
+export interface RawSummaryCompetitor {
+  id?: string;
+  homeAway?: string;
+  winner?: boolean;
+  team?: RawTeam;
+  score?: string | RawScore;
+  record?: { type?: string; summary?: string }[];
+  records?: { type?: string; summary?: string }[];
+}
+
+export interface RawSummaryCompetition {
+  id?: string;
+  date?: string;
+  status?: { type?: RawStatusType };
+  competitors?: RawSummaryCompetitor[];
+  broadcasts?: { media?: { shortName?: string }; names?: string[] }[];
+}
+
+export interface RawSummary {
+  header?: {
+    id?: string;
+    competitions?: RawSummaryCompetition[];
+  };
+  gameInfo?: { venue?: { fullName?: string } };
+  winprobability?: RawWinProbability[];
+  scoringPlays?: RawScoringPlay[];
+  plays?: RawPlay[];
+  drives?: RawDrives;
+  leaders?: RawTeamLeaders[];
+}

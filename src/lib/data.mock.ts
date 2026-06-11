@@ -1,12 +1,16 @@
 import type {
   Game,
+  GameSummary,
   LeagueId,
+  PlayByPlay,
   PlayoffBracket,
   PlayoffSide,
   Player,
   ScheduleGame,
+  ScoringPlay,
   StandingsGroup,
   TeamCard,
+  WinProbPoint,
 } from "./types";
 import { GAMES, PLAYER_BY_ID, STANDINGS, TEAM_CARD_BY_ID } from "./mock";
 import {
@@ -154,6 +158,84 @@ export async function getSchedule(
   return [...past, ...upcoming].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
+}
+
+/** A plausible, deterministic-ish single-game payload for the offline demo. */
+export async function getSummary(league: LeagueId, id: string): Promise<GameSummary> {
+  await sleep(jitter());
+  const base =
+    GAMES.find((g) => g.id === id) ?? GAMES.find((g) => g.league === league) ?? GAMES[0];
+
+  // A gently drifting win-probability curve that lands near the leader.
+  const homeAhead = (base.home.score ?? 0) >= (base.away.score ?? 0);
+  let p = 50;
+  const winProbability: WinProbPoint[] = Array.from({ length: 40 }, (_, i) => {
+    p += (Math.random() - (homeAhead ? 0.42 : 0.58)) * 9;
+    p = Math.max(3, Math.min(97, p));
+    return { i, home: Math.round(p * 10) / 10 };
+  });
+
+  const scoringPlays: ScoringPlay[] = [
+    {
+      id: "s1",
+      period: 1,
+      periodLabel: "Q1",
+      clock: "8:21",
+      teamAbbr: base.away.abbreviation,
+      teamLogo: base.away.logo,
+      text: `${base.away.shortName} open the scoring`,
+      homeScore: 0,
+      awayScore: 3,
+    },
+    {
+      id: "s2",
+      period: 2,
+      periodLabel: "Q2",
+      clock: "2:04",
+      teamAbbr: base.home.abbreviation,
+      teamLogo: base.home.logo,
+      text: `${base.home.shortName} answer back`,
+      homeScore: base.home.score ?? 7,
+      awayScore: base.away.score ?? 3,
+    },
+  ];
+
+  const plays: PlayByPlay[] = scoringPlays
+    .map(
+      (s, i): PlayByPlay => ({
+        id: `p${i}`,
+        seq: i,
+        period: s.period,
+        periodLabel: s.periodLabel,
+        clock: s.clock,
+        text: s.text,
+        scoring: true,
+        teamAbbr: s.teamAbbr,
+        homeScore: s.homeScore,
+        awayScore: s.awayScore,
+      }),
+    )
+    .reverse();
+
+  return {
+    id: base.id,
+    league: base.league,
+    state: base.state,
+    statusDetail: base.statusDetail,
+    shortDetail: base.shortDetail,
+    date: base.date,
+    home: base.home,
+    away: base.away,
+    venue: base.venue,
+    broadcast: base.broadcast,
+    possession: base.state === "in" ? base.home.abbreviation : null,
+    hasWinProb: true,
+    winProbability,
+    scoringPlays,
+    plays,
+    drives: [],
+    leaders: [],
+  };
 }
 
 export async function getCatalogTeams(leagues: LeagueId[]): Promise<CatalogTeam[]> {

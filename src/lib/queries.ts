@@ -19,6 +19,7 @@ import {
   getSchedule,
   getScoreboard,
   getStandings,
+  getSummary,
   getTeamCard,
   hasLiveGame,
 } from "./data";
@@ -141,6 +142,18 @@ export function useTeamSlate(teams: FollowedTeam[]) {
       schedules.forEach((q) => q.refetch());
     },
   };
+}
+
+/** Single-game Game Center detail. Polls only while the game is live. */
+export function useGameSummary(league: LeagueId, id: string) {
+  return useQuery({
+    queryKey: ["summary", league, id],
+    queryFn: () => getSummary(league, id),
+    refetchInterval: (query) =>
+      query.state.data?.state === "in" ? LIVE_POLL_MS : false,
+    placeholderData: keepPreviousData,
+    enabled: Boolean(league && id),
+  });
 }
 
 export function useTeamCard(league: LeagueId, teamId: string) {

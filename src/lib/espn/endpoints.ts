@@ -15,6 +15,8 @@ function seg(league: LeagueId): string {
 
 export const espnUrl = {
   scoreboard: (l: LeagueId) => `${SITE}/${seg(l)}/scoreboard`,
+  /** Single-game detail: win probability, plays, drives, leaders, boxscore. */
+  summary: (l: LeagueId, eventId: string) => `${SITE}/${seg(l)}/summary?event=${eventId}`,
   /** Playoff games over a date window, "YYYYMMDD-YYYYMMDD". */
   playoffScoreboard: (l: LeagueId, dates: string) =>
     `${SITE}/${seg(l)}/scoreboard?dates=${dates}&limit=400`,
@@ -33,6 +35,8 @@ export const espnUrl = {
     informal ~2.5k/day budget even with several followed leagues. */
 export const REVALIDATE = {
   scoreboard: 20,
+  // Live game center: plays/win-prob move fast, so keep this tight like the board.
+  summary: 15,
   bracket: 300,
   team: 300,
   standings: 300,
