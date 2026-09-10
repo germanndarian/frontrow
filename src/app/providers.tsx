@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { ThemeController } from "@/components/system/ThemeController";
 import { AuthBridge } from "@/components/system/AuthBridge";
+import { NativeController } from "@/components/system/NativeController";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -40,6 +41,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeController />
+      <NativeController />
       <AuthBridge />
       {children}
     </QueryClientProvider>

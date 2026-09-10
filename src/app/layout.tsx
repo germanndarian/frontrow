@@ -40,6 +40,9 @@ export const viewport: Viewport = {
   themeColor: "#f1f1ec",
   width: "device-width",
   initialScale: 1,
+  // Lets the layout reach under the notch and home indicator, which is what
+  // makes env(safe-area-inset-*) resolve to real values in the iOS shell.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
