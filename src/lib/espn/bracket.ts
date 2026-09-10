@@ -18,7 +18,7 @@ import type {
   PlayoffSide,
 } from "@/lib/types";
 import { hex } from "@/lib/utils";
-import { espnFetch } from "./client";
+import { espnCached, espnFetchFresh, type Cached } from "./client";
 import { espnUrl, REVALIDATE } from "./endpoints";
 import type { RawCompetition, RawCompetitor, RawScoreboard } from "./raw";
 
@@ -236,10 +236,15 @@ function dateWindow(now = new Date()): string {
   return `${fmt(start)}-${fmt(end)}`;
 }
 
-export async function fetchBracket(league: LeagueId): Promise<PlayoffBracket> {
-  const raw = await espnFetch<RawScoreboard>(
-    espnUrl.playoffScoreboard(league, dateWindow()),
-    REVALIDATE.bracket,
-  ).catch(() => ({ events: [] }) as RawScoreboard);
-  return normalizeBracket(raw, league);
+export async function fetchBracket(league: LeagueId): Promise<Cached<PlayoffBracket>> {
+  const dates = dateWindow();
+  // The postseason scoreboard is ~10MB — way over the fetch-cache ceiling — so
+  // the normalized bracket is what gets cached. The window is part of the key
+  // so it rolls forward with the date instead of pinning to a stale range.
+  return espnCached(["bracket", league, dates], REVALIDATE.bracket, async () => {
+    const raw = await espnFetchFresh<RawScoreboard>(
+      espnUrl.playoffScoreboard(league, dates),
+    );
+    return normalizeBracket(raw, league);
+  });
 }

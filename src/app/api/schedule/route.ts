@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LEAGUES } from "@/lib/leagues";
 import type { LeagueId } from "@/lib/types";
-import { fetchSchedule } from "@/lib/espn/client";
+import { espnCached, fetchSchedule } from "@/lib/espn/client";
 import { REVALIDATE } from "@/lib/espn/endpoints";
 import { normalizeSchedule } from "@/lib/espn/normalize";
+import { jsonCached } from "@/lib/espn/response";
 
 const VALID = new Set(Object.keys(LEAGUES));
 
@@ -16,8 +17,11 @@ export async function GET(req: NextRequest) {
   const l = league as LeagueId;
 
   try {
-    const raw = await fetchSchedule(l, teamId, REVALIDATE.team);
-    return NextResponse.json(normalizeSchedule(raw, l, teamId));
+    // The raw schedule is far too big for the fetch cache, so cache it normalized.
+    const cached = await espnCached(["schedule", l, teamId], REVALIDATE.team, async () =>
+      normalizeSchedule(await fetchSchedule(l, teamId), l, teamId),
+    );
+    return jsonCached(cached);
   } catch {
     return NextResponse.json({ error: "schedule_failed" }, { status: 502 });
   }

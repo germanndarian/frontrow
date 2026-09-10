@@ -8,6 +8,7 @@ import type {
   TeamCard,
 } from "./types";
 import type { CatalogPlayer, CatalogTeam } from "./catalog";
+import { reportUpstream, STALE_HEADER } from "./upstream";
 
 /* ───────────────────────────────────────────────────────────────────────────
    Data facade. Calls the Next.js /api route handlers, which fetch ESPN's
@@ -20,6 +21,9 @@ const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === "true";
 async function get<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Request failed (${res.status})`);
+  // A tagged response means ESPN was unreachable and the route fell back to the
+  // last good payload — the dashboard says so rather than passing it off as live.
+  reportUpstream(url, res.headers.get(STALE_HEADER) === "1");
   return (await res.json()) as T;
 }
 
