@@ -17,6 +17,7 @@ import { PlayerCardView } from "./PlayerCardView";
 import { StandingsCard } from "./StandingsCard";
 import { SeasonTrendCard } from "./SeasonTrendCard";
 import { TeamStatCards } from "./TeamStatCards";
+import { StaleNotice } from "./StaleNotice";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
@@ -129,6 +130,8 @@ export function Dashboard() {
       <AppHeader liveCount={liveCount} />
 
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-7 sm:px-6">
+        <StaleNotice />
+
         {/* Hero */}
         <div className="mb-7 flex flex-col gap-4 sm:mb-9 sm:flex-row sm:items-end sm:justify-between">
           <div>

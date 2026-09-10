@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { LEAGUES } from "@/lib/leagues";
 import type { LeagueId, PlayoffBracket } from "@/lib/types";
 import { fetchBracket } from "@/lib/espn/bracket";
+import { jsonCached } from "@/lib/espn/response";
 
 const VALID = new Set(Object.keys(LEAGUES));
 
@@ -14,8 +15,7 @@ export async function GET(
     return NextResponse.json({ error: "bad_league" }, { status: 400 });
   }
   try {
-    const bracket = await fetchBracket(league as LeagueId);
-    return NextResponse.json(bracket);
+    return jsonCached(await fetchBracket(league as LeagueId));
   } catch {
     // No bracket beats a 500 — the UI treats empty rounds as "no playoffs".
     const empty: PlayoffBracket = {

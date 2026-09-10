@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LEAGUES } from "@/lib/leagues";
 import type { LeagueId } from "@/lib/types";
-import { espnFetch, fetchSchedule } from "@/lib/espn/client";
+import { espnCached, espnFetchFresh, fetchSchedule } from "@/lib/espn/client";
 import { espnUrl, REVALIDATE } from "@/lib/espn/endpoints";
 import { normalizeTeamCard } from "@/lib/espn/normalize";
-import type { RawTeamDetail } from "@/lib/espn/raw";
+import { jsonCached } from "@/lib/espn/response";
+import type { RawSchedule, RawTeamDetail } from "@/lib/espn/raw";
 
 const VALID = new Set(Object.keys(LEAGUES));
 
@@ -20,12 +21,17 @@ export async function GET(
   const l = league as LeagueId;
 
   try {
-    const [detail, sched] = await Promise.all([
-      espnFetch<RawTeamDetail>(espnUrl.team(l, id), REVALIDATE.team),
-      // Schedule is supplementary (and has an off-season fallback) — never fatal.
-      fetchSchedule(l, id, REVALIDATE.team),
-    ]);
-    return NextResponse.json(normalizeTeamCard(detail, sched, l));
+    // Cached after normalization — the schedule half blows past the 2MB
+    // fetch-cache ceiling, so caching the raw responses wouldn't stick.
+    const cached = await espnCached(["team", l, id], REVALIDATE.team, async () => {
+      const [detail, sched] = await Promise.all([
+        espnFetchFresh<RawTeamDetail>(espnUrl.team(l, id)),
+        // Schedule is supplementary (and has an off-season fallback) — never fatal.
+        fetchSchedule(l, id).catch(() => ({ events: [] }) as RawSchedule),
+      ]);
+      return normalizeTeamCard(detail, sched, l);
+    });
+    return jsonCached(cached);
   } catch {
     return NextResponse.json({ error: "team_failed" }, { status: 502 });
   }
