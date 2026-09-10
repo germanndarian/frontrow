@@ -139,14 +139,13 @@ No new error-handling code is introduced beyond the fallback page.
 
 ## Build and install procedure
 
-1. Finish installing Xcode (a partial `Xcode.appdownload` exists; ~15GB).
-2. `npm run ios:sync` → `npx cap sync ios`
-3. `npm run ios:open` → `npx cap open ios`
-4. In Xcode: select the project, set Signing Team to the personal Apple ID.
-5. Connect the iPhone, select it as the run destination, press Run.
-6. On the iPhone: Settings → General → VPN & Device Management → trust the
+1. `npm run ios:sync` → `npx cap sync ios`
+2. `npm run ios:open` → `npx cap open ios`
+3. In Xcode: select the project, set Signing Team to the personal Apple ID.
+4. Connect the iPhone, select it as the run destination, press Run.
+5. On the iPhone: Settings → General → VPN & Device Management → trust the
    developer certificate.
-7. **Every 7 days:** reconnect and press Run again.
+6. **Every 7 days:** reconnect and press Run again.
 
 Free provisioning limits: 7-day certificates, 3 sideloaded apps installed at
 once, 10 new app IDs per week.
@@ -155,7 +154,6 @@ once, 10 new app IDs per week.
 
 - **The 7-day expiry is permanent** under free provisioning. The only removal
   is the $99/yr Apple Developer Program.
-- **Xcode is not yet installed**, and is a hard prerequisite for every step.
 - **The app mirrors production.** It shows whatever the deployed site shows.
 - **Google OAuth cannot work in a WebView.** Handled by hiding the buttons; a
   future `ASWebAuthenticationSession` flow could restore them.
