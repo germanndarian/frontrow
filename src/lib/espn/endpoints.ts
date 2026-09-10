@@ -1,10 +1,16 @@
 import { LEAGUES } from "@/lib/leagues";
 import type { LeagueId } from "@/lib/types";
 
-/* ESPN base URLs. Site/web bases are overridable via env (non-secret); the
-   standings host (apis/v2) differs from the site host and is kept here. */
-const SITE = process.env.ESPN_SITE_API ?? "https://site.api.espn.com/apis/site/v2/sports";
-const SITE_V2 = process.env.ESPN_STANDINGS_API ?? "https://site.api.espn.com/apis/v2/sports";
+/* ESPN base URLs, overridable via env (non-secret).
+
+   All three point at site.web.api.espn.com. The otherwise-identical
+   site.api.espn.com host sits behind a bot-management rule that 403s any
+   request whose User-Agent isn't a recognised CLI tool — an honest
+   identifier is rejected there just as a browser-impersonating one is.
+   site.web.api.espn.com serves the same paths and the same response shapes
+   while accepting the UA we actually send, so it's the host we ask. */
+const SITE = process.env.ESPN_SITE_API ?? "https://site.web.api.espn.com/apis/site/v2/sports";
+const SITE_V2 = process.env.ESPN_STANDINGS_API ?? "https://site.web.api.espn.com/apis/v2/sports";
 const WEB = process.env.ESPN_WEB_API ?? "https://site.web.api.espn.com/apis/common/v3/sports";
 
 /** "baseball/mlb" — the sport/league path segment for a league id. */
