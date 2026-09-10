@@ -16,9 +16,11 @@ export class EspnError extends Error {
 }
 
 const TIMEOUT_MS = 8_000;
-// A browser-ish UA; ESPN's edge is friendlier to these than a bare fetch UA.
-const UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+/* Identify ourselves honestly. We used to send a spoofed Chrome UA on the
+   theory that ESPN's edge preferred it; that stopped being true — their bot
+   management now treats a browser UA arriving without browser TLS as an
+   impersonator and 403s it. Saying who we are works on the host we query. */
+const UA = "frontrow/1.0 (+https://github.com/germanndarian/frontrow)";
 
 /** `revalidate: false` skips the fetch cache entirely — used for the oversized
     payloads that are cached after normalization instead (see `espnCached`). */
