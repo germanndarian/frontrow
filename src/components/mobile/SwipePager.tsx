@@ -57,6 +57,46 @@ export function SwipePager({
     return () => ro.disconnect();
   }, []);
 
+  // Browsers take a touch for native scrolling once it passes the slop
+  // threshold — even under touch-action — unless its first horizontal
+  // touchmove is cancelled. Decide intent from the touch's own displacement,
+  // so vertical scrolls stay native and horizontal drags stay ours.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let sx = 0;
+    let sy = 0;
+    let intent: "none" | "x" | "y" = "none";
+    const start = (e: TouchEvent) => {
+      const t = e.touches[0];
+      sx = t.clientX;
+      sy = t.clientY;
+      intent = (e.target as HTMLElement).closest("[data-hscroll]") ? "y" : "none";
+    };
+    const move = (e: TouchEvent) => {
+      if (intent === "none") {
+        const t = e.touches[0];
+        const dx = Math.abs(t.clientX - sx);
+        const dy = Math.abs(t.clientY - sy);
+        if (dx > 6 || dy > 6) intent = dx > dy ? "x" : "y";
+      }
+      if (intent === "x" && e.cancelable) e.preventDefault();
+    };
+    const end = () => {
+      intent = "none";
+    };
+    el.addEventListener("touchstart", start, { passive: true });
+    el.addEventListener("touchmove", move, { passive: false });
+    el.addEventListener("touchend", end);
+    el.addEventListener("touchcancel", end);
+    return () => {
+      el.removeEventListener("touchstart", start);
+      el.removeEventListener("touchmove", move);
+      el.removeEventListener("touchend", end);
+      el.removeEventListener("touchcancel", end);
+    };
+  }, []);
+
   // A page change from outside (a button) slides too: start with the old page
   // in view and settle onto the new one. Skipped when a drag already did it.
   useEffect(() => {
