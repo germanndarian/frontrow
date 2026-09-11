@@ -2,13 +2,19 @@ import SwiftUI
 
 /// Around the League: one league's table, your team's row highlighted.
 struct TableScreen: View {
-    @State private var model = TableModel()
+    let preferences: Preferences
+    @State private var model: TableModel
+
+    init(preferences: Preferences) {
+        self.preferences = preferences
+        _model = State(initialValue: TableModel(preferences: preferences))
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    if let active = model.active {
+                    if let active = model.active, let key = model.activeKey {
                         ChipRow {
                             ForEach(model.leagues) { league in
                                 Chip(label: league.name, on: league == active) { select(league) }
@@ -17,14 +23,14 @@ struct TableScreen: View {
                         .padding(.horizontal, 18)
 
                         Group {
-                            switch model.standings[active] {
+                            switch model.standings[key] {
                             case .loading:
                                 CardSkeleton(height: 320)
                             case .failed(let message):
                                 FailedState(
                                     title: "Couldn't load \(active.name) standings",
                                     message: message,
-                                    retry: { Task { await model.standings.fetch(active, force: true) } }
+                                    retry: { Task { await model.standings.fetch(key, force: true) } }
                                 )
                                 .padding(.top, 30)
                             case .loaded(let group):
@@ -60,6 +66,7 @@ struct TableScreen: View {
             .navigationSubtitle(Text(model.active.map { "\($0.name) · \($0.groupNoun)" } ?? ""))
         }
         .task(id: model.active) { await model.load() }
+        .task(id: preferences) { await model.apply(preferences) }
     }
 
     private func select(_ league: League) {

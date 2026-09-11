@@ -10,11 +10,17 @@ final class TeamsModel {
     private(set) var teams: [FollowedTeam]
     var selectedID: String?
 
-    init(api: APIClient = .shared, preferences: Preferences = .current) {
+    init(api: APIClient = .shared, preferences: Preferences = .empty) {
         teams = preferences.teams
         cards = Cache { follow in
             try await api.get("team/\(follow.teamId)", query: ["league": follow.league.rawValue])
         }
+    }
+
+    func apply(_ next: Preferences) async {
+        guard next.teams != teams else { return }
+        teams = next.teams
+        await load()
     }
 
     /// The team the season panel features: the tapped one, or the first.

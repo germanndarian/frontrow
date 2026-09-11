@@ -8,8 +8,6 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "ios:sync": "cap sync ios",
-    "ios:open": "cap open ios",
     "native:gen": "cd apple && xcodegen generate",
     "native:open": "open apple/Frontrow.xcodeproj",
     "native:build": "xcodebuild -project apple/Frontrow.xcodeproj -scheme Frontrow -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet build",
@@ -31,9 +29,6 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.5.1",
-    "@capacitor/core": "^8.5.1",
-    "@capacitor/ios": "^8.5.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -11,6 +11,7 @@ final class TabsTests: XCTestCase {
     @MainActor
     func testTeamsPlayersAndTableRenderLiveData() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-sample"]
         app.launch()
 
         let tabBar = app.tabBars.firstMatch

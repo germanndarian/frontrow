@@ -5,7 +5,8 @@ import UIKit
 /// theme that matches the homepage, dark the original midnight look. Each
 /// follows the system appearance automatically.
 enum Theme {
-    static let accent = Color(hex: 0x3C82E6)
+    /// Follows the account's accent choice; cobalt until settings load.
+    @MainActor static var accent: Color = AccentId.cobalt.color
 
     static let background = dynamic(light: 0xF1F1EC, dark: 0x0F1622)
     static let background2 = dynamic(light: 0xEAE9E4, dark: 0x161D2A)

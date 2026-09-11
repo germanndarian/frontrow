@@ -16,6 +16,7 @@ final class ShellTests: XCTestCase {
     @MainActor
     func testTabBarMinimizesOnScrollDownAndExpandsAgain() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-sample"]
         app.launch()
 
         let tabBar = app.tabBars.firstMatch

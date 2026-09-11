@@ -9,11 +9,17 @@ final class PlayersModel {
     let players: Cache<FollowedPlayer, Player>
     private(set) var followed: [FollowedPlayer]
 
-    init(api: APIClient = .shared, preferences: Preferences = .current) {
+    init(api: APIClient = .shared, preferences: Preferences = .empty) {
         followed = preferences.players
         players = Cache { follow in
             try await api.get("player/\(follow.playerId)", query: ["league": follow.league.rawValue])
         }
+    }
+
+    func apply(_ next: Preferences) async {
+        guard next.players != followed else { return }
+        followed = next.players
+        await load()
     }
 
     func load(force: Bool = false) async {
