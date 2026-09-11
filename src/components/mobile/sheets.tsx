@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils";
 
 function shortDate(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { weekday: "short", month: "numeric", day: "numeric" });
+  // "Sat 9/12" — drop the locale's comma so the column never wraps.
+  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { weekday: "short", month: "numeric", day: "numeric" }).replace(",", "");
 }
 function shortTime(iso: string): string {
   const d = new Date(iso);
@@ -29,7 +30,7 @@ function ScheduleRow({ g }: { g: ScheduleGame }) {
   const done = g.state === "post";
   return (
     <div className="flex items-center gap-[11px] border-t border-line-soft/70 px-[18px] py-2.5">
-      <span className="w-[46px] flex-none font-mono text-[11px] text-faint">{shortDate(g.date)}</span>
+      <span className="w-[52px] flex-none whitespace-nowrap font-mono text-[11px] text-faint">{shortDate(g.date)}</span>
       <span className="w-[18px] flex-none text-center text-[11.5px] text-faint">{g.atVs}</span>
       <TeamLogo src={g.opponentLogo} name={g.opponentName} abbr={g.opponentAbbr} size={26} className="rounded-[8px]" />
       <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-ink">{g.opponentName}</span>
