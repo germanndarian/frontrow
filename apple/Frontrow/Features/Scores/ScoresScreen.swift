@@ -1,0 +1,162 @@
+import SwiftUI
+
+/// Live & Upcoming: league chips, then games grouped LIVE NOW / UPCOMING /
+/// RESULTS. Followed teams' games get the accent border, as on the web.
+struct ScoresScreen: View {
+    @State private var model = ScoresModel()
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    chips
+                        .padding(.horizontal, 18)
+                        .padding(.top, 6)
+                        .padding(.bottom, 4)
+
+                    switch model.phase {
+                    case .idle, .loading:
+                        VStack(spacing: 12) {
+                            ForEach(0..<3, id: \.self) { _ in GameCardSkeleton() }
+                        }
+                        .padding(.horizontal, 18)
+                        .padding(.top, 18)
+                    case .failed(let message):
+                        ContentUnavailableView {
+                            Label("Couldn't reach the scoreboard", systemImage: "wifi.exclamationmark")
+                        } description: {
+                            Text(message)
+                        } actions: {
+                            Button("Try again") { Task { await model.load() } }
+                                .buttonStyle(.glass)
+                        }
+                        .padding(.top, 40)
+                    case .loaded:
+                        if model.groups.isEmpty {
+                            ContentUnavailableView(
+                                "Nothing on the slate",
+                                systemImage: "calendar.badge.clock",
+                                description: Text("No games in the leagues you follow right now.")
+                            )
+                            .padding(.top, 40)
+                        } else {
+                            ForEach(model.groups) { group in
+                                GroupRule(title: group.title, count: group.games.count)
+                                    .padding(.horizontal, 18)
+                                    .padding(.top, 22)
+                                    .padding(.bottom, 12)
+                                VStack(spacing: 12) {
+                                    ForEach(group.games) { game in
+                                        GameCard(game: game, followed: model.isFollowed(game))
+                                    }
+                                }
+                                .padding(.horizontal, 18)
+                            }
+                            if model.liveCount > 0 {
+                                HStack(spacing: 8) {
+                                    LiveDot()
+                                    Text("Auto-refreshing \(model.liveCount) live \(model.liveCount == 1 ? "game" : "games")")
+                                }
+                                .font(.footnote)
+                                .foregroundStyle(Theme.faint)
+                                .padding(.horizontal, 18)
+                                .padding(.top, 18)
+                            }
+                        }
+                    }
+                    Color.clear.frame(height: 24)
+                }
+            }
+            .background(Theme.background)
+            .refreshable { await model.load() }
+            .navigationTitle("Live & Upcoming")
+            .navigationSubtitle(Text(Date.now, format: .dateTime.weekday(.wide).month(.abbreviated).day()))
+            .toolbar {
+                if model.liveCount > 0 {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        HStack(spacing: 6) {
+                            LiveDot()
+                            Text("\(model.liveCount) LIVE")
+                                .font(.caption.weight(.bold))
+                                .tracking(0.8)
+                        }
+                        .foregroundStyle(Theme.live)
+                    }
+                }
+            }
+        }
+        .task { await model.load() }
+    }
+
+    /// League filter chips. Glass, in one container so their highlights blend.
+    private var chips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            GlassEffectContainer(spacing: 8) {
+                HStack(spacing: 8) {
+                    Chip(label: "All", on: model.league == nil) { model.league = nil }
+                    ForEach(model.leagues) { league in
+                        Chip(label: league.name, on: model.league == league) { model.league = league }
+                    }
+                }
+            }
+            .padding(.vertical, 6)
+        }
+        .scrollClipDisabled()
+    }
+}
+
+struct Chip: View {
+    let label: String
+    let on: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.subheadline.weight(.bold))
+                .padding(.horizontal, 15)
+                .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(on ? Color.white : Theme.muted)
+        .glassEffect(on ? .regular.tint(Theme.accent).interactive() : .regular.interactive())
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+}
+
+struct GroupRule: View {
+    let title: String
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .font(.system(size: 13, weight: .black, design: .default))
+                .tracking(0.8)
+                .foregroundStyle(Theme.ink)
+            Text("\(count)")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundStyle(Theme.faint)
+            Rectangle().fill(Theme.line).frame(height: 1)
+        }
+    }
+}
+
+struct LiveDot: View {
+    @State private var pulse = false
+
+    var body: some View {
+        Circle()
+            .fill(Theme.live)
+            .frame(width: 7, height: 7)
+            .overlay {
+                Circle()
+                    .stroke(Theme.live.opacity(pulse ? 0 : 0.55), lineWidth: pulse ? 8 : 0)
+                    .scaleEffect(pulse ? 2.2 : 1)
+            }
+            .onAppear {
+                withAnimation(.easeOut(duration: 1.8).repeatForever(autoreverses: false)) { pulse = true }
+            }
+            .accessibilityHidden(true)
+    }
+}
