@@ -9,7 +9,10 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
-    DEVELOPMENT_TEAM: ""
+    # Set here rather than in Xcode: a team picked in the Signing editor lives
+    # in the .xcodeproj, which `npm run native:gen` regenerates — and the
+    # widget extension needs one too, or it refuses to sign.
+    DEVELOPMENT_TEAM: 9N4Y5K8R9K
     CODE_SIGN_STYLE: Automatic
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
