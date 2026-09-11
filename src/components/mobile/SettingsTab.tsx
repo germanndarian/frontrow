@@ -28,7 +28,7 @@ function Section({ title, sub, children, action }: { title: string; sub?: string
   );
 }
 
-const field = "mt-1.5 w-full rounded-[14px] border border-line bg-bg-2/60 px-3.5 py-3 text-[14.5px] text-ink outline-none focus:border-primary/60";
+const field = "mt-1.5 w-full rounded-[14px] border border-line bg-bg-2/60 px-3.5 py-3 text-[16px] text-ink outline-none focus:border-primary/60";
 
 export function SettingsTab({ onEditFollows }: { onEditFollows: () => void }) {
   const profile = useCurrentUser();
