@@ -16,7 +16,7 @@ const config: CapacitorConfig = {
   appName: "Frontrow",
   webDir: "capacitor/www",
   server: {
-    url: "https://frontrow-ten.vercel.app",
+    url: "https://frontrow-ten.vercel.app/app",
     cleartext: false,
   },
   ios: {
