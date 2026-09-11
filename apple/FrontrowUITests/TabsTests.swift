@@ -27,7 +27,11 @@ final class TabsTests: XCTestCase {
         attach(app, "1-teams")
 
         // ── Schedule sheet ───────────────────────────────────────────────
-        app.buttons["Full schedule"].firstMatch.tap()
+        // Tapped near the left edge of the row, well away from the words, to
+        // prove the whole strip is the target and not just the label.
+        let scheduleRow = app.buttons["Full schedule"].firstMatch
+        XCTAssertTrue(scheduleRow.waitForExistence(timeout: 10))
+        scheduleRow.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.5)).tap()
         XCTAssertTrue(app.staticTexts["Full schedule"].waitForExistence(timeout: 10))
         let hasGames = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'RESULTS ·' OR label BEGINSWITH 'UPCOMING ·'")).firstMatch
         XCTAssertTrue(hasGames.waitForExistence(timeout: 30), "the schedule sheet lists games")

@@ -148,24 +148,34 @@ struct TeamCardView: View {
             }
     }
 
+    /// The whole strip is the target, not the words in the middle of it: the
+    /// label carries the size so the tap area is the full half of the card.
     private func actions(_ card: TeamCard) -> some View {
         HStack(spacing: 0) {
             if card.inPlayoffs == true {
-                Button("Playoff bracket") { onSheet(.bracket(follow)) }
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                action("Playoff bracket", tint: Theme.accent) { onSheet(.bracket(follow)) }
                 Divider().frame(height: 24).overlay(Theme.lineSoft)
             }
-            Button("Full schedule") { onSheet(.schedule(follow)) }
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Theme.muted)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
+            action("Full schedule", tint: Theme.muted) { onSheet(.schedule(follow)) }
         }
-        .buttonStyle(.plain)
         .overlay(alignment: .top) { Rectangle().fill(Theme.lineSoft).frame(height: 1) }
+    }
+
+    private func action(_ title: String, tint: Color, run: @escaping () -> Void) -> some View {
+        Button(action: run) {
+            HStack(spacing: 5) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .bold))
+                    .opacity(0.5)
+            }
+            .foregroundStyle(tint)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(RowButtonStyle())
     }
 }
 

@@ -26,9 +26,12 @@ final class ShellTests: XCTestCase {
         XCTAssertTrue(scores.exists)
         XCTAssertTrue(settings.exists)
 
-        // Let the scoreboard load so there is something to scroll.
+        // The tab bar only minimises against a list long enough to scroll, and
+        // "My teams" is deliberately short — a league's whole week is not.
         let list = app.scrollViews.firstMatch
         XCTAssertTrue(list.waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["MLB"].waitForExistence(timeout: 15))
+        app.buttons["MLB"].tap()
         _ = app.staticTexts["UPCOMING"].waitForExistence(timeout: 30)
             || app.staticTexts["LIVE NOW"].waitForExistence(timeout: 5)
             || app.staticTexts["RESULTS"].waitForExistence(timeout: 5)

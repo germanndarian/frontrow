@@ -55,20 +55,30 @@ struct ScoresScreen: View {
                     case .loaded:
                         if model.groups.isEmpty {
                             ContentUnavailableView(
-                                "Nothing on the slate",
+                                model.league == nil && !model.showingEverything ? "None of your teams play" : "Nothing on the slate",
                                 systemImage: "calendar.badge.clock",
-                                description: Text("No games for the leagues you follow in \(model.week.range).")
+                                description: Text(
+                                    model.league == nil && !model.showingEverything
+                                        ? "Your teams have no games in \(model.week.range). Pick a league to see everything that's on."
+                                        : "No games for the leagues you follow in \(model.week.range)."
+                                )
                             )
                             .padding(.top, 40)
                         } else {
                             ForEach(model.groups) { group in
-                                SectionRule(title: group.title, detail: "\(group.games.count)")
+                                SectionRule(
+                                    title: group.title,
+                                    detail: model.league == nil
+                                        ? "\(group.games.count)"
+                                        : "\(group.games.count) · \(model.followedCount(in: group.games)) yours",
+                                    accent: model.followedCount(in: group.games) > 0 ? Theme.accent : nil
+                                )
                                     .padding(.horizontal, 18)
                                     .padding(.top, 22)
                                     .padding(.bottom, 12)
                                 VStack(spacing: 12) {
                                     ForEach(group.games) { game in
-                                        GameCard(game: game, followed: model.isFollowed(game))
+                                        GameCard(game: game, followed: model.marksFollowed && model.isFollowed(game))
                                     }
                                 }
                                 .padding(.horizontal, 18)
@@ -113,7 +123,7 @@ struct ScoresScreen: View {
     /// League filter chips, with "All" in front of the followed leagues.
     private var chips: some View {
         ChipRow {
-            Chip(label: "All", on: model.league == nil) { model.league = nil }
+            Chip(label: model.showingEverything ? "All" : "My teams", on: model.league == nil) { model.league = nil }
             ForEach(model.leagues) { league in
                 Chip(label: league.name, on: model.league == league) { model.league = league }
             }
