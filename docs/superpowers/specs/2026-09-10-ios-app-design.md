@@ -167,3 +167,27 @@ once, 10 new app IDs per week.
 Push notifications, home-screen widgets, background refresh, offline data,
 Android, App Store distribution, and any change to the website's own
 functionality.
+
+## Addendum (2026-09-11): the 1b app UI
+
+After the shell shipped, the maintainer designed a native-feeling UI in
+Claude Design ("Frontrow mobile app redesign", option **1b**) and chose it
+over the web layout in a frame. Decisions taken when implementing it:
+
+- **Own route, not a gate.** The app UI lives at `/app`; the shell's
+  `server.url` points there. The website's routes are byte-identical in a
+  browser — nothing in `/dashboard`, `/login` or `/settings` changed.
+- **Presentation layer only.** Every screen reads the existing hooks and
+  stores (`useScoreboard`, `useTeamSlate`, `useTeamCard`, `usePlayer`,
+  `useStandings`, `usePlayoffBracket`, `useSchedule`, `usePreferences`,
+  `useSettings`, `useAuth`). No new API routes, no new data paths.
+- **Screens.** Welcome → Login (email/password + guest; no OAuth, per the
+  earlier decision) → Setup (the existing `SetupFlow`, given `after`,
+  `onDone` and `seedFromStore` props) → five tabs: Scores, Teams, Players,
+  Table, Settings. Sheets for schedule, bracket and player detail.
+- **Staying signed in** is a consequence of the navigation: there is no Home
+  button, and Sign out lives only in Settings. Sessions already persisted;
+  the web header's Home-logs-out behaviour was what ended them.
+- **Deferred.** The onboarding screen still uses the web `SetupFlow`
+  styling rather than the mockup's; the welcome screen omits the mockup's
+  sample live-game card (it was placeholder data).
