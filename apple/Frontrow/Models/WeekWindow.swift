@@ -13,7 +13,15 @@ struct WeekWindow: Identifiable, Hashable, Sendable {
     static let offsets = Array(-1...16)
 
     static func all(from now: Date = .now, calendar: Calendar = .current) -> [WeekWindow] {
-        offsets.compactMap { make(offset: $0, from: now, calendar: calendar) }
+        let windows = offsets.compactMap { make(offset: $0, from: now, calendar: calendar) }
+        // A calendar that can't place a week is not something to crash over.
+        return windows.isEmpty ? [current(from: now, calendar: calendar)] : windows
+    }
+
+    /// This week, always — the fallback when the calendar won't answer.
+    static func current(from now: Date = .now, calendar: Calendar = .current) -> WeekWindow {
+        make(offset: 0, from: now, calendar: calendar)
+            ?? WeekWindow(offset: 0, start: now, end: now)
     }
 
     static func make(offset: Int, from now: Date = .now, calendar: Calendar = .current) -> WeekWindow? {
@@ -55,6 +63,7 @@ struct WeekWindow: Identifiable, Hashable, Sendable {
     }
 
     func contains(_ date: Date) -> Bool {
-        date >= start && date < Calendar.current.date(byAdding: .day, value: 1, to: end)!
+        let dayAfterEnd = Calendar.current.date(byAdding: .day, value: 1, to: end) ?? end
+        return date >= start && date < dayAfterEnd
     }
 }

@@ -57,7 +57,7 @@ struct OnboardingDone: View {
             // Fetch the first screen's games while this one is being read.
             Prefetch.warm(
                 leagues: account.preferences.orderedLeagues.map(\.rawValue).joined(separator: ","),
-                dates: (WeekWindow.make(offset: 0) ?? WeekWindow.all()[0]).query
+                dates: WeekWindow.current().query
             )
         }
     }

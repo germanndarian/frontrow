@@ -27,7 +27,7 @@ final class ScoresModel {
         self.api = api
         self.preferences = preferences
         self.weeks = windows
-        self.week = windows.first { $0.offset == 0 } ?? windows[0]
+        self.week = windows.first { $0.offset == 0 } ?? .current()
     }
 
     /// Follows changed in Settings or onboarding — reload against the new set.
