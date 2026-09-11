@@ -191,3 +191,21 @@ over the web layout in a frame. Decisions taken when implementing it:
 - **Deferred.** The onboarding screen still uses the web `SetupFlow`
   styling rather than the mockup's; the welcome screen omits the mockup's
   sample live-game card (it was placeholder data).
+
+## Addendum (2026-09-11): onboarding to the mockups; system theme
+
+- **Onboarding** now follows the design's turns 2 and 3: a fixed header
+  with the step rail, tappable rows with a 44px mark and a 24px check, a
+  fixed footer with back / count / action, and a new **Done** screen
+  (summary of picks, live-game count, "Go to my dashboard" / "Add more
+  teams"). `SetupFlow` is shared, so `/setup` on the website gets the same
+  look, laid out as a centred column on desktop. Onboarding is marked
+  complete only when the user leaves Done, so `/app`'s gate can't swap the
+  screen out early; picks are saved on Finish regardless.
+- **Theme** gains a **System** option, the default for new accounts
+  (`0003_appearance_system.sql` changes the column default; run it in the
+  SQL Editor). Light/dark choices persist as before. A first-paint script
+  in `layout.tsx` applies the remembered choice — or the device scheme —
+  before React loads, so nothing flashes.
+- Out of scope, by instruction: the home-screen frame in turn 3 and its
+  app-icon asset. Not done yet: the tab-bar icons added to turn 1.

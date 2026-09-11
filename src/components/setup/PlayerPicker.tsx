@@ -26,19 +26,15 @@ function PlayerRow({
       onClick={onToggle}
       aria-pressed={selected}
       className={cn(
-        "flex w-full items-center gap-3 rounded-md border p-2.5 text-left",
-        "transition-[transform,background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.99]",
-        selected
-          ? "border-primary/60 bg-primary/[0.1]"
-          : "border-line/70 bg-surface/50 hover:border-line hover:bg-surface-2/60",
+        "flex w-full items-center gap-3.5 rounded-[18px] border p-[15px] text-left",
+        "transition-[transform,background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.98]",
+        selected ? "border-primary/55 bg-primary/8" : "border-line bg-surface hover:bg-surface-2/60",
       )}
     >
-      <Headshot src={player.headshot} name={player.fullName} size={38} />
+      <Headshot src={player.headshot} name={player.fullName} size={44} />
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[14px] font-semibold text-ink">
-          {player.fullName}
-        </span>
-        <span className="text-[12px] text-faint">{player.position || "—"}</span>
+        <span className="block truncate font-display text-[16px] font-bold text-ink">{player.fullName}</span>
+        <span className="mt-0.5 block text-[12.5px] text-faint">{player.position || "—"}</span>
       </span>
       <CheckMark active={selected} />
     </button>
@@ -85,7 +81,7 @@ export function PlayerPicker({
       ) : isPending ? (
         <div className="grid gap-2.5 sm:grid-cols-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[62px] rounded-md" />
+            <Skeleton key={i} className="h-[76px] rounded-[18px]" />
           ))}
         </div>
       ) : grouped.length === 0 ? (
@@ -94,7 +90,7 @@ export function PlayerPicker({
           body={q ? `Nothing for “${q}”.` : "No rosters available for your teams right now."}
         />
       ) : (
-        <div className="max-h-[44vh] space-y-5 overflow-y-auto pr-1 sm:max-h-[38vh]">
+        <div className="space-y-5">
           {grouped.map(({ team, players }) => (
             <div key={`${team.league}:${team.teamId}`}>
               <div className="mb-2 flex items-center gap-2">

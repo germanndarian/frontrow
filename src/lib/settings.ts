@@ -22,8 +22,19 @@ export type AccentId =
 
 export type Radius = "sharp" | "default" | "round";
 export type Density = "comfortable" | "compact";
-/** Light = the cobalt theme matching the homepage; dark = the original midnight look. */
-export type Appearance = "light" | "dark";
+/** Light = the cobalt theme matching the homepage; dark = the original midnight
+    look; system = whichever the device is set to, followed live. */
+export type Appearance = "light" | "dark" | "system";
+
+/** The concrete theme to paint for a preference. "system" reads the device;
+    pass `prefersDark` to decide without a window (tests, SSR). */
+export function resolveAppearance(a: Appearance, prefersDark?: boolean): "light" | "dark" {
+  if (a !== "system") return a;
+  const dark =
+    prefersDark ??
+    (typeof window !== "undefined" && !!window.matchMedia?.("(prefers-color-scheme: dark)").matches);
+  return dark ? "dark" : "light";
+}
 
 /** Dashboard sections, in default display order. */
 export type SectionId =
@@ -48,7 +59,7 @@ export interface AppSettings {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  appearance: "light",
+  appearance: "system",
   accent: "cobalt",
   radius: "default",
   density: "comfortable",
@@ -275,7 +286,12 @@ export function applySettings(s: AppSettings) {
   // Compact density gently scales the whole rem-based type + spacing ramp.
   el.style.fontSize = s.density === "compact" ? "15px" : "16px";
 
-  el.dataset.appearance = s.appearance;
+  el.dataset.appearance = resolveAppearance(s.appearance);
+  // Remembered for the pre-hydration script in layout.tsx, so the next load
+  // paints the right theme before React is up.
+  try {
+    localStorage.setItem("fr-appearance", s.appearance);
+  } catch {}
   el.dataset.reduceMotion = s.reduceMotion ? "true" : "false";
   el.dataset.glow = s.backgroundGlow ? "on" : "off";
 }

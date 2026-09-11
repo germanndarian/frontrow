@@ -88,7 +88,7 @@ export function SettingsTab({ onEditFollows }: { onEditFollows: () => void }) {
 
       <Section title="Appearance" sub="Changes apply instantly.">
         <div className="mt-4 flex flex-col gap-3.5">
-          <Segmented label="Theme" hint="Light matches the site; dark is the midnight look." value={settings.appearance} options={[{ label: "Light", value: "light" }, { label: "Dark", value: "dark" }]} onChange={(v) => settings.set("appearance", v)} />
+          <Segmented label="Theme" hint="System follows your device." value={settings.appearance} options={[{ label: "System", value: "system" }, { label: "Light", value: "light" }, { label: "Dark", value: "dark" }]} onChange={(v) => settings.set("appearance", v)} />
           <Segmented label="Corner roundness" hint="Cards, chips and buttons." value={settings.radius} options={[{ label: "Sharp", value: "sharp" }, { label: "Default", value: "default" }, { label: "Round", value: "round" }]} onChange={(v) => settings.set("radius", v)} />
           <Segmented label="Density" hint="Compact tightens spacing." value={settings.density} options={[{ label: "Comfortable", value: "comfortable" }, { label: "Compact", value: "compact" }]} onChange={(v) => settings.set("density", v)} />
           <div>
