@@ -37,7 +37,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f1f1ec",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f1f1ec" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f1622" },
+  ],
   width: "device-width",
   initialScale: 1,
   // Lets the layout reach under the notch and home indicator, which is what
@@ -53,9 +56,23 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      // The first-paint script below may change data-appearance before React
+      // hydrates; that's intended, so don't warn about the attribute mismatch.
+      suppressHydrationWarning
       data-appearance="light"
       className={`${archivo.variable} ${hanken.variable} ${geistMono.variable} ${spaceMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Paint the right theme before React loads: the remembered choice if
+            there is one, otherwise the device's scheme (the "system" default).
+            ThemeController takes over from here once hydrated. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var p=localStorage.getItem('fr-appearance');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.appearance=(p==='light'||p==='dark')?p:(d?'dark':'light')}catch(e){}",
+          }}
+        />
+      </head>
       <body className="min-h-full">
         <Providers>{children}</Providers>
         <Analytics />

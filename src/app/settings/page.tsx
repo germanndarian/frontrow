@@ -447,12 +447,13 @@ function AppearanceCard() {
       <div className="mt-4">
         <SettingRow
           label="Theme"
-          hint="Light matches the homepage; dark is the original midnight look."
+          hint="System follows your device; light matches the homepage; dark is the original midnight look."
           control={
             <Segmented
               value={appearance}
               onChange={(v) => set("appearance", v as Appearance)}
               options={[
+                { label: "System", value: "system" },
                 { label: "Light", value: "light" },
                 { label: "Dark", value: "dark" },
               ]}
