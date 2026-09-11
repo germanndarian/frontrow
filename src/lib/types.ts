@@ -96,6 +96,8 @@ export interface StandingRow {
   teamId: string;
   abbreviation: string;
   displayName: string;
+  /** Nickname without the location — "Rays", "Red Sox" — for narrow layouts. */
+  name?: string;
   logo: string;
   position: number;
   stats: Record<string, string>;
