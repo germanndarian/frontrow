@@ -21,20 +21,25 @@ struct TeamStep: View {
                         FailedState(title: "Couldn't load teams", message: message, retry: { Task { await load() } })
                             .padding(.top, 30)
                     case .loaded(let teams):
-                        let shown = filtered(teams)
-                        if shown.isEmpty {
+                        let sections = sections(filtered(teams))
+                        if sections.isEmpty {
                             ContentUnavailableView.search(text: search).padding(.top, 30)
                         } else {
-                            ForEach(shown) { team in
-                                let follow = team.follow
-                                PickRow(
-                                    name: team.displayName,
-                                    detail: team.league.name,
-                                    active: account.preferences.teams.contains { $0.id == follow.id }
-                                ) {
-                                    TeamMark(logo: team.logo, abbreviation: team.abbreviation, color: team.color, size: 44)
-                                } toggle: {
-                                    withAnimation(.snappy(duration: 0.18)) { account.toggleTeam(follow) }
+                            ForEach(sections) { section in
+                                SectionRule(title: section.league.name, detail: "\(section.teams.count)")
+                                    .padding(.top, section.league == sections.first?.league ? 0 : 10)
+                                    .padding(.bottom, 2)
+                                ForEach(section.teams) { team in
+                                    let follow = team.follow
+                                    PickRow(
+                                        name: team.displayName,
+                                        detail: followedDetail(team),
+                                        active: account.preferences.teams.contains { $0.id == follow.id }
+                                    ) {
+                                        TeamMark(logo: team.logo, abbreviation: team.abbreviation, color: team.color, size: 44)
+                                    } toggle: {
+                                        withAnimation(.snappy(duration: 0.18)) { account.toggleTeam(follow) }
+                                    }
                                 }
                             }
                         }
@@ -45,6 +50,21 @@ struct TeamStep: View {
             }
         }
         .task(id: account.preferences.leagues) { await load() }
+    }
+
+    /// One block per league, in the league order the rest of the app uses, so
+    /// a long list of teams reads as "MLB, then NHL, then NFL".
+    private func sections(_ teams: [CatalogTeam]) -> [LeagueSection] {
+        League.displayOrder.compactMap { league in
+            let inLeague = teams.filter { $0.league == league }
+            return inLeague.isEmpty ? nil : LeagueSection(league: league, teams: inLeague)
+        }
+    }
+
+    /// The league is the section header now, so the row shows the short code
+    /// instead of repeating it.
+    private func followedDetail(_ team: CatalogTeam) -> String {
+        team.abbreviation
     }
 
     private func filtered(_ teams: [CatalogTeam]) -> [CatalogTeam] {
@@ -182,6 +202,13 @@ struct SearchField: View {
         .padding(.vertical, 11)
         .glassEffect(.regular)
     }
+}
+
+/// A league's teams, for the picker's section headers.
+struct LeagueSection: Identifiable {
+    let league: League
+    let teams: [CatalogTeam]
+    var id: String { league.rawValue }
 }
 
 /// What `/api/teams` returns — the same fields as a follow, plus the

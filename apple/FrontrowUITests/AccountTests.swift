@@ -57,23 +57,29 @@ final class AccountTests: XCTestCase {
         // Step 1: sports.
         XCTAssertTrue(app.staticTexts["Pick your sports"].waitForExistence(timeout: 10))
         tapRow(app, "Baseball")
+        tapRow(app, "Hockey")
         attach(app, "4-onboarding-sports")
         app.buttons["Continue"].tap()
 
         // Step 2: leagues — baseball pre-selects MLB.
         XCTAssertTrue(app.staticTexts["Choose your leagues"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Major League Baseball"].exists)
+        XCTAssertTrue(app.staticTexts["National Hockey League"].exists)
         app.buttons["Continue"].tap()
 
         // Step 3: teams, from the live catalogue.
         XCTAssertTrue(app.staticTexts["Follow your teams"].waitForExistence(timeout: 10))
         XCTAssertTrue(row(app, "Arizona Diamondbacks").waitForExistence(timeout: 30),
                       "the team list loads from /api/teams")
-        // The list is alphabetical and lazy, so search for the one we want.
+        // The list is long and lazy, so narrow it — which also puts both
+        // leagues on screen at once, each under its own heading.
         let search = app.textFields["Search teams"]
         XCTAssertTrue(search.waitForExistence(timeout: 5))
         search.tap()
-        search.typeText("Yankees")
+        search.typeText("New York")
+        XCTAssertTrue(app.staticTexts["MLB"].waitForExistence(timeout: 5), "teams are grouped by league")
+        XCTAssertTrue(app.staticTexts["NHL"].exists, "and every followed league gets its own block")
+        attach(app, "5a-teams-by-league")
         let yankees = row(app, "New York Yankees")
         XCTAssertTrue(yankees.waitForExistence(timeout: 10), "search narrows the list")
         yankees.tap()
@@ -89,6 +95,8 @@ final class AccountTests: XCTestCase {
 
         // Done screen, then the app.
         XCTAssertTrue(app.staticTexts["You're all set"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)["Setup complete"].exists,
+                      "the check draws itself on the Done screen")
         attach(app, "7-done")
         app.buttons["Open Frontrow"].tap()
 

@@ -80,7 +80,7 @@ struct OnboardingFlow: View {
                     .padding(.horizontal, 26)
                     .padding(.vertical, 14)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressableButtonStyle())
             .foregroundStyle(.white)
             .background(Theme.accent.opacity(canAdvance ? 1 : 0.4), in: Capsule())
             .disabled(!canAdvance)
@@ -111,7 +111,7 @@ struct OnboardingFlow: View {
 
     private func advance() {
         if step == 3 {
-            withAnimation(.snappy) { done = true }
+            withAnimation(.snappy(duration: 0.2)) { done = true }
         } else {
             withAnimation(.snappy(duration: 0.25)) { step += 1 }
         }

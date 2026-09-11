@@ -8,12 +8,21 @@ struct GameCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
+            HStack(spacing: 8) {
                 Text(game.league.name)
                     .font(.system(size: 10.5, weight: .bold, design: .monospaced))
                     .tracking(1.4)
                     .foregroundStyle(Theme.faint)
-                Spacer()
+                if let week = game.week {
+                    Text("WEEK \(week)")
+                        .font(.system(size: 9.5, weight: .bold, design: .monospaced))
+                        .tracking(0.8)
+                        .foregroundStyle(Theme.muted)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Theme.background2, in: Capsule())
+                }
+                Spacer(minLength: 4)
                 Text(statusText)
                     .font(.system(size: 11, weight: .bold))
                     .tracking(0.8)

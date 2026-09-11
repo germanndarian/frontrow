@@ -15,9 +15,24 @@ struct ScoresScreen: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
+                    WeekStrip(weeks: model.weeks, selected: model.week) { window in
+                        Task { await model.select(window) }
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 6)
+
+                    if let note = model.weekNote {
+                        Text(note)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Theme.accent)
+                            .padding(.horizontal, 18)
+                            .padding(.top, 6)
+                            .transition(.opacity)
+                    }
+
                     chips
                         .padding(.horizontal, 18)
-                        .padding(.top, 6)
+                        .padding(.top, 4)
                         .padding(.bottom, 4)
 
                     switch model.phase {
@@ -42,7 +57,7 @@ struct ScoresScreen: View {
                             ContentUnavailableView(
                                 "Nothing on the slate",
                                 systemImage: "calendar.badge.clock",
-                                description: Text("No games in the leagues you follow right now.")
+                                description: Text("No games for the leagues you follow in \(model.week.range).")
                             )
                             .padding(.top, 40)
                         } else {
@@ -76,7 +91,7 @@ struct ScoresScreen: View {
             .background(Theme.background)
             .refreshable { await model.load() }
             .navigationTitle("Live & Upcoming")
-            .navigationSubtitle(Text(Date.now, format: .dateTime.weekday(.wide).month(.abbreviated).day()))
+            .navigationSubtitle(Text("\(model.week.label) · \(model.week.range)"))
             .toolbar {
                 if model.liveCount > 0 {
                     ToolbarItem(placement: .topBarTrailing) {

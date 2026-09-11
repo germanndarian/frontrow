@@ -90,6 +90,8 @@ export interface Game {
   period?: string;
   /** Pre-game only: betting line when the scoreboard provides one. */
   odds?: OddsLine;
+  /** Week of the season, for the leagues that count in weeks (NFL, NCAAF). */
+  week?: number;
 }
 
 export interface StandingRow {

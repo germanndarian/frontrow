@@ -229,3 +229,44 @@ struct ChipRow<Content: View>: View {
         .scrollClipDisabled()
     }
 }
+
+/// The week picker above the scoreboard: last week, this week, and the season
+/// ahead. The chosen week is kept in view as the strip scrolls.
+struct WeekStrip: View {
+    let weeks: [WeekWindow]
+    let selected: WeekWindow
+    let choose: (WeekWindow) -> Void
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                GlassEffectContainer(spacing: 8) {
+                    HStack(spacing: 8) {
+                        ForEach(weeks) { week in
+                            Chip(label: week.label, on: week == selected) { choose(week) }
+                                .id(week.offset)
+                        }
+                    }
+                }
+                .padding(.vertical, 6)
+            }
+            .scrollClipDisabled()
+            .onAppear { proxy.scrollTo(selected.offset, anchor: .center) }
+            .onChange(of: selected) { _, week in
+                withAnimation(.snappy(duration: 0.25)) { proxy.scrollTo(week.offset, anchor: .center) }
+            }
+        }
+        .accessibilityLabel("Week")
+    }
+}
+
+/// A filled button that answers the touch before the work starts — the press
+/// is what makes a tap feel immediate, whatever happens next.
+struct PressableButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .opacity(configuration.isPressed ? 0.9 : 1)
+            .animation(.snappy(duration: 0.12), value: configuration.isPressed)
+    }
+}
