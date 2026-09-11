@@ -193,6 +193,10 @@ are.
 - `-widget-gallery` draws every widget at its real size inside the app, from
   the same view files the extension ships, so a change can be looked at without
   adding a widget to a home screen.
+- The development team lives in `project.yml`, not in the Signing editor: a
+  team picked in Xcode is written into the `.xcodeproj`, which `native:gen`
+  regenerates, and every target needs one — an extension that inherits an empty
+  team refuses to sign.
 
 ## Deferred
 
