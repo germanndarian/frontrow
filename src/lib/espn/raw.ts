@@ -93,6 +93,8 @@ export interface RawEvent {
   /** Postseason = type 3. */
   season?: { type?: number };
   seasonType?: { type?: number };
+  /** Week of the season — football only, in practice. */
+  week?: { number?: number };
 }
 
 export interface RawScoreboard {

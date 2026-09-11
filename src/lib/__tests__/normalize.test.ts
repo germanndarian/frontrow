@@ -65,3 +65,40 @@ describe("normalizeScoreboard odds", () => {
     expect(final.odds).toBeUndefined();
   });
 });
+
+describe("normalizeScoreboard week", () => {
+  function weekly(week?: number): RawScoreboard {
+    return {
+      events: [
+        {
+          id: "1",
+          date: "2026-09-14T00:00:00Z",
+          week: week === undefined ? undefined : { number: week },
+          competitions: [
+            {
+              status: { type: { state: "pre" } },
+              competitors: [
+                { homeAway: "home", team: { abbreviation: "DAL" } },
+                { homeAway: "away", team: { abbreviation: "PHI" } },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  it("carries the week for football", () => {
+    expect(normalizeScoreboard(weekly(2), "nfl")[0].week).toBe(2);
+    expect(normalizeScoreboard(weekly(3), "college-football")[0].week).toBe(3);
+  });
+
+  it("drops it for leagues nobody counts in weeks", () => {
+    expect(normalizeScoreboard(weekly(24), "mlb")[0].week).toBeUndefined();
+    expect(normalizeScoreboard(weekly(24), "nhl")[0].week).toBeUndefined();
+  });
+
+  it("is undefined when ESPN omits it", () => {
+    expect(normalizeScoreboard(weekly(undefined), "nfl")[0].week).toBeUndefined();
+  });
+});

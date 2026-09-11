@@ -20,7 +20,12 @@ function seg(league: LeagueId): string {
 }
 
 export const espnUrl = {
-  scoreboard: (l: LeagueId) => `${SITE}/${seg(l)}/scoreboard`,
+  /** Today's slate, or a window ("YYYYMMDD" / "YYYYMMDD-YYYYMMDD"). A window
+      needs the raised limit: ESPN pages a week of baseball otherwise. */
+  scoreboard: (l: LeagueId, dates?: string) =>
+    dates
+      ? `${SITE}/${seg(l)}/scoreboard?dates=${dates}&limit=400`
+      : `${SITE}/${seg(l)}/scoreboard`,
   /** Playoff games over a date window, "YYYYMMDD-YYYYMMDD". */
   playoffScoreboard: (l: LeagueId, dates: string) =>
     `${SITE}/${seg(l)}/scoreboard?dates=${dates}&limit=400`,
@@ -39,6 +44,8 @@ export const espnUrl = {
     informal ~2.5k/day budget even with several followed leagues. */
 export const REVALIDATE = {
   scoreboard: 20,
+  /** A week's slate moves slower than today's, and costs more to fetch. */
+  scoreboardWeek: 120,
   bracket: 300,
   team: 300,
   standings: 300,

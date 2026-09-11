@@ -4,26 +4,12 @@ import SwiftUI
 struct OnboardingDone: View {
     @Environment(Account.self) private var account
     let onContinue: () -> Void
-    @State private var checked = false
 
     var body: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 20)
 
-            ZStack {
-                Circle()
-                    .fill(Theme.accent.opacity(0.12))
-                    .frame(width: 108, height: 108)
-                    .scaleEffect(checked ? 1 : 0.6)
-                Image(systemName: "checkmark")
-                    .font(.system(size: 44, weight: .bold))
-                    .foregroundStyle(Theme.accent)
-                    .scaleEffect(checked ? 1 : 0.3)
-                    .opacity(checked ? 1 : 0)
-            }
-            .onAppear {
-                withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) { checked = true }
-            }
+            DrawnCheck(size: 108)
 
             Text("You're all set")
                 .font(.system(size: 30, weight: .black))
@@ -59,7 +45,7 @@ struct OnboardingDone: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressableButtonStyle())
             .foregroundStyle(.white)
             .background(Theme.accent, in: Capsule())
             .padding(.horizontal, 24)
@@ -67,6 +53,13 @@ struct OnboardingDone: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.background)
+        .task {
+            // Fetch the first screen's games while this one is being read.
+            Prefetch.warm(
+                leagues: account.preferences.orderedLeagues.map(\.rawValue).joined(separator: ","),
+                dates: (WeekWindow.make(offset: 0) ?? WeekWindow.all()[0]).query
+            )
+        }
     }
 
     private var summary: String {
@@ -77,5 +70,54 @@ struct OnboardingDone: View {
         if players > 0 { parts.append("\(players) player\(players == 1 ? "" : "s")") }
         parts.append("across \(leagues) league\(leagues == 1 ? "" : "s")")
         return parts.joined(separator: ", ") + ". Scores, stats and standings — only for these."
+    }
+}
+
+/// A check that draws itself: the ring sweeps round, then the tick is stroked
+/// on, the way a native "done" confirmation builds up rather than popping in.
+struct DrawnCheck: View {
+    var size: CGFloat = 108
+
+    @State private var ring: CGFloat = 0
+    @State private var tick: CGFloat = 0
+    @State private var settle = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Theme.accent.opacity(0.12))
+                .frame(width: size, height: size)
+                .scaleEffect(settle ? 1 : 0.82)
+
+            Circle()
+                .trim(from: 0, to: ring)
+                .stroke(Theme.accent.opacity(0.55), style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .frame(width: size, height: size)
+
+            Tick()
+                .trim(from: 0, to: tick)
+                .stroke(Theme.accent, style: StrokeStyle(lineWidth: size * 0.09, lineCap: .round, lineJoin: .round))
+                .frame(width: size * 0.46, height: size * 0.36)
+        }
+        .onAppear(perform: draw)
+        .accessibilityLabel("Setup complete")
+    }
+
+    private func draw() {
+        withAnimation(.easeOut(duration: 0.45)) { ring = 1 }
+        withAnimation(.easeOut(duration: 0.38).delay(0.22)) { tick = 1 }
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.55).delay(0.24)) { settle = true }
+    }
+}
+
+/// The two strokes of a tick, drawn left to right so `trim` builds it up.
+private struct Tick: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+        path.addLine(to: CGPoint(x: rect.minX + rect.width * 0.38, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        return path
     }
 }

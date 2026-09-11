@@ -3,7 +3,27 @@ import Foundation
 /// Talks to the deployed site's /api route handlers — the same ESPN proxy the
 /// website uses, with the same server-side caching and normalisation.
 struct APIClient: Sendable {
-    static let shared = APIClient(baseURL: URL(string: "https://frontrow-ten.vercel.app/api")!)
+    static let production = URL(string: "https://frontrow-ten.vercel.app/api")!
+
+    /// Points at production unless told otherwise, which is how the simulator
+    /// is aimed at a dev server or a PR preview — either as a launch argument
+    /// (`-api-base http://localhost:3000/api`) or, for `xcodebuild test`, as
+    /// `TEST_RUNNER_FRONTROW_API_BASE=…`, which XCTest hands to the app with
+    /// the prefix stripped.
+    static let shared = APIClient(baseURL: baseOverride() ?? production)
+
+    private static func baseOverride() -> URL? {
+        let process = ProcessInfo.processInfo
+        if let flag = process.arguments.firstIndex(of: "-api-base"),
+           process.arguments.index(after: flag) < process.arguments.endIndex,
+           let url = URL(string: process.arguments[process.arguments.index(after: flag)]) {
+            return url
+        }
+        if let base = process.environment["FRONTROW_API_BASE"], let url = URL(string: base) {
+            return url
+        }
+        return nil
+    }
 
     let baseURL: URL
     private let session: URLSession

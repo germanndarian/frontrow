@@ -31,8 +31,8 @@ struct RootView: View {
         .environment(account)
         .tint(account.settings.accent.color)
         .preferredColorScheme(colorScheme)
-        .animation(.snappy(duration: 0.28), value: account.status)
-        .animation(.snappy(duration: 0.28), value: needsOnboarding)
+        .animation(.snappy(duration: 0.2), value: account.status)
+        .animation(.snappy(duration: 0.2), value: needsOnboarding)
         .sheet(item: $signIn) { mode in
             SignInSheet(mode: mode).environment(account)
         }

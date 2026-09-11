@@ -133,6 +133,9 @@ function extractOdds(comp: RawCompetition): OddsLine | undefined {
   };
 }
 
+/** The leagues whose season is spoken about in weeks. */
+const WEEKLY_LEAGUES = new Set<LeagueId>(["nfl", "college-football"]);
+
 export function normalizeScoreboard(raw: RawScoreboard, league: LeagueId): Game[] {
   const sport = LEAGUES[league].espnSport;
   return (raw.events ?? []).map((ev): Game => {
@@ -162,6 +165,9 @@ export function normalizeScoreboard(raw: RawScoreboard, league: LeagueId): Game[
       period: state === "in" ? st.shortDetail ?? "" : undefined,
       // Odds are a pre-game concept; skip them once a game is live/final.
       odds: state === "pre" ? extractOdds(comp) : undefined,
+      // Only football numbers its weeks in a way anyone quotes; baseball and
+      // hockey carry a week index that means nothing to a viewer.
+      week: WEEKLY_LEAGUES.has(league) ? ev.week?.number : undefined,
     };
   });
 }

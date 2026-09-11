@@ -66,6 +66,8 @@ struct Game: Codable, Sendable, Hashable, Identifiable {
     let lastPlay: String?
     let period: String?
     let odds: OddsLine?
+    /// Week of the season — football only; the API drops it elsewhere.
+    let week: Int?
 
     var startsAt: Date? { ISODate.parse(date) }
 }

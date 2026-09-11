@@ -131,6 +131,29 @@ are.
   catalogue) → roster → Done → the tabs showing exactly what was picked, with
   Settings reporting a guest session.
 
+## Follow-ups after phase 3
+
+- **Week view.** The Scores tab moved from today's slate to a week at a time:
+  a strip of last week, this week, next week and the season ahead. The
+  scoreboard route now takes a `dates` window (`YYYYMMDD-YYYYMMDD`) and caches
+  the normalized games — a week of baseball is ~1.5MB raw, past what Next's
+  fetch cache will store, but ~70KB once normalized.
+- **Where the season is.** Football games carry their week from ESPN, so cards
+  read "NFL · WEEK 2" and the strip notes "NFL Week 2 · NCAAF Week 3" for
+  whatever is in view. Baseball and hockey carry a week index nobody quotes, so
+  the API drops it for those leagues.
+- **Teams by league.** The onboarding team picker groups its rows under league
+  headings rather than running one alphabetical list across every league.
+- **A faster Done screen.** The check draws itself — ring, then tick — instead
+  of popping in, buttons answer the press immediately, the hand-off animation
+  is 0.2s, and the Done screen prefetches the first scoreboard so the tabs open
+  on games rather than skeletons.
+- **Aiming the app elsewhere.** `APIClient` accepts `-api-base` as a launch
+  argument or `FRONTROW_API_BASE` in the environment, which is how the
+  simulator is pointed at a dev server; `xcrun simctl spawn <udid> launchctl
+  setenv FRONTROW_API_BASE …` reaches a test run, where `TEST_RUNNER_`
+  variables do not.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the
