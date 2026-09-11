@@ -48,7 +48,7 @@ function Standings({ league }: { league: LeagueId }) {
           <span className="flex min-w-0 flex-1 items-center gap-2">
             <TeamLogo src={r.logo} name={r.displayName} abbr={r.abbreviation} size={24} className="rounded-[7px]" />
             <span className={cn("truncate text-[13.5px] font-semibold", r.followed ? "text-ink" : "text-muted")}>
-              {r.displayName}{r.clinched ? <sup className="ml-0.5 text-[9px] text-faint">{r.clinched}</sup> : null}
+              {r.name ?? r.displayName}{r.clinched ? <sup className="ml-0.5 text-[9px] text-faint">{r.clinched}</sup> : null}
             </span>
           </span>
           {cols.map((c) => (

@@ -25,7 +25,7 @@ function Side({ s, state, lead }: { s: GameSide; state: Game["state"]; lead: boo
         <span className="block text-[11.5px] text-faint">{s.record ?? ""}</span>
       </span>
       <span className={cn("font-mono text-[27px] font-semibold", state === "in" && lead ? "text-primary" : dim ? "text-faint" : "text-ink")}>
-        {s.score ?? "–"}
+        {state === "pre" ? "–" : (s.score ?? "–")}
       </span>
     </div>
   );
