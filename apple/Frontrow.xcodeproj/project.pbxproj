@@ -49,6 +49,7 @@
 		D710EDF9E10F793504DF58E6 /* Accent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DBD7B88CCBA3085A3328DB /* Accent.swift */; };
 		D719D4FB1BA98AFEF45CD9CD /* TabsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1C5EB83FE251174CEE412C9 /* TabsTests.swift */; };
 		E781AB429B5330AB932AA9B4 /* LeagueMeta.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A0EEA27F858F26075BF03C /* LeagueMeta.swift */; };
+		E85E84ABDEE275E38036BEFD /* OnboardingSwipeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF3BD0B9F8D17BFAF22805F /* OnboardingSwipeTests.swift */; };
 		E9C3053C3CA8F16C0441D7CF /* FrontrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1FE3321971E9DBD00BD262 /* FrontrowApp.swift */; };
 		EC4856B68F541D48DDF224FF /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C534DACE529C5045C8D179F3 /* SupabaseConfig.swift */; };
 		ECE2CEA27E817F79BA7EB2EF /* FavouritesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BB715610A2586C7B449BF7 /* FavouritesTests.swift */; };
@@ -98,6 +99,7 @@
 		7BECBC9CF8C2FE25829506A2 /* PlayersScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayersScreen.swift; sourceTree = "<group>"; };
 		7F2F5327EC1E606F167307BE /* Prefetch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prefetch.swift; sourceTree = "<group>"; };
 		8A6AA021E3FCD7C4EDA5A5AA /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		8AF3BD0B9F8D17BFAF22805F /* OnboardingSwipeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSwipeTests.swift; sourceTree = "<group>"; };
 		94D997893A5BFC2434FCAF37 /* FrontrowUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FrontrowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		986D896A6050DA833F87C1E6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A9A4AE75A5AFB2BA7C8ADD1B /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
@@ -244,6 +246,7 @@
 			children = (
 				090AB71635D8EFB19B5EBF06 /* AccountTests.swift */,
 				D0BB715610A2586C7B449BF7 /* FavouritesTests.swift */,
+				8AF3BD0B9F8D17BFAF22805F /* OnboardingSwipeTests.swift */,
 				B1DACC40DFE8AC31B99652AF /* ShellTests.swift */,
 				D1C5EB83FE251174CEE412C9 /* TabsTests.swift */,
 				CB24D8EE32E50433CE129AF3 /* WeekTests.swift */,
@@ -435,6 +438,7 @@
 			files = (
 				937550A23E52DD94ED0EB36F /* AccountTests.swift in Sources */,
 				ECE2CEA27E817F79BA7EB2EF /* FavouritesTests.swift in Sources */,
+				E85E84ABDEE275E38036BEFD /* OnboardingSwipeTests.swift in Sources */,
 				3D82CFFD1790E11C981AF3F9 /* ShellTests.swift in Sources */,
 				D719D4FB1BA98AFEF45CD9CD /* TabsTests.swift in Sources */,
 				67D7A2F40CB492A08CD56473 /* WeekTests.swift in Sources */,

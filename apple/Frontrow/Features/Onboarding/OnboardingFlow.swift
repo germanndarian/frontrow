@@ -5,15 +5,38 @@ import SwiftUI
 /// through, which is where swiping belongs now the tabs don't use it.
 struct OnboardingFlow: View {
     @Environment(Account.self) private var account
-    @State private var step = 0
+    @State private var step: Step = .sports
     @State private var done = false
 
-    private static let titles = [
-        ("Pick your sports", "Choose everything you follow. You can add more later."),
-        ("Choose your leagues", "We pre-select the obvious ones — adjust as you like."),
-        ("Follow your teams", "Search and tap the teams you want on your dashboard."),
-        ("Star your players", "Optional. Add the names you tune in for."),
-    ]
+    /// The steps are a type, not positions in an array. A paged TabView drives
+    /// this binding, and an index into a fixed list of titles is one stray
+    /// value away from a crash; a case can only ever be one of four things.
+    enum Step: Int, CaseIterable, Identifiable, Hashable {
+        case sports, leagues, teams, players
+
+        var id: Int { rawValue }
+        var isLast: Bool { self == .players }
+        var next: Step? { Step(rawValue: rawValue + 1) }
+        var previous: Step? { Step(rawValue: rawValue - 1) }
+
+        var title: String {
+            switch self {
+            case .sports: "Pick your sports"
+            case .leagues: "Choose your leagues"
+            case .teams: "Follow your teams"
+            case .players: "Star your players"
+            }
+        }
+
+        var subtitle: String {
+            switch self {
+            case .sports: "Choose everything you follow. You can add more later."
+            case .leagues: "We pre-select the obvious ones — adjust as you like."
+            case .teams: "Search and tap the teams you want on your dashboard."
+            case .players: "Optional. Add the names you tune in for."
+            }
+        }
+    }
 
     var body: some View {
         if done {
@@ -22,10 +45,10 @@ struct OnboardingFlow: View {
             VStack(spacing: 0) {
                 header
                 TabView(selection: $step) {
-                    SportStep().tag(0)
-                    LeagueStep().tag(1)
-                    TeamStep().tag(2)
-                    PlayerStep().tag(3)
+                    SportStep().tag(Step.sports)
+                    LeagueStep().tag(Step.leagues)
+                    TeamStep().tag(Step.teams)
+                    PlayerStep().tag(Step.players)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 footer
@@ -37,17 +60,17 @@ struct OnboardingFlow: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
-                ForEach(0..<4, id: \.self) { index in
+                ForEach(Step.allCases) { bar in
                     Capsule()
-                        .fill(index <= step ? Theme.accent : Theme.line)
+                        .fill(bar.rawValue <= step.rawValue ? Theme.accent : Theme.line)
                         .frame(height: 4)
                 }
             }
-            Text(Self.titles[step].0)
+            Text(step.title)
                 .font(.system(size: 26, weight: .black))
                 .tracking(-0.6)
                 .foregroundStyle(Theme.ink)
-            Text(Self.titles[step].1)
+            Text(step.subtitle)
                 .font(.system(size: 13.5))
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -60,22 +83,24 @@ struct OnboardingFlow: View {
 
     private var footer: some View {
         HStack(spacing: 12) {
-            if step > 0 {
+            if let previous = step.previous {
                 Button {
-                    withAnimation(.snappy(duration: 0.25)) { step -= 1 }
+                    withAnimation(.snappy(duration: 0.25)) { step = previous }
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 15, weight: .semibold))
                         .frame(width: 46, height: 46)
+                        .accessibilityLabel("Back")
                 }
                 .buttonStyle(.glass)
+                .accessibilityIdentifier("Back")
             }
             Text(count)
                 .font(.system(size: 12.5, weight: .semibold))
                 .foregroundStyle(Theme.faint)
             Spacer(minLength: 0)
             Button(action: advance) {
-                Text(step == 3 ? "Finish" : "Continue")
+                Text(step.isLast ? "Finish" : "Continue")
                     .font(.system(size: 15, weight: .bold))
                     .padding(.horizontal, 26)
                     .padding(.vertical, 14)
@@ -93,28 +118,28 @@ struct OnboardingFlow: View {
 
     private var count: String {
         switch step {
-        case 0: "\(account.sports.count) selected"
-        case 1: "\(account.preferences.leagues.count) selected"
-        case 2: "\(account.preferences.teams.count) followed"
-        default: "\(account.preferences.players.count) starred"
+        case .sports: "\(account.sports.count) selected"
+        case .leagues: "\(account.preferences.leagues.count) selected"
+        case .teams: "\(account.preferences.teams.count) followed"
+        case .players: "\(account.preferences.players.count) starred"
         }
     }
 
     private var canAdvance: Bool {
         switch step {
-        case 0: !account.sports.isEmpty
-        case 1: !account.preferences.leagues.isEmpty
-        case 2: !account.preferences.teams.isEmpty
-        default: true
+        case .sports: !account.sports.isEmpty
+        case .leagues: !account.preferences.leagues.isEmpty
+        case .teams: !account.preferences.teams.isEmpty
+        case .players: true
         }
     }
 
     private func advance() {
-        if step == 3 {
+        guard let next = step.next else {
             withAnimation(.snappy(duration: 0.2)) { done = true }
-        } else {
-            withAnimation(.snappy(duration: 0.25)) { step += 1 }
+            return
         }
+        withAnimation(.snappy(duration: 0.25)) { step = next }
     }
 }
 

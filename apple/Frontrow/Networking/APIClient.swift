@@ -41,21 +41,27 @@ struct APIClient: Sendable {
     enum Failure: Error, LocalizedError {
         case http(Int)
         case upstream(String)
+        case badURL(String)
 
         var errorDescription: String? {
             switch self {
             case .http(let code): "The server answered \(code)."
             case .upstream(let message): message
+            case .badURL(let path): "Couldn't build a request for \(path)."
             }
         }
     }
 
     func get<T: Decodable>(_ path: String, query: [String: String] = [:]) async throws -> T {
-        var components = URLComponents(url: baseURL.appending(path: path), resolvingAgainstBaseURL: false)!
+        let endpoint = baseURL.appending(path: path)
+        var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)
         if !query.isEmpty {
-            components.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
+            components?.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
         }
-        var request = URLRequest(url: components.url!)
+        // A path we built ourselves should always resolve; if it somehow
+        // doesn't, that is a failed request, not a dead app.
+        guard let url = components?.url else { throw Failure.badURL(path) }
+        var request = URLRequest(url: url)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("frontrow-ios/1.0", forHTTPHeaderField: "User-Agent")
         let (data, response) = try await session.data(for: request)
