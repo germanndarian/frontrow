@@ -43,3 +43,11 @@ next-env.d.ts
 
 # brainstorming visual companion
 .superpowers/
+
+# Capacitor / Xcode native project (the project itself IS committed).
+# Capacitor 8 uses Swift Package Manager, so there is no Pods directory.
+ios/App/build/
+ios/App/.swiftpm/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+ios/DerivedData/
