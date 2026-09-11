@@ -9,7 +9,11 @@
     "lint": "eslint",
     "test": "vitest run",
     "ios:sync": "cap sync ios",
-    "ios:open": "cap open ios"
+    "ios:open": "cap open ios",
+    "native:gen": "cd apple && xcodegen generate",
+    "native:open": "open apple/Frontrow.xcodeproj",
+    "native:build": "xcodebuild -project apple/Frontrow.xcodeproj -scheme Frontrow -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet build",
+    "native:test": "xcodebuild -project apple/Frontrow.xcodeproj -scheme Frontrow -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
