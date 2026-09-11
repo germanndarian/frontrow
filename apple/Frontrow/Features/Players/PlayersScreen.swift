@@ -3,8 +3,15 @@ import SwiftUI
 /// Your Players: a card per starred name — headshot, season stats with
 /// league ranks, a sparkline and the last few games. Tap for the full sheet.
 struct PlayersScreen: View {
-    @State private var model = PlayersModel()
+    let preferences: Preferences
     @Binding var sheet: AppSheet?
+    @State private var model: PlayersModel
+
+    init(preferences: Preferences, sheet: Binding<AppSheet?>) {
+        self.preferences = preferences
+        _sheet = sheet
+        _model = State(initialValue: PlayersModel(preferences: preferences))
+    }
 
     var body: some View {
         NavigationStack {
@@ -38,6 +45,7 @@ struct PlayersScreen: View {
             .navigationSubtitle(Text("\(model.followed.count) starred"))
         }
         .task { await model.load() }
+        .task(id: preferences) { await model.apply(preferences) }
     }
 }
 

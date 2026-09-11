@@ -3,7 +3,13 @@ import SwiftUI
 /// Live & Upcoming: league chips, then games grouped LIVE NOW / UPCOMING /
 /// RESULTS. Followed teams' games get the accent border, as on the web.
 struct ScoresScreen: View {
-    @State private var model = ScoresModel()
+    let preferences: Preferences
+    @State private var model: ScoresModel
+
+    init(preferences: Preferences) {
+        self.preferences = preferences
+        _model = State(initialValue: ScoresModel(preferences: preferences))
+    }
 
     var body: some View {
         NavigationStack {
@@ -86,6 +92,7 @@ struct ScoresScreen: View {
             }
         }
         .task { await model.load() }
+        .task(id: preferences) { await model.apply(preferences) }
     }
 
     /// League filter chips, with "All" in front of the followed leagues.

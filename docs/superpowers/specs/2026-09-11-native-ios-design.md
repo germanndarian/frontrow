@@ -1,7 +1,7 @@
 # Frontrow — native iOS app — design
 
 **Date:** 2026-09-11
-**Status:** approved (direction and phasing); Phases 1 and 2 built
+**Status:** built — phases 1, 2 and 3
 
 ## Goal
 
@@ -66,7 +66,7 @@ are.
   the first upward flick, while a tap expands it at once. Build and run in
   the iOS Simulator (iPhone 17 Pro, iOS 26.5) from the CLI.
 
-## Phase 2 (this PR)
+## Phase 2
 
 - **Teams.** A card per followed team: header tinted with the team colour,
   recent form as W/L chips, what's next, the scoring stretch, and actions for
@@ -93,12 +93,48 @@ are.
   followed team's name, "Batting Average", "AL East", the row for the team you
   follow) and switching leagues. Screenshots at each step.
 
+## Phase 3 (this PR)
+
+- **Account.** Supabase Swift (2.55) for email/password sign-in and sign-up.
+  The SDK keeps the session in the keychain, so signing in once is enough —
+  the app reopens signed in until Settings signs you out. Guest mode keeps
+  everything in memory, as the website does.
+- **The front door.** A dark, branded welcome screen with sign up, sign in and
+  "look around as a guest".
+- **Onboarding.** Sports → leagues → teams → players, in a paged view so the
+  steps can be swiped as well as tapped, then a Done screen that reads back
+  what you picked. Teams come from `/api/teams` and players from `/api/roster`,
+  so the pickers offer whatever ESPN currently lists rather than a baked-in
+  catalogue.
+- **Settings.** Profile (avatar emoji, display name), theme, accent colour,
+  reduce motion, greeting name, the full list of follows with removal, sign
+  out and delete account.
+- **Sync.** The same three tables the website writes — `profiles`,
+  `preferences`, `settings` — with the same column names and JSON shapes, so a
+  team followed on the phone shows up on the website and a theme chosen in the
+  browser arrives on the phone. Writes are debounced by 400ms, as on the web.
+  The settings the app doesn't surface (radius, density, glow, hidden sections)
+  are read and written back untouched rather than dropped.
+- **The anon key ships in the app.** `SupabaseConfig` holds the project URL and
+  the public anon key — the same pair the website serves in every page. Row-
+  Level Security, not secrecy, is what scopes rows to their owner.
+- **Account deletion needed one web change.** The route authenticated with the
+  session cookie, which an app doesn't have; it now also accepts the session as
+  a bearer token, verified by Supabase before anything is deleted.
+- **The Capacitor shell is retired.** `ios/`, `capacitor.config.ts` and the
+  three `@capacitor/*` dependencies are gone; the native app replaces it under
+  the same bundle id. The website keeps its `/app` route for phone browsers,
+  and with it the WebView detection in `src/lib/native.ts`, now inert.
+- Verification: `AccountTests` asserts the front door, a real sign-in round
+  trip to Supabase (an unknown account has to come back rejected), and the
+  whole guest path — sports → leagues → teams (searched from the live
+  catalogue) → roster → Done → the tabs showing exactly what was picked, with
+  Settings reporting a guest session.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the
   fonts is a small follow-up.
 - The design's custom tab glyphs: SF Symbols in Phase 1, as Apple's apps use.
-- Retiring the Capacitor shell (`ios/`, `capacitor.config.ts`, deps) once
-  the native app reaches parity in Phase 3.
 - The web `/app` route's scroll glitch the maintainer mentioned — left as is
   by instruction while the native app takes over.

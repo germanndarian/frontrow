@@ -3,8 +3,15 @@ import SwiftUI
 /// Your Teams: a card per followed team, and a season panel underneath for
 /// whichever one you tap.
 struct TeamsScreen: View {
-    @State private var model = TeamsModel()
+    let preferences: Preferences
     @Binding var sheet: AppSheet?
+    @State private var model: TeamsModel
+
+    init(preferences: Preferences, sheet: Binding<AppSheet?>) {
+        self.preferences = preferences
+        _sheet = sheet
+        _model = State(initialValue: TeamsModel(preferences: preferences))
+    }
 
     var body: some View {
         NavigationStack {
@@ -57,6 +64,7 @@ struct TeamsScreen: View {
             .navigationSubtitle(Text("\(model.teams.count) followed"))
         }
         .task { await model.load() }
+        .task(id: preferences) { await model.apply(preferences) }
     }
 
     private func select(_ team: FollowedTeam) {

@@ -15,19 +15,27 @@ final class ScoresModel {
     var league: League? = nil // nil = all
 
     private let api: APIClient
-    private let preferences: Preferences
+    private var preferences: Preferences
     private var pollTask: Task<Void, Never>?
 
-    init(api: APIClient = .shared, preferences: Preferences = .current) {
+    init(api: APIClient = .shared, preferences: Preferences = .empty) {
         self.api = api
         self.preferences = preferences
+    }
+
+    /// Follows changed in Settings or onboarding — reload against the new set.
+    func apply(_ next: Preferences) async {
+        guard next != preferences else { return }
+        preferences = next
+        if let league, !next.leagues.contains(league) { self.league = nil }
+        await load()
     }
 
     var followedKeys: Set<String> {
         Set(preferences.teams.map(\.id))
     }
 
-    var leagues: [League] { preferences.leagues }
+    var leagues: [League] { preferences.orderedLeagues }
 
     var visible: [Game] {
         guard let league else { return games }
@@ -56,9 +64,14 @@ final class ScoresModel {
     }
 
     func load() async {
+        guard !preferences.leagues.isEmpty else {
+            games = []
+            phase = .loaded
+            return
+        }
         if games.isEmpty { phase = .loading }
         do {
-            let leagues = preferences.leagues.map(\.rawValue).joined(separator: ",")
+            let leagues = preferences.orderedLeagues.map(\.rawValue).joined(separator: ",")
             let fetched: [Game] = try await api.get("scoreboard", query: ["leagues": leagues])
             games = fetched.sorted { ($0.startsAt ?? .distantFuture) < ($1.startsAt ?? .distantFuture) }
             phase = .loaded
@@ -78,19 +91,4 @@ final class ScoresModel {
             await self?.load()
         }
     }
-}
-
-/// Followed leagues and teams. Phase 1 uses the same default lineup the web
-/// app offers as "Use a sample lineup"; Phase 3 replaces this with the
-/// account's follows from Supabase.
-struct Preferences: Sendable {
-    var leagues: [League]
-    var teams: [FollowedTeam]
-    var players: [FollowedPlayer]
-
-    static let current = Preferences(
-        leagues: [.mlb, .nhl, .nfl, .collegeFootball],
-        teams: DefaultLineup.teams,
-        players: DefaultLineup.players
-    )
 }
