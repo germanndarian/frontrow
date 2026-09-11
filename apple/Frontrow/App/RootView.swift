@@ -5,6 +5,7 @@ import SwiftUI
 /// when you scroll up or tap it.
 struct RootView: View {
     @State private var selection: Area = .scores
+    @State private var sheet: AppSheet?
 
     enum Area: String, CaseIterable, Identifiable {
         case scores, teams, players, table, settings
@@ -17,19 +18,26 @@ struct RootView: View {
                 ScoresScreen()
             }
             Tab("Teams", systemImage: "shield.checkered", value: .teams) {
-                PlaceholderScreen(title: "Your Teams", phase: 2)
+                TeamsScreen(sheet: $sheet)
             }
             Tab("Players", systemImage: "person.crop.circle", value: .players) {
-                PlaceholderScreen(title: "Your Players", phase: 2)
+                PlayersScreen(sheet: $sheet)
             }
             Tab("Table", systemImage: "tablecells", value: .table) {
-                PlaceholderScreen(title: "Around the League", phase: 2)
+                TableScreen()
             }
             Tab("Settings", systemImage: "gearshape", value: .settings) {
                 PlaceholderScreen(title: "Settings", phase: 3)
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .sheet(item: $sheet) { which in
+            switch which {
+            case .schedule(let team): ScheduleSheet(team: team)
+            case .bracket(let team): BracketSheet(team: team)
+            case .player(let player): PlayerSheet(follow: player)
+            }
+        }
     }
 }
 

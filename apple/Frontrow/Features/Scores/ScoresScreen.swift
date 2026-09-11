@@ -41,7 +41,7 @@ struct ScoresScreen: View {
                             .padding(.top, 40)
                         } else {
                             ForEach(model.groups) { group in
-                                GroupRule(title: group.title, count: group.games.count)
+                                SectionRule(title: group.title, detail: "\(group.games.count)")
                                     .padding(.horizontal, 18)
                                     .padding(.top, 22)
                                     .padding(.bottom, 12)
@@ -88,56 +88,13 @@ struct ScoresScreen: View {
         .task { await model.load() }
     }
 
-    /// League filter chips. Glass, in one container so their highlights blend.
+    /// League filter chips, with "All" in front of the followed leagues.
     private var chips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            GlassEffectContainer(spacing: 8) {
-                HStack(spacing: 8) {
-                    Chip(label: "All", on: model.league == nil) { model.league = nil }
-                    ForEach(model.leagues) { league in
-                        Chip(label: league.name, on: model.league == league) { model.league = league }
-                    }
-                }
+        ChipRow {
+            Chip(label: "All", on: model.league == nil) { model.league = nil }
+            ForEach(model.leagues) { league in
+                Chip(label: league.name, on: model.league == league) { model.league = league }
             }
-            .padding(.vertical, 6)
-        }
-        .scrollClipDisabled()
-    }
-}
-
-struct Chip: View {
-    let label: String
-    let on: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.subheadline.weight(.bold))
-                .padding(.horizontal, 15)
-                .padding(.vertical, 8)
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(on ? Color.white : Theme.muted)
-        .glassEffect(on ? .regular.tint(Theme.accent).interactive() : .regular.interactive())
-        .accessibilityAddTraits(on ? .isSelected : [])
-    }
-}
-
-struct GroupRule: View {
-    let title: String
-    let count: Int
-
-    var body: some View {
-        HStack(spacing: 10) {
-            Text(title)
-                .font(.system(size: 13, weight: .black, design: .default))
-                .tracking(0.8)
-                .foregroundStyle(Theme.ink)
-            Text("\(count)")
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundStyle(Theme.faint)
-            Rectangle().fill(Theme.line).frame(height: 1)
         }
     }
 }

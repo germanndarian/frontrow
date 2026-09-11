@@ -1,7 +1,7 @@
 # Frontrow — native iOS app — design
 
 **Date:** 2026-09-11
-**Status:** approved (direction and phasing), Phase 1 in progress
+**Status:** approved (direction and phasing); Phases 1 and 2 built
 
 ## Goal
 
@@ -46,7 +46,7 @@ are.
   controls, never content.
 - **Tab bar.** `TabView` with `Tab`s and `.tabBarMinimizeBehavior(.onScrollDown)`.
 
-## Phase 1 (this PR)
+## Phase 1
 
 - App shell: five tabs with SF Symbols, accent tint, minimise-on-scroll.
 - Scores tab on live data: league chips, LIVE NOW / UPCOMING / RESULTS
@@ -65,6 +65,33 @@ are.
   the bar re-expands as the list travels back toward the top rather than on
   the first upward flick, while a tap expands it at once. Build and run in
   the iOS Simulator (iPhone 17 Pro, iOS 26.5) from the CLI.
+
+## Phase 2 (this PR)
+
+- **Teams.** A card per followed team: header tinted with the team colour,
+  recent form as W/L chips, what's next, the scoring stretch, and actions for
+  the schedule and (when the team is in it) the playoff bracket. Tapping a
+  card features it in the Season Stats panel below — record, win %, streak,
+  per-game tiles and the scoring chart.
+- **Players.** A card per starred player: headshot, season stats in a
+  three-wide grid with league ranks (gold for a league leader), a sparkline of
+  the headline number, and the last four game logs.
+- **Table.** One league at a time, showing the followed team's division or
+  conference with that team's row highlighted. Columns come from the league,
+  so hockey shows GP/W/L/OTL/PTS and football W/L/T/PCT/STRK.
+- **Sheets.** Schedule, bracket and player, as native sheets with the grabber
+  and swipe-to-dismiss. Each fetches its own data and carries a compact header
+  with Done rather than a navigation bar.
+- Game-log stats arrive as a JSON object, which Swift decodes into an
+  unordered dictionary. Rather than print them alphabetically ("0 2B · 0 3B")
+  the app states a per-league order, so a line reads like a box score
+  ("4 AB · 1 R · 2 H").
+- A small `Loadable`/`Cache` pair stands in for the web's React Query: one
+  request per key, kept until pull-to-refresh forces it.
+- Verification: a second XCUITest walks Teams → schedule sheet → season panel
+  → Players → player sheet → Table, asserting live values rendered (the
+  followed team's name, "Batting Average", "AL East", the row for the team you
+  follow) and switching leagues. Screenshots at each step.
 
 ## Deferred
 
