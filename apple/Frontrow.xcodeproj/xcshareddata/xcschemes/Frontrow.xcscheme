@@ -35,6 +35,20 @@
                ReferencedContainer = "container:Frontrow.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "483F40E00C1930073027E091"
+               BuildableName = "FrontrowWidgets.appex"
+               BlueprintName = "FrontrowWidgets"
+               ReferencedContainer = "container:Frontrow.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

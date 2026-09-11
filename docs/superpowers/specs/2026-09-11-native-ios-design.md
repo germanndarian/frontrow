@@ -168,6 +168,32 @@ are.
 - A team card's schedule and bracket strips are buttons across their full
   width, with a press state, rather than tappable words.
 
+## Widgets and Google sign-in
+
+- **Home screen**, in the design's three sizes: Small (2×2) is the live or next
+  game, Medium (4×2) adds a NEXT column, Large (4×4) adds an UP NEXT list and a
+  footer. **Lock screen** adds rectangular, circular and inline.
+- Widgets run in their own process with no keychain session, so the app writes
+  what they need — followed leagues, teams, accent — into an App Group
+  (`group.com.germanndarian.frontrow`) whenever it changes, and reloads their
+  timelines. Without the group the widgets fall back to the sample lineup
+  rather than breaking.
+- The widget target compiles the app's own `Models`, `Networking` and `Theme`
+  rather than keeping a second copy of them, and asks the same `/api/scoreboard`
+  the app asks. It refreshes every 5 minutes while a followed game is live and
+  every 30 otherwise.
+- The tile's ground is `containerBackground` — the system's own widget material
+  — with the account's accent laid over it: the midnight wash in dark, a light
+  tint in light. Lock-screen widgets carry no colour, as that layer is
+  monochrome by design.
+- Tapping a widget opens `frontrow://scores`, which selects the Scores tab.
+- **Google sign-in** through `ASWebAuthenticationSession` (a real Safari view —
+  Google refuses embedded WebViews), coming back to `frontrow://auth-callback`.
+  Supabase needs that URL in its redirect allow-list.
+- `-widget-gallery` draws every widget at its real size inside the app, from
+  the same view files the extension ships, so a change can be looked at without
+  adding a widget to a home screen.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the

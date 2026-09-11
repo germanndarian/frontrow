@@ -5,6 +5,7 @@ import SwiftUI
 struct WelcomeScreen: View {
     let onSignUp: () -> Void
     let onSignIn: () -> Void
+    let onGoogle: () -> Void
     let onGuest: () -> Void
 
     private static let features = [
@@ -114,6 +115,19 @@ struct WelcomeScreen: View {
                     .buttonStyle(.plain)
                     .foregroundStyle(.white)
                     .background(Theme.accent, in: Capsule())
+
+                    Button(action: onGoogle) {
+                        HStack(spacing: 9) {
+                            GoogleMark()
+                            Text("Continue with Google")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 15)
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Color(hex: 0x131313))
+                    .background(.white, in: Capsule())
 
                     Button(action: onSignIn) {
                         Text("I already have an account")

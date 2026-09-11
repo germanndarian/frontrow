@@ -6,9 +6,15 @@ import SwiftUI
 struct RootView: View {
     @State private var account = Account()
     @State private var signIn: SignInSheet.Mode?
+    @State private var googleError: String?
+    /// Changes when a widget asks for the scoreboard, so the shell can switch.
+    @State private var openScores = UUID()
 
     var body: some View {
         Group {
+            if ProcessInfo.processInfo.arguments.contains("-widget-gallery") {
+                WidgetGallery(entry: .placeholder())
+            } else {
             switch account.status {
             case .loading:
                 LaunchScreen()
@@ -16,16 +22,23 @@ struct RootView: View {
                 WelcomeScreen(
                     onSignUp: { signIn = .signUp },
                     onSignIn: { signIn = .signIn },
+                    onGoogle: { Task { googleError = await account.signInWithGoogle() } },
                     onGuest: { account.continueAsGuest() }
                 )
+                .alert("Couldn't sign in with Google", isPresented: showingGoogleError) {
+                    Button("OK") { googleError = nil }
+                } message: {
+                    Text(googleError ?? "")
+                }
             case .authed, .guest:
                 if needsOnboarding {
                     OnboardingFlow()
                         .transition(.opacity)
                 } else {
-                    TabShell()
+                    TabShell(openScores: openScores)
                         .transition(.opacity)
                 }
+            }
             }
         }
         .environment(account)
@@ -37,7 +50,16 @@ struct RootView: View {
             SignInSheet(mode: mode).environment(account)
         }
         .task { await account.start() }
+        .onOpenURL { url in
+            // frontrow://scores comes from a widget; the auth callback is the
+            // Supabase SDK's business and needs nothing from us here.
+            if url.host == "scores" { openScores = UUID() }
+        }
         .onChange(of: account.settings.accent) { _, accent in Theme.accent = accent.color }
+    }
+
+    private var showingGoogleError: Binding<Bool> {
+        Binding(get: { googleError != nil }, set: { if !$0 { googleError = nil } })
     }
 
     /// A guest has no saved follows, so the flow is where they pick some.
@@ -78,6 +100,7 @@ struct LaunchScreen: View {
 /// when you scroll up or tap it.
 struct TabShell: View {
     @Environment(Account.self) private var account
+    let openScores: UUID
     @State private var selection: Area = .scores
     @State private var sheet: AppSheet?
 
@@ -105,6 +128,9 @@ struct TabShell: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .onChange(of: openScores) { _, _ in
+            withAnimation(.snappy(duration: 0.2)) { selection = .scores }
+        }
         .sheet(item: $sheet) { which in
             switch which {
             case .schedule(let team): ScheduleSheet(team: team)
