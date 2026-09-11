@@ -5,9 +5,8 @@ import { usePlayer } from "@/lib/queries";
 import type { FollowedPlayer, GameLogEntry, Player, PlayerSeasonStat } from "@/lib/types";
 import { Headshot } from "@/components/ui/Headshot";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
-import { Bars, Eyebrow, Outcome } from "./primitives";
+import { Bars, Eyebrow, Outcome, PlayerCardSkeleton } from "./primitives";
 import { cn } from "@/lib/utils";
 
 /* Players tab: one card per starred player — headshot, season stat grid with
@@ -58,7 +57,7 @@ export function GameLogRows({ entries }: { entries: GameLogEntry[] }) {
 
 function PlayerCardMobile({ follow, onOpen }: { follow: FollowedPlayer; onOpen: (p: FollowedPlayer, data: Player) => void }) {
   const { data, isPending } = usePlayer(follow.league, follow.id);
-  if (isPending) return <Skeleton className="h-[300px] w-full rounded-[22px]" />;
+  if (isPending) return <PlayerCardSkeleton />;
   if (!data) return null;
 
   const spark = [...data.recent.entries].reverse().map((e) => e.primary);

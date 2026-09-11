@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "motion/react";
 import { usePreferences } from "@/lib/store";
 import { useAppReady, useIsAuthed } from "@/lib/auth";
 import { DEFAULT_PREFERENCES } from "@/lib/mock";
 import { LEAGUES, SPORTS, SPORT_ORDER, leaguesForSports } from "@/lib/leagues";
 import type { FollowedPlayer, FollowedTeam, LeagueId, SportId } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { SwipePager } from "@/components/mobile/SwipePager";
 import { CheckMark } from "./CheckMark";
 import { TeamPicker } from "./TeamPicker";
 import { PlayerPicker } from "./PlayerPicker";
@@ -18,7 +18,8 @@ import { SetupDone } from "./SetupDone";
 /* Four-step onboarding — sports → leagues → teams → players — then a Done
    screen. Laid out the way the app mockups are: a fixed header with the step
    rail, a scrolling list of tappable rows, and a fixed footer with back, the
-   selection count and the primary action. Shared by /setup and /app. */
+   selection count and the primary action. Steps live in a pager, so on a
+   phone you can swipe between them as well as tap. Shared by /setup and /app. */
 
 const STEPS = [
   { title: "Pick your sports", subtitle: "Choose everything you follow. You can add more later." },
@@ -95,12 +96,6 @@ function Mark({ color, children }: { color: string; children: React.ReactNode })
   );
 }
 
-const variants = {
-  enter: (dir: number) => ({ opacity: 0, x: dir > 0 ? 26 : -26 }),
-  center: { opacity: 1, x: 0 },
-  exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -26 : 26 }),
-};
-
 /** `after` is where onboarding lands; `loginHref` where an unauthenticated
     visitor is bounced. The iOS app points both at /app so the flow never drops
     someone onto the web dashboard. `onDone` fires once the user leaves the
@@ -127,7 +122,6 @@ export function SetupFlow({
   }, [ready, authed, router, loginHref]);
 
   const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState(1);
   const [done, setDone] = useState(false);
 
   const [sports, setSports] = useState<SportId[]>(() => (seedFromStore ? store.sports : []));
@@ -165,12 +159,10 @@ export function SetupFlow({
     if (step === 0 && leagues.length === 0) setLeagues(leaguesForSports(sports));
     if (step === 1) setTeams((prev) => prev.filter((t) => leagues.includes(t.league)));
     if (step === 3) return finish();
-    setDirection(1);
     setStep((s) => Math.min(3, s + 1));
   }
   function goBack() {
     if (step === 0) return;
-    setDirection(-1);
     setStep((s) => Math.max(0, s - 1));
   }
 
@@ -190,7 +182,6 @@ export function SetupFlow({
   }
   function addMore() {
     setDone(false);
-    setDirection(-1);
     setStep(2);
   }
   function useSample() {
@@ -207,6 +198,28 @@ export function SetupFlow({
 
   const progress = ((step + 1) / STEPS.length) * 100;
   const selectedCount = step === 0 ? sports.length : step === 1 ? leagues.length : step === 2 ? teams.length : players.length;
+
+  function stepContent(i: number) {
+    if (i === 0)
+      return (
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {SPORT_ORDER.map((s) => (
+            <PickRow key={s} active={sports.includes(s)} onToggle={() => toggleSport(s)} mark={<Mark color={SPORT_MARK[s]}><SportGlyph sport={s} /></Mark>} name={SPORTS[s].name} sub={SPORTS[s].leagues.map((l) => LEAGUES[l].name).join(" · ")} />
+          ))}
+        </div>
+      );
+    if (i === 1)
+      return (
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          {availableLeagues.map((l) => {
+            const meta = LEAGUES[l];
+            return <PickRow key={l} active={leagues.includes(l)} onToggle={() => toggleLeague(l)} mark={<Mark color={LEAGUE_MARK[l]}>{LEAGUE_TAG[l]}</Mark>} name={meta.name} sub={`${meta.fullName} · ${meta.inSeason ? "In season" : meta.seasonHint}`} />;
+          })}
+        </div>
+      );
+    if (i === 2) return <TeamPicker leagues={leagues} selected={teams} onToggle={toggleTeam} />;
+    return <PlayerPicker teams={teams} selected={players} onToggle={togglePlayer} />;
+  }
 
   return (
     <div className="flex h-dvh flex-col">
@@ -238,58 +251,27 @@ export function SetupFlow({
         </div>
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-5 pb-6 pt-[22px]">
-        <div className="mx-auto max-w-2xl">
-          <AnimatePresence mode="wait" custom={direction} initial={false}>
-            <motion.div key={step} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}>
-              {step === 0 && (
-                <div className="grid gap-2.5 sm:grid-cols-2">
-                  {SPORT_ORDER.map((s) => (
-                    <PickRow
-                      key={s}
-                      active={sports.includes(s)}
-                      onToggle={() => toggleSport(s)}
-                      mark={<Mark color={SPORT_MARK[s]}><SportGlyph sport={s} /></Mark>}
-                      name={SPORTS[s].name}
-                      sub={SPORTS[s].leagues.map((l) => LEAGUES[l].name).join(" · ")}
-                    />
-                  ))}
-                </div>
-              )}
+      <SwipePager
+        className="min-h-0 flex-1"
+        index={step}
+        count={STEPS.length}
+        canSwipe={(dir) => (dir === -1 ? step > 0 : step < 3 && canContinue)}
+        onSwipe={(dir) => (dir === 1 ? goNext() : goBack())}
+        render={(i) => (
+          <div className="no-scrollbar h-full overflow-y-auto px-5 pb-6 pt-[22px]">
+            <div className="mx-auto max-w-2xl">{stepContent(i)}</div>
+          </div>
+        )}
+      />
 
-              {step === 1 && (
-                <div className="grid gap-2.5 sm:grid-cols-2">
-                  {availableLeagues.map((l) => {
-                    const meta = LEAGUES[l];
-                    return (
-                      <PickRow
-                        key={l}
-                        active={leagues.includes(l)}
-                        onToggle={() => toggleLeague(l)}
-                        mark={<Mark color={LEAGUE_MARK[l]}>{LEAGUE_TAG[l]}</Mark>}
-                        name={meta.name}
-                        sub={`${meta.fullName} · ${meta.inSeason ? "In season" : meta.seasonHint}`}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-
-              {step === 2 && <TeamPicker leagues={leagues} selected={teams} onToggle={toggleTeam} />}
-              {step === 3 && <PlayerPicker teams={teams} selected={players} onToggle={togglePlayer} />}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </div>
-
-      <footer className="flex-none border-t border-line/80 bg-bg/90 px-5 pt-3.5 backdrop-blur-[14px]" style={{ paddingBottom: "max(16px, calc(env(safe-area-inset-bottom) + 10px))" }}>
+      <footer className="glass-bar flex-none px-5 pt-3.5" style={{ paddingBottom: "max(16px, calc(env(safe-area-inset-bottom) + 10px))" }}>
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <button
             type="button"
             onClick={goBack}
             disabled={step === 0}
             aria-label="Back"
-            className={cn("grid h-12 w-12 flex-none place-items-center rounded-full border border-line bg-surface text-[16px] text-muted transition-opacity active:scale-[0.97]", step === 0 && "pointer-events-none opacity-0")}
+            className={cn("glass grid h-12 w-12 flex-none place-items-center rounded-full text-[16px] text-muted transition-opacity active:scale-[0.97]", step === 0 && "pointer-events-none opacity-0")}
           >
             ←
           </button>

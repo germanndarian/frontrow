@@ -6,9 +6,8 @@ import { useStandings } from "@/lib/queries";
 import { LEAGUES, LEAGUE_ORDER } from "@/lib/leagues";
 import type { LeagueId } from "@/lib/types";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/States";
-import { Chip, ChipRow, Eyebrow, Panel } from "./primitives";
+import { Chip, ChipRow, Eyebrow, Panel, TableSkeleton } from "./primitives";
 import { cn } from "@/lib/utils";
 
 /* Table tab: one league at a time, the followed team's division or
@@ -24,7 +23,7 @@ function Standings({ league }: { league: LeagueId }) {
   const meta = LEAGUES[league];
   const cols = meta.standingsColumns;
 
-  if (isPending) return <Skeleton className="h-[360px] w-full rounded-[20px]" />;
+  if (isPending) return <TableSkeleton />;
   if (isError) return <ErrorState onRetry={() => refetch()} message={`Couldn't load ${meta.name} standings.`} />;
   if (!data || data.rows.length === 0) return <EmptyState title="No standings yet" body={meta.inSeason ? "Check back once games are underway." : meta.seasonHint} />;
 

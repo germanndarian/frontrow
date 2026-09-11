@@ -8,9 +8,8 @@ import type { FollowedTeam, TeamCard } from "@/lib/types";
 import { currentStreak, mean, parseRecord, scoreNoun, winPct } from "@/lib/team-stats";
 import { whenLabel } from "@/lib/mobile-scores";
 import { TeamLogo } from "@/components/ui/TeamLogo";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
-import { Bars, Eyebrow, Panel, Rule, StatTile } from "./primitives";
+import { Bars, Eyebrow, Panel, Rule, StatTile, TeamCardSkeleton } from "./primitives";
 import { cn } from "@/lib/utils";
 
 /* Teams tab: one card per followed team (form, next up, scoring trend, and
@@ -42,7 +41,7 @@ function TeamCardMobile({ follow, selected, onSelect, onAction }: { follow: Foll
   const meta = LEAGUES[follow.league];
   const inSeason = meta.inSeason;
 
-  if (isPending) return <Skeleton className="h-[280px] w-full rounded-[22px]" />;
+  if (isPending) return <TeamCardSkeleton />;
 
   const team = data?.team;
   const form = data?.form ?? [];
@@ -110,7 +109,7 @@ function TeamCardMobile({ follow, selected, onSelect, onAction }: { follow: Foll
 function Spotlight({ follow }: { follow: FollowedTeam }) {
   const { data, isPending } = useTeamCard(follow.league, follow.teamId);
   const meta = LEAGUES[follow.league];
-  if (isPending) return <Skeleton className="mt-3 h-[320px] w-full rounded-[20px]" />;
+  if (isPending) return <div className="mt-3"><TeamCardSkeleton /></div>;
 
   const team = data?.team;
   const form = data?.form ?? [];

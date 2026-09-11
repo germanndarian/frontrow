@@ -323,3 +323,61 @@ html[data-native="true"] main {
 html[data-native="true"] body {
   background-attachment: scroll;
 }
+
+/* ── Liquid glass ─────────────────────────────────────────────────────────
+   Translucent, saturated, with a specular inner highlight — the recipe the
+   iOS 26 kit uses for bars and pills. Dark is the base; light overrides.
+   Applied to controls and bars only (header, tab bar, chips, sheet chrome),
+   never to content cards, so the effect stays quiet. */
+@layer utilities {
+  .glass,
+  .glass-bar,
+  .glass-lens {
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
+  }
+  .glass {
+    background: rgba(120, 120, 128, 0.24);
+    border: 0.5px solid rgba(255, 255, 255, 0.15);
+    box-shadow:
+      inset 1.5px 1.5px 1px rgba(255, 255, 255, 0.15),
+      inset -1px -1px 1px rgba(255, 255, 255, 0.08),
+      0 2px 6px rgba(0, 0, 0, 0.35),
+      0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+  .glass-bar {
+    background: color-mix(in oklab, var(--color-bg) 78%, transparent);
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+  footer.glass-bar {
+    border-bottom: 0;
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+  .glass-lens {
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.22),
+      inset -1px -1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+html[data-appearance="light"] .glass {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow:
+    inset 1.5px 1.5px 1px rgba(255, 255, 255, 0.7),
+    inset -1px -1px 1px rgba(255, 255, 255, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 3px 10px rgba(0, 0, 0, 0.06);
+}
+html[data-appearance="light"] .glass-bar {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+html[data-appearance="light"] footer.glass-bar {
+  border-top-color: rgba(0, 0, 0, 0.06);
+}
+html[data-appearance="light"] .glass-lens {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.08);
+}

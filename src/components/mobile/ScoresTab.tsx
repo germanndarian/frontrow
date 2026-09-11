@@ -6,9 +6,8 @@ import { useScoreboard, useTeamSlate } from "@/lib/queries";
 import { LEAGUES, LEAGUE_ORDER } from "@/lib/leagues";
 import type { Game, GameSide, LeagueId } from "@/lib/types";
 import { filterLeague, followKey, gameFoot, groupGames, isFollowed, leagueLine, mergeSlate } from "@/lib/mobile-scores";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/States";
-import { Chip, ChipRow, Mark, Rule } from "./primitives";
+import { Chip, ChipRow, GameRowSkeleton, Mark, Rule } from "./primitives";
 import { cn } from "@/lib/utils";
 
 /* Scores tab: league chips, then games bucketed LIVE NOW / UPCOMING / RESULTS.
@@ -76,7 +75,7 @@ export function ScoresTab() {
 
       {board.isPending && games.length === 0 ? (
         <div className="flex flex-col gap-3 px-[18px] pt-5">
-          {[0, 1, 2].map((i) => <Skeleton key={i} className="h-[150px] w-full rounded-[20px]" />)}
+          {[0, 1, 2].map((i) => <GameRowSkeleton key={i} />)}
         </div>
       ) : board.isError && games.length === 0 ? (
         <ErrorState onRetry={() => board.refetch()} />
