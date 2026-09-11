@@ -64,7 +64,22 @@ const variants = {
   exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -26 : 26 }),
 };
 
-export function SetupFlow() {
+/** `after` is where a finished onboarding lands; `loginHref` where an
+    unauthenticated visitor is bounced. The iOS app points both at /app so the
+    flow never drops someone onto the web dashboard. */
+export function SetupFlow({
+  after = "/dashboard",
+  loginHref = "/login",
+  onDone,
+  seedFromStore = false,
+}: {
+  after?: string;
+  loginHref?: string;
+  /** Called once picks are saved, before navigating to `after`. */
+  onDone?: () => void;
+  /** Start from what's already followed instead of a blank slate. */
+  seedFromStore?: boolean;
+} = {}) {
   const router = useRouter();
   const store = usePreferences();
 
@@ -72,16 +87,16 @@ export function SetupFlow() {
   const ready = useAppReady();
   const authed = useIsAuthed();
   useEffect(() => {
-    if (ready && !authed) router.replace("/login");
-  }, [ready, authed, router]);
+    if (ready && !authed) router.replace(loginHref);
+  }, [ready, authed, router, loginHref]);
 
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
 
-  const [sports, setSports] = useState<SportId[]>([]);
-  const [leagues, setLeagues] = useState<LeagueId[]>([]);
-  const [teams, setTeams] = useState<FollowedTeam[]>([]);
-  const [players, setPlayers] = useState<FollowedPlayer[]>([]);
+  const [sports, setSports] = useState<SportId[]>(() => (seedFromStore ? store.sports : []));
+  const [leagues, setLeagues] = useState<LeagueId[]>(() => (seedFromStore ? store.leagues : []));
+  const [teams, setTeams] = useState<FollowedTeam[]>(() => (seedFromStore ? store.teams : []));
+  const [players, setPlayers] = useState<FollowedPlayer[]>(() => (seedFromStore ? store.players : []));
 
   function toggleSport(s: SportId) {
     const next = sports.includes(s) ? sports.filter((x) => x !== s) : [...sports, s];
@@ -129,7 +144,8 @@ export function SetupFlow() {
     store.setTeams(teams.filter((t) => leagues.includes(t.league)));
     store.setPlayers(players.filter((p) => leagues.includes(p.league)));
     store.complete();
-    router.replace("/dashboard");
+    onDone?.();
+    router.replace(after);
   }
 
   function useSample() {
@@ -138,7 +154,8 @@ export function SetupFlow() {
     store.setTeams(DEFAULT_PREFERENCES.teams);
     store.setPlayers(DEFAULT_PREFERENCES.players);
     store.complete();
-    router.replace("/dashboard");
+    onDone?.();
+    router.replace(after);
   }
 
   const progress = ((step + 1) / STEPS.length) * 100;

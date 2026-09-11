@@ -304,6 +304,7 @@ export function normalizeStandings(
       teamId: t.id ?? "",
       abbreviation: t.abbreviation ?? "",
       displayName: t.displayName ?? "",
+      name: t.name ?? t.shortDisplayName ?? undefined,
       logo: teamLogo(t),
       position: i + 1,
       stats,
