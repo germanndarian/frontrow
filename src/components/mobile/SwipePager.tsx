@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animate, motion, useDragControls, useMotionValue, type PanInfo } from "motion/react";
 import { useMotionPref } from "@/lib/motion-pref";
 
@@ -8,14 +8,22 @@ import { useMotionPref } from "@/lib/motion-pref";
    drag and settles into the neighbour on release, like iOS page controls.
    Used for the app's tabs and for onboarding's steps.
 
+   - Commits on release. The page change happens the instant the finger
+     lifts, so the tab bar and title react immediately; the slide then
+     finishes from wherever the finger left it, carrying its velocity.
+   - The position reset that keeps that slide continuous runs in a layout
+     effect, before paint — a plain effect would flash one frame at the old
+     offset with the new pages, which reads as a jump.
    - Touch only. A mouse never drags, so desktop keeps its click-driven flow.
-   - Axis-locked: a vertical scroll never turns into a page change, and
-     `touch-action: pan-y` keeps native scrolling inside pages.
+   - Axis-locked, and horizontal touchmoves are cancelled once intent is
+     clear, so the browser can't claim the gesture for scrolling while
+     vertical scrolling inside pages stays native.
    - Rows that scroll sideways (chips, the bracket) opt out with
-     `data-hscroll`; a drag that starts inside one is left alone.
-   - Neighbours stay mounted so the slide never shows a blank page. */
+     `data-hscroll`. Neighbours stay mounted so the slide never shows a
+     blank page. */
 
-const SPRING = { type: "spring", stiffness: 420, damping: 40, mass: 0.9 } as const;
+// Critically damped: settles in ~250ms with no overshoot.
+const SPRING = { type: "spring", stiffness: 520, damping: 46, mass: 1 } as const;
 
 /** Which way to page for a release at `offset` px / `velocity` px/s. */
 export function decideSwipe(offset: number, velocity: number, width: number): -1 | 0 | 1 {
@@ -47,7 +55,8 @@ export function SwipePager({
   const x = useMotionValue(0);
   const controls = useDragControls();
   const prev = useRef(index);
-  const settling = useRef(false);
+  // Where the finger left the track, and how fast, when a swipe commits.
+  const handoff = useRef<{ x: number; v: number } | null>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -57,10 +66,7 @@ export function SwipePager({
     return () => ro.disconnect();
   }, []);
 
-  // Browsers take a touch for native scrolling once it passes the slop
-  // threshold — even under touch-action — unless its first horizontal
-  // touchmove is cancelled. Decide intent from the touch's own displacement,
-  // so vertical scrolls stay native and horizontal drags stay ours.
+  // Cancel horizontal touchmoves once intent is clear (see header comment).
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -97,19 +103,18 @@ export function SwipePager({
     };
   }, []);
 
-  // A page change from outside (a button) slides too: start with the old page
-  // in view and settle onto the new one. Skipped when a drag already did it.
-  useEffect(() => {
+  // The page changed — from a swipe (handoff set) or a button (not set).
+  // The track is now centred on the new page, so shift x by one page width
+  // to keep the picture exactly where it was, then settle to 0. Layout
+  // effect: this must land before the browser paints the re-ordered pages.
+  useLayoutEffect(() => {
     if (prev.current === index) return;
     const dir = index > prev.current ? 1 : -1;
     prev.current = index;
-    if (settling.current) {
-      settling.current = false;
-      x.set(0);
-      return;
-    }
-    x.set(dir * width);
-    animate(x, 0, reduce ? { duration: 0 } : SPRING);
+    const h = handoff.current;
+    handoff.current = null;
+    x.set((h?.x ?? 0) + dir * width);
+    animate(x, 0, reduce ? { duration: 0 } : { ...SPRING, velocity: h?.v ?? 0 });
   }, [index, width, reduce, x]);
 
   const canPrev = index > 0 && canSwipe(-1);
@@ -123,14 +128,13 @@ export function SwipePager({
 
   function onDragEnd(_: unknown, info: PanInfo) {
     const dir = decideSwipe(info.offset.x, info.velocity.x, width);
-    // Returning on the zero case first is what lets TypeScript narrow `dir`
-    // to -1 | 1 for onSwipe below.
+    // Returning on the zero case first is what lets TypeScript narrow `dir`.
     if (dir === 0 || !(dir === 1 ? canNext : canPrev)) {
-      animate(x, 0, reduce ? { duration: 0 } : SPRING);
+      animate(x, 0, reduce ? { duration: 0 } : { ...SPRING, velocity: info.velocity.x });
       return;
     }
-    settling.current = true;
-    animate(x, -dir * width, reduce ? { duration: 0 } : SPRING).then(() => onSwipe(dir));
+    handoff.current = { x: x.get(), v: info.velocity.x };
+    onSwipe(dir);
   }
 
   return (
