@@ -110,7 +110,7 @@ export function BracketSheet({ team, onClose }: { team: FollowedTeam; onClose: (
       ) : rounds.length === 0 ? (
         <EmptyState title="No active bracket" body="The postseason picture appears here once it starts." />
       ) : (
-        <div className="no-scrollbar overflow-x-auto px-[18px] pb-2 pt-4">
+        <div data-hscroll className="no-scrollbar overflow-x-auto px-[18px] pb-2 pt-4">
           <div className="flex min-w-max gap-4">
             {rounds.map((rd) => {
               const isLive = rd.matchups.some((m) => m.state === "in");
