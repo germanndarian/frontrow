@@ -9,6 +9,12 @@ struct GameCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
+                if followed {
+                    Image(systemName: "star.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.accent)
+                        .accessibilityLabel("Your team")
+                }
                 Text(game.league.name)
                     .font(.system(size: 10.5, weight: .bold, design: .monospaced))
                     .tracking(1.4)
@@ -49,12 +55,25 @@ struct GameCard: View {
             }
         }
         .padding(16)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(.leading, followed ? 5 : 0)
+        .background {
+            let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
+            shape.fill(Theme.surface)
+            if followed { shape.fill(Theme.accent.opacity(0.08)) }
+        }
+        .overlay(alignment: .leading) {
+            if followed { Rectangle().fill(Theme.accent).frame(width: 5) }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(followed ? Theme.accent.opacity(0.4) : Theme.line, lineWidth: 1)
+                .stroke(followed ? Theme.accent : Theme.line, lineWidth: followed ? 2 : 1)
         }
-        .shadow(color: .black.opacity(0.08), radius: 12, y: 6)
+        .shadow(
+            color: followed ? Theme.accent.opacity(0.22) : .black.opacity(0.08),
+            radius: followed ? 14 : 12,
+            y: 6
+        )
         .accessibilityElement(children: .combine)
     }
 

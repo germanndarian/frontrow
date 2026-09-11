@@ -154,6 +154,20 @@ are.
   setenv FRONTROW_API_BASE …` reaches a test run, where `TEST_RUNNER_`
   variables do not.
 
+## Your teams first
+
+- The scoreboard opens on **My teams** — only the games your followed teams
+  play — because a week of every league is 200 games and none of them are why
+  the app exists. A league chip still shows that league in full.
+- Inside a league, your games sort to the front of each group, the group rule
+  counts them ("45 · 3 yours"), and each card is marked: a star, an accent
+  tint, a 5pt accent edge and a 2pt accent border. The mark only appears where
+  it means something — under My teams everything would be marked, so nothing is.
+- With nothing followed yet, My teams falls back to the whole slate rather than
+  showing an empty screen, and the chip says "All".
+- A team card's schedule and bracket strips are buttons across their full
+  width, with a press state, rather than tappable words.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the

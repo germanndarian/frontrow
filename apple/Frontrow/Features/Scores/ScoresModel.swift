@@ -53,9 +53,23 @@ final class ScoresModel {
 
     var leagues: [League] { preferences.orderedLeagues }
 
+    /// "My teams" is the default view: the whole point of the app is the
+    /// handful of teams you follow, so an unfiltered week of 200 games is the
+    /// wrong thing to open on. Picking a league shows that league in full,
+    /// with your teams' games marked and sorted to the front of each group.
     var visible: [Game] {
-        guard let league else { return games }
+        guard let league else {
+            // Nothing followed yet (a guest mid-setup) — showing nothing would
+            // read as breakage, so fall back to the full slate.
+            return preferences.teams.isEmpty ? games : games.filter(isFollowed)
+        }
         return games.filter { $0.league == league }
+    }
+
+    /// True while "My teams" is showing everything because there is nothing
+    /// to narrow to.
+    var showingEverything: Bool {
+        league == nil && preferences.teams.isEmpty
     }
 
     struct Group: Identifiable {
@@ -67,9 +81,32 @@ final class ScoresModel {
 
     var groups: [Group] {
         let buckets: [(GameState, String)] = [(.in, "LIVE NOW"), (.pre, "UPCOMING"), (.post, "RESULTS")]
+        let shown = visible
         return buckets
-            .map { bucket in Group(state: bucket.0, title: bucket.1, games: visible.filter { $0.state == bucket.0 }) }
+            .map { bucket in
+                // Your teams first inside each group, then kick-off order.
+                let inBucket = shown
+                    .filter { $0.state == bucket.0 }
+                    .enumerated()
+                    .sorted { a, b in
+                        let mine = (isFollowed(a.element), isFollowed(b.element))
+                        if mine.0 != mine.1 { return mine.0 }
+                        return a.offset < b.offset
+                    }
+                    .map(\.element)
+                return Group(state: bucket.0, title: bucket.1, games: inBucket)
+            }
             .filter { !$0.games.isEmpty }
+    }
+
+    /// A game is marked as yours only when it is sitting among games that
+    /// aren't — under "My teams" every card would be marked, which says
+    /// nothing and turns the whole list blue.
+    var marksFollowed: Bool { league != nil }
+
+    /// How many of the games on screen are your teams', for the group rule.
+    func followedCount(in games: [Game]) -> Int {
+        games.filter(isFollowed).count
     }
 
     var liveCount: Int { visible.filter { $0.state == .in }.count }

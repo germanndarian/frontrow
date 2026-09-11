@@ -270,3 +270,12 @@ struct PressableButtonStyle: ButtonStyle {
             .animation(.snappy(duration: 0.12), value: configuration.isPressed)
     }
 }
+
+/// A full-width row that highlights while it's held, the way a list row does.
+struct RowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .background(configuration.isPressed ? Theme.background2.opacity(0.7) : .clear)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
