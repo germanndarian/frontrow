@@ -28,6 +28,31 @@ struct SignInSheet: View {
                         .foregroundStyle(Theme.muted)
                         .padding(.bottom, 2)
 
+                    Button(action: google) {
+                        HStack(spacing: 9) {
+                            GoogleMark()
+                            Text("Continue with Google")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.ink)
+                    .background(Theme.surface, in: Capsule())
+                    .overlay { Capsule().stroke(Theme.line, lineWidth: 1) }
+                    .disabled(busy)
+
+                    HStack(spacing: 10) {
+                        Rectangle().fill(Theme.line).frame(height: 1)
+                        Text("or")
+                            .font(.system(size: 11.5, weight: .semibold))
+                            .foregroundStyle(Theme.faint)
+                        Rectangle().fill(Theme.line).frame(height: 1)
+                    }
+                    .padding(.vertical, 2)
+
                     if mode == .signUp {
                         field("Name", text: $displayName, field: .name)
                             .textContentType(.name)
@@ -129,6 +154,17 @@ struct SignInSheet: View {
             Text("At least 6 characters.")
                 .font(.system(size: 11.5))
                 .foregroundStyle(Theme.faint)
+        }
+    }
+
+    private func google() {
+        busy = true
+        error = nil
+        notice = nil
+        Task {
+            error = await account.signInWithGoogle()
+            busy = false
+            if error == nil { dismiss() }
         }
     }
 

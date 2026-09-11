@@ -45,6 +45,36 @@ final class AccountTests: XCTestCase {
         app.buttons["Cancel"].firstMatch.tap()
     }
 
+    /// Google can't be completed without a Google account, but everything up
+    /// to the browser handing over can: the button is there, and tapping it
+    /// makes iOS ask permission to sign in — which only happens once the app
+    /// has built a real authorization URL and opened a real auth session.
+    @MainActor
+    func testGoogleOpensAnAuthenticationSession() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-reset"]
+        app.launch()
+
+        let google = app.buttons["Continue with Google"]
+        XCTAssertTrue(google.waitForExistence(timeout: 20), "the front door offers Google")
+        attach(app, "0-welcome-with-google")
+        google.tap()
+
+        // The system's own consent alert, not ours.
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let consent = springboard.alerts.firstMatch
+        XCTAssertTrue(consent.waitForExistence(timeout: 20),
+                      "iOS asks before handing the sign-in to a browser")
+        XCTAssertTrue(
+            consent.staticTexts.matching(
+                NSPredicate(format: "label CONTAINS[c] 'Sign In' OR label CONTAINS[c] 'supabase'")
+            ).firstMatch.exists,
+            "and the sheet names the sign-in it is about to open"
+        )
+        consent.buttons["Cancel"].tap()
+        XCTAssertEqual(app.state, .runningForeground, "cancelling comes back to the app")
+    }
+
     @MainActor
     func testGuestOnboardingReachesTheApp() throws {
         let app = XCUIApplication()

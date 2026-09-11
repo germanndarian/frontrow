@@ -279,3 +279,36 @@ struct RowButtonStyle: ButtonStyle {
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
+
+/// Google's mark, drawn rather than bundled — four arcs and a bar, which is
+/// enough to be recognised at 18pt without shipping their asset.
+struct GoogleMark: View {
+    var size: CGFloat = 18
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .trim(from: 0.0, to: 0.25)
+                .stroke(Color(hex: 0x4285F4), lineWidth: size * 0.28)
+                .rotationEffect(.degrees(-45))
+            Circle()
+                .trim(from: 0.25, to: 0.5)
+                .stroke(Color(hex: 0x34A853), lineWidth: size * 0.28)
+                .rotationEffect(.degrees(-45))
+            Circle()
+                .trim(from: 0.5, to: 0.75)
+                .stroke(Color(hex: 0xFBBC05), lineWidth: size * 0.28)
+                .rotationEffect(.degrees(-45))
+            Circle()
+                .trim(from: 0.75, to: 1.0)
+                .stroke(Color(hex: 0xEA4335), lineWidth: size * 0.28)
+                .rotationEffect(.degrees(-45))
+            Rectangle()
+                .fill(Color(hex: 0x4285F4))
+                .frame(width: size * 0.42, height: size * 0.26)
+                .offset(x: size * 0.2, y: 0)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}

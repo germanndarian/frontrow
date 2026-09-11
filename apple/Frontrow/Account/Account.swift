@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import Supabase
+import WidgetKit
 
 /// The signed-in account: session, profile, who you follow and how the app
 /// looks. Supabase keeps the session in the keychain, so signing in once is
@@ -110,6 +111,7 @@ final class Account {
         }
         settings = await settingsRow ?? .defaults(userId: userId)
         status = .authed
+        publishToWidgets()
     }
 
     /// The user's own row from a table, or nil when the seed trigger hasn't
@@ -149,6 +151,25 @@ final class Account {
             return (nil, response.session == nil)
         } catch {
             return (message(error), false)
+        }
+    }
+
+    /// Google, through ASWebAuthenticationSession: a real Safari view, which
+    /// is the only kind of browser Google will complete a sign-in in. The
+    /// callback comes back to the app's own URL scheme.
+    func signInWithGoogle() async -> String? {
+        do {
+            _ = try await client.auth.signInWithOAuth(
+                provider: .google,
+                redirectTo: URL(string: "frontrow://auth-callback")
+            ) { session in
+                session.prefersEphemeralWebBrowserSession = false
+            }
+            return nil
+        } catch {
+            // Closing the sheet is a decision, not a failure to report.
+            if error is AuthError, "\(error)".contains("canceled") { return nil }
+            return message(error)
         }
     }
 
@@ -278,6 +299,8 @@ final class Account {
     /// Mirrors the local state back to Postgres, coalescing a burst of taps
     /// into one write. Guests have nowhere to save to.
     private func schedulePush() {
+        // The widgets follow the local state, signed in or not.
+        publishToWidgets()
         guard status == .authed, userId != nil else { return }
         pushTask?.cancel()
         pushTask = Task { [weak self] in
@@ -285,6 +308,20 @@ final class Account {
             guard !Task.isCancelled else { return }
             await self?.push()
         }
+    }
+
+    /// Widgets run in their own process with no keychain session, so the app
+    /// leaves them what they need to draw and tells WidgetKit to redraw.
+    private func publishToWidgets() {
+        SharedStore.write(
+            SharedStore.Snapshot(
+                leagues: preferences.orderedLeagues,
+                teams: preferences.teams,
+                accent: settings.accent,
+                updatedAt: .now
+            )
+        )
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     private func push() async {

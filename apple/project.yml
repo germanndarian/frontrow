@@ -24,21 +24,70 @@ targets:
     platform: iOS
     sources:
       - path: Frontrow
+      # The widget's own views, so the app can show them side by side in a
+      # gallery and they can't drift from what the extension ships. The
+      # bundle's @main entry point stays out — the app has its own.
+      - path: FrontrowWidgets/HomeWidgets.swift
+      - path: FrontrowWidgets/LockWidgets.swift
+      - path: FrontrowWidgets/WidgetPieces.swift
+      - path: FrontrowWidgets/Provider.swift
     dependencies:
       - package: Supabase
         product: Supabase
+      - target: FrontrowWidgets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.germanndarian.frontrow
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Frontrow
-        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
-        GENERATE_INFOPLIST_FILE: YES
+        GENERATE_INFOPLIST_FILE: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: Frontrow/Info.plist
+      properties:
+        CFBundleDisplayName: Frontrow
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIApplicationSupportsIndirectInputEvents: true
+        ITSAppUsesNonExemptEncryption: false
+        # Where OAuth comes back to, and what a widget tap opens.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.germanndarian.frontrow
+            CFBundleURLSchemes: [frontrow]
+    entitlements:
+      path: Frontrow/Frontrow.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.germanndarian.frontrow]
+  FrontrowWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: FrontrowWidgets
+      # The widget draws the same games with the same tokens as the app, so it
+      # compiles the same models rather than keeping a second copy of them.
+      - path: Frontrow/Models
+      - path: Frontrow/Networking
+      - path: Frontrow/Theme
+      - path: Frontrow/Account/Rows.swift
+      - path: Frontrow/Assets.xcassets
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.germanndarian.frontrow.widgets
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: FrontrowWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Frontrow
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: FrontrowWidgets/FrontrowWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.germanndarian.frontrow]
+
   FrontrowUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -51,11 +100,42 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.germanndarian.frontrow.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Frontrow
+  FrontrowWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: FrontrowWidgets
+      # The widget draws the same games with the same tokens as the app, so it
+      # compiles the same models rather than keeping a second copy of them.
+      - path: Frontrow/Models
+      - path: Frontrow/Networking
+      - path: Frontrow/Theme
+      - path: Frontrow/Account/Rows.swift
+      - path: Frontrow/Assets.xcassets
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.germanndarian.frontrow.widgets
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+        TARGETED_DEVICE_FAMILY: "1"
+    info:
+      path: FrontrowWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Frontrow
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: FrontrowWidgets/FrontrowWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.germanndarian.frontrow]
+
 schemes:
   Frontrow:
     build:
       targets:
         Frontrow: all
+        FrontrowWidgets: all
         FrontrowUITests: [test]
     run:
       config: Debug
