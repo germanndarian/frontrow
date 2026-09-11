@@ -31,7 +31,7 @@ export function SearchInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className={cn(
-          "h-11 w-full rounded-full border border-line/80 bg-bg-2/60 pl-10 pr-10 text-[14px] text-ink",
+          "h-11 w-full rounded-full border border-line/80 bg-bg-2/60 pl-10 pr-10 text-[16px] text-ink",
           "placeholder:text-faint transition-colors duration-150",
           "focus:border-primary/50 focus:bg-bg-2 focus:outline-none",
         )}

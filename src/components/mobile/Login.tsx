@@ -20,7 +20,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const inputClass = "mt-[3px] w-full bg-transparent text-[15px] text-ink outline-none placeholder:text-faint";
+// 16px on purpose: iOS zooms into any focused input smaller than that.
+const inputClass = "mt-[3px] w-full bg-transparent text-[16px] text-ink outline-none placeholder:text-faint";
 
 export function Login({ mode, onMode, onBack, onGuest }: { mode: Mode; onMode: (m: Mode) => void; onBack: () => void; onGuest: () => void }) {
   const { signIn, signUp } = useAuth();
