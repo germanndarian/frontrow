@@ -86,9 +86,11 @@ final class ScoresModel {
 struct Preferences: Sendable {
     var leagues: [League]
     var teams: [FollowedTeam]
+    var players: [FollowedPlayer]
 
     static let current = Preferences(
         leagues: [.mlb, .nhl, .nfl, .collegeFootball],
-        teams: DefaultLineup.teams
+        teams: DefaultLineup.teams,
+        players: DefaultLineup.players
     )
 }
