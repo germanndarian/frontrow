@@ -179,6 +179,15 @@ final class Account {
         status = .signedOut
     }
 
+    /// Leaving the setup flow: a guest goes back to the front door, and a
+    /// signed-in account stays signed in — there is nothing before onboarding
+    /// for them to go back to.
+    func leaveOnboarding() {
+        guard status == .guest else { return }
+        reset()
+        status = .signedOut
+    }
+
     func continueAsGuest() {
         preferences = Preferences(leagues: [], teams: [], players: [])
         sports = []
