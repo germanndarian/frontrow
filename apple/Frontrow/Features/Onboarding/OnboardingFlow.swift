@@ -102,12 +102,13 @@ struct OnboardingFlow: View {
             Button(action: advance) {
                 Text(step.isLast ? "Finish" : "Continue")
                     .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
                     .padding(.horizontal, 26)
                     .padding(.vertical, 14)
+                    .background(Theme.accent.opacity(canAdvance ? 1 : 0.4), in: Capsule())
+                    .contentShape(Capsule())
             }
             .buttonStyle(PressableButtonStyle())
-            .foregroundStyle(.white)
-            .background(Theme.accent.opacity(canAdvance ? 1 : 0.4), in: Capsule())
             .disabled(!canAdvance)
         }
         .padding(.horizontal, 18)

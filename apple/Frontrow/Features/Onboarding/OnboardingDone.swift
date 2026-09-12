@@ -42,12 +42,13 @@ struct OnboardingDone: View {
             Button(action: onContinue) {
                 Text("Open Frontrow")
                     .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 15)
+                    .background(Theme.accent, in: Capsule())
+                    .contentShape(Capsule())
             }
             .buttonStyle(PressableButtonStyle())
-            .foregroundStyle(.white)
-            .background(Theme.accent, in: Capsule())
             .padding(.horizontal, 24)
             .padding(.bottom, 10)
         }

@@ -18,7 +18,7 @@ final class AccountTests: XCTestCase {
         app.launchArguments = ["-ui-testing-reset"]
         app.launch()
 
-        XCTAssertTrue(app.buttons["Get started free"].waitForExistence(timeout: 20),
+        XCTAssertTrue(app.buttons["Get started for free"].waitForExistence(timeout: 20),
                       "a signed-out launch lands on the front door")
         XCTAssertTrue(app.buttons["I already have an account"].exists)
         XCTAssertTrue(app.buttons["Look around as a guest"].exists)
@@ -75,6 +75,34 @@ final class AccountTests: XCTestCase {
         XCTAssertEqual(app.state, .runningForeground, "cancelling comes back to the app")
     }
 
+    /// Creating an account is a three-field form, so its sheet opens full
+    /// height; signing in is two fields and keeps the half sheet. The sheet's
+    /// own title bar is the measurement — near the top of the screen, or halfway
+    /// down it.
+    @MainActor
+    func testSignUpOpensFullHeightAndSignInDoesNot() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-reset"]
+        app.launch()
+
+        let started = app.buttons["Get started for free"]
+        XCTAssertTrue(started.waitForExistence(timeout: 20), "the front door says 'for free'")
+        started.tap()
+
+        let signUpBar = app.navigationBars["Get started"]
+        XCTAssertTrue(signUpBar.waitForExistence(timeout: 10))
+        let screen = app.windows.firstMatch.frame.height
+        XCTAssertLessThan(signUpBar.frame.minY, screen * 0.2, "sign-up fills the screen")
+        attach(app, "6-sign-up-full-height")
+        app.buttons["Cancel"].tap()
+
+        app.buttons["I already have an account"].tap()
+        let signInBar = app.navigationBars["Sign in"]
+        XCTAssertTrue(signInBar.waitForExistence(timeout: 10))
+        XCTAssertGreaterThan(signInBar.frame.minY, screen * 0.3, "sign-in stays a half sheet")
+        attach(app, "7-sign-in-half-sheet")
+    }
+
     @MainActor
     func testGuestOnboardingReachesTheApp() throws {
         let app = XCUIApplication()
@@ -112,7 +140,9 @@ final class AccountTests: XCTestCase {
         attach(app, "5a-teams-by-league")
         let yankees = row(app, "New York Yankees")
         XCTAssertTrue(yankees.waitForExistence(timeout: 10), "search narrows the list")
+        XCTAssertGreaterThan(app.keyboards.count, 0, "the keyboard is up while searching")
         yankees.tap()
+        XCTAssertEqual(app.keyboards.count, 0, "and gone once a team is picked")
         attach(app, "5-onboarding-teams")
         app.buttons["Continue"].tap()
 
@@ -128,7 +158,10 @@ final class AccountTests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["Setup complete"].exists,
                       "the check draws itself on the Done screen")
         attach(app, "7-done")
-        app.buttons["Open Frontrow"].tap()
+        // Tapped near the edge of the button, away from the words.
+        let open = app.buttons["Open Frontrow"]
+        XCTAssertTrue(open.waitForExistence(timeout: 5))
+        open.coordinate(withNormalizedOffset: CGVector(dx: 0.06, dy: 0.5)).tap()
 
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 15), "the tabs open")
         XCTAssertTrue(app.navigationBars["Live & Upcoming"].waitForExistence(timeout: 15))
