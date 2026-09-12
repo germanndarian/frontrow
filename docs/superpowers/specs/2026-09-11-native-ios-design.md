@@ -214,6 +214,27 @@ are.
   single Edit button — they are the same question, and the sheet it opens has a
   tab for each, with leagues hidden under the same one-league rule.
 
+## Every game card opens
+
+- A game card is a button. It opens the same sheet everywhere — Scores, the
+  live pill, the list of live games — presented the way "Get started for free"
+  is: up from the bottom, full height, grabber, swipe to dismiss.
+- The sheet answers what the card cannot: the line score period by period,
+  the last play, venue, broadcast, the betting line, and the scheduled start.
+- Before a game starts there is no score to show, so the sheet counts down to
+  first pitch instead — a monospaced-digit clock that ticks once a second and
+  grows a day field when the game is more than a day out.
+- The LIVE pill in the toolbar is a button too. One live game opens that
+  game's sheet directly; several open a list, and picking one swaps the sheet
+  for the game.
+- The line score needed the web to carry it: `linescores` now rides on
+  `GameSide` from ESPN's `competitor.linescores` through `normalize`. The
+  column is dropped whole rather than passed with holes — ESPN sometimes sends
+  entries without a `value`, and a row of blanks reads worse than no row.
+- Period labels come from the league: nine innings then `OT`/`OT2` for extras,
+  three periods for hockey, four quarters for football, and the total column
+  is "R" for baseball and "T" everywhere else.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the

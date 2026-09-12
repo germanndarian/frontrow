@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { normalizeScoreboard } from "@/lib/espn/normalize";
-import type { RawScoreboard } from "@/lib/espn/raw";
+import type { RawLinescore, RawScoreboard } from "@/lib/espn/raw";
 
 function event(state: "pre" | "in" | "post", odds?: unknown[]): RawScoreboard {
   return {
@@ -100,5 +100,43 @@ describe("normalizeScoreboard week", () => {
 
   it("is undefined when ESPN omits it", () => {
     expect(normalizeScoreboard(weekly(undefined), "nfl")[0].week).toBeUndefined();
+  });
+});
+
+describe("normalizeScoreboard line scores", () => {
+  function withLines(home?: RawLinescore[], away?: RawLinescore[]): RawScoreboard {
+    return {
+      events: [
+        {
+          id: "1",
+          date: "2026-09-12T00:00:00Z",
+          competitions: [
+            {
+              status: { type: { state: "post" } },
+              competitors: [
+                { homeAway: "home", team: { abbreviation: "SEA" }, linescores: home },
+                { homeAway: "away", team: { abbreviation: "NE" }, linescores: away },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  it("carries a period-by-period column for each side", () => {
+    const raw = withLines(
+      [{ value: 0 }, { value: 0 }, { value: 3 }, { value: 10 }],
+      [{ value: 0 }, { value: 7 }, { value: 3 }, { value: 0 }],
+    );
+    const [game] = normalizeScoreboard(raw, "nfl");
+    expect(game.home.linescores).toEqual([0, 0, 3, 10]);
+    expect(game.away.linescores).toEqual([0, 7, 3, 0]);
+  });
+
+  it("drops the column rather than pass on holes", () => {
+    const [game] = normalizeScoreboard(withLines([{ value: 3 }, {}], undefined), "nfl");
+    expect(game.home.linescores).toBeUndefined();
+    expect(game.away.linescores).toBeUndefined();
   });
 });

@@ -82,7 +82,16 @@ function side(c?: RawCompetitor): GameSide {
       c?.records?.find((r) => r.type === "total")?.summary ?? c?.records?.[0]?.summary ?? null,
     winner: !!c?.winner,
     rank: typeof rank === "number" && rank > 0 && rank <= 25 ? rank : undefined,
+    linescores: lineScores(c),
   };
+}
+
+/** The per-period column, dropped entirely when ESPN sends nothing usable —
+    an array of holes is worse than no line score at all. */
+function lineScores(c?: RawCompetitor): number[] | undefined {
+  const values = c?.linescores?.map((l) => l.value);
+  if (!values?.length || values.some((v) => typeof v !== "number")) return undefined;
+  return values as number[];
 }
 
 function buildSituation(

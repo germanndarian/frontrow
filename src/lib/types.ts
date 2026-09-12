@@ -60,6 +60,8 @@ export interface GameSide {
   record: string | null;
   winner: boolean;
   rank?: number; // AP rank for college football
+  /** Runs/points/goals per period, oldest first — the line score. */
+  linescores?: number[];
 }
 
 /** Pre-game betting line, sourced from the ESPN scoreboard's `odds`. */

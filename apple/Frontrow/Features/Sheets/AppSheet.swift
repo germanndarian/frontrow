@@ -1,17 +1,22 @@
 import SwiftUI
 
-/// The three detail sheets the tabs open. Native sheets, so they come with
-/// the grabber and swipe-to-dismiss for free.
+/// The detail sheets the tabs open. Native sheets, so they come up from the
+/// bottom with a grabber and swipe away for free.
 enum AppSheet: Identifiable {
     case schedule(FollowedTeam)
     case bracket(FollowedTeam)
     case player(FollowedPlayer)
+    case game(Game)
+    /// More than one game on at once: pick which to watch.
+    case liveGames([Game])
 
     var id: String {
         switch self {
         case .schedule(let t): "schedule:\(t.id)"
         case .bracket(let t): "bracket:\(t.id)"
         case .player(let p): "player:\(p.id)"
+        case .game(let g): "game:\(g.id)"
+        case .liveGames(let games): "live:\(games.map(\.id).joined(separator: ","))"
         }
     }
 }

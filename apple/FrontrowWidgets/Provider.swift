@@ -129,7 +129,8 @@ enum SampleGames {
     private static func side(_ abbr: String, _ name: String, _ color: String, _ score: Int?, winner: Bool = false) -> GameSide {
         GameSide(
             teamId: abbr, abbreviation: abbr, displayName: name, shortName: name,
-            logo: "", color: color, score: score, record: nil, winner: winner, rank: nil
+            logo: "", color: color, score: score, record: nil, winner: winner,
+            rank: nil, linescores: nil
         )
     }
 }
