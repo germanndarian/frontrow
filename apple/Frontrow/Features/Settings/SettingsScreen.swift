@@ -17,7 +17,6 @@ struct SettingsScreen: View {
                 LazyVStack(spacing: 14) {
                     accountPanel
                     appearancePanel
-                    leaguesPanel
                     followsPanel
                     actions
                     Color.clear.frame(height: 24)
@@ -203,15 +202,15 @@ struct SettingsScreen: View {
         }
     }
 
-    // ── Sports & leagues ─────────────────────────────────────────────────
+    // ── What you follow ──────────────────────────────────────────────────
 
-    private var leaguesPanel: some View {
+    private var followsPanel: some View {
         Panel {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     VStack(alignment: .leading, spacing: 1) {
-                        Eyebrow("What you follow at the top level")
-                        Text("Sports & leagues")
+                        Eyebrow(summary)
+                        Text("What you follow")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundStyle(Theme.ink)
                     }
@@ -233,32 +232,8 @@ struct SettingsScreen: View {
                 } else {
                     FlowingChips(labels: account.preferences.orderedLeagues.map(\.fullName))
                         .padding(.horizontal, 18)
-                        .padding(.bottom, 16)
+                        .padding(.bottom, 14)
                 }
-            }
-        }
-    }
-
-    // ── Follows ──────────────────────────────────────────────────────────
-
-    private var followsPanel: some View {
-        Panel {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 1) {
-                        Eyebrow("\(account.preferences.teams.count) followed · \(account.preferences.players.count) starred")
-                        Text("Teams & players")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(Theme.ink)
-                    }
-                    Spacer(minLength: 8)
-                    Button("Edit") { editing = .teams }
-                        .font(.system(size: 12.5, weight: .semibold))
-                        .buttonStyle(.glass)
-                }
-                .padding(.horizontal, 18)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
 
                 ForEach(account.preferences.teams) { team in
                     row(logo: team.logo, abbr: team.abbreviation, color: team.color,
@@ -272,15 +247,19 @@ struct SettingsScreen: View {
                         withAnimation(.snappy(duration: 0.2)) { account.togglePlayer(player) }
                     }
                 }
-                if account.preferences.teams.isEmpty && account.preferences.players.isEmpty {
-                    Text("Nothing followed yet.")
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(Theme.faint)
-                        .padding(.horizontal, 18)
-                        .padding(.bottom, 16)
-                }
             }
         }
+    }
+
+    /// "3 leagues · 4 teams · 2 players", skipping whatever is empty.
+    private var summary: String {
+        let counts = [
+            (account.preferences.leagues.count, "league"),
+            (account.preferences.teams.count, "team"),
+            (account.preferences.players.count, "player"),
+        ]
+        let parts = counts.filter { $0.0 > 0 }.map { "\($0.0) \($0.1)\($0.0 == 1 ? "" : "s")" }
+        return parts.isEmpty ? "Nothing yet" : parts.joined(separator: " · ")
     }
 
     private func row(logo: String, abbr: String, color: String, title: String, detail: String, circular: Bool = false, remove: @escaping () -> Void) -> some View {

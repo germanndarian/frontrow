@@ -209,9 +209,10 @@ are.
   field inside it held focus made UIKit assert
   (`_resignOrRebaseFirstResponderViewWithIndexPathMapping:`). Pages now change
   only on Continue, after the keyboard has been dismissed.
-- Sports and leagues are editable from Settings, not just at setup: a
-  "Sports & leagues" panel lists what's followed and opens the same pickers,
-  with the leagues tab hidden under the same one-league rule.
+- Sports and leagues are editable from Settings, not just at setup. One panel,
+  "What you follow", lists the leagues, teams and players together behind a
+  single Edit button — they are the same question, and the sheet it opens has a
+  tab for each, with leagues hidden under the same one-league rule.
 
 ## Deferred
 
