@@ -119,14 +119,10 @@ final class AccountTests: XCTestCase {
         attach(app, "4-onboarding-sports")
         app.buttons["Continue"].tap()
 
-        // Step 2: leagues — baseball pre-selects MLB.
-        XCTAssertTrue(app.staticTexts["Choose your leagues"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Major League Baseball"].exists)
-        XCTAssertTrue(app.staticTexts["National Hockey League"].exists)
-        app.buttons["Continue"].tap()
-
-        // Step 3: teams, from the live catalogue.
-        XCTAssertTrue(app.staticTexts["Follow your teams"].waitForExistence(timeout: 10))
+        // Baseball and hockey have one league each, so there is nothing to
+        // choose between and the flow goes straight to teams.
+        XCTAssertTrue(app.staticTexts["Follow your teams"].waitForExistence(timeout: 10),
+                      "no league step when every sport has a single league")
         XCTAssertTrue(row(app, "Arizona Diamondbacks").waitForExistence(timeout: 30),
                       "the team list loads from /api/teams")
         // The list is long and lazy, so narrow it — which also puts both

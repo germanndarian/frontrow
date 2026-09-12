@@ -54,7 +54,7 @@ final class OnboardingSwipeTests: XCTestCase {
 
         app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Baseball'")).firstMatch.tap()
         app.buttons["Continue"].tap()
-        XCTAssertTrue(app.staticTexts["Choose your leagues"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Follow your teams"].waitForExistence(timeout: 10))
 
         let back = app.buttons["Back"]
         XCTAssertTrue(back.waitForExistence(timeout: 5))
