@@ -6,10 +6,11 @@ struct TeamStep: View {
     @Environment(Account.self) private var account
     @State private var state: Loadable<[CatalogTeam]> = .loading
     @State private var search = ""
+    @FocusState private var searching: Bool
 
     var body: some View {
         VStack(spacing: 0) {
-            SearchField(text: $search, placeholder: "Search teams")
+            SearchField(text: $search, placeholder: "Search teams", focused: $searching)
                 .padding(.horizontal, 18)
                 .padding(.bottom, 10)
             ScrollView {
@@ -38,6 +39,9 @@ struct TeamStep: View {
                                     ) {
                                         TeamMark(logo: team.logo, abbreviation: team.abbreviation, color: team.color, size: 44)
                                     } toggle: {
+                                        // A pick is the end of a search: give
+                                        // the list back the screen.
+                                        searching = false
                                         withAnimation(.snappy(duration: 0.18)) { account.toggleTeam(follow) }
                                     }
                                 }
@@ -48,6 +52,7 @@ struct TeamStep: View {
                 .padding(.horizontal, 18)
                 .padding(.bottom, 20)
             }
+            .scrollDismissesKeyboard(.immediately)
         }
         .task(id: account.preferences.leagues) { await load() }
     }
@@ -99,10 +104,11 @@ struct PlayerStep: View {
     @Environment(Account.self) private var account
     @State private var rosters: [String: Loadable<[RosterPlayer]>] = [:]
     @State private var search = ""
+    @FocusState private var searching: Bool
 
     var body: some View {
         VStack(spacing: 0) {
-            SearchField(text: $search, placeholder: "Search your teams' rosters")
+            SearchField(text: $search, placeholder: "Search your teams' rosters", focused: $searching)
                 .padding(.horizontal, 18)
                 .padding(.bottom, 10)
             ScrollView {
@@ -141,6 +147,7 @@ struct PlayerStep: View {
                                         ) {
                                             Headshot(url: player.headshot, name: player.fullName, color: team.color, size: 44)
                                         } toggle: {
+                                            searching = false
                                             withAnimation(.snappy(duration: 0.18)) { account.togglePlayer(follow) }
                                         }
                                     }
@@ -152,6 +159,7 @@ struct PlayerStep: View {
                 .padding(.horizontal, 18)
                 .padding(.bottom, 20)
             }
+            .scrollDismissesKeyboard(.immediately)
         }
         .task(id: account.preferences.teams) { await load() }
     }
@@ -181,6 +189,7 @@ struct PlayerStep: View {
 struct SearchField: View {
     @Binding var text: String
     let placeholder: String
+    var focused: FocusState<Bool>.Binding
 
     var body: some View {
         HStack(spacing: 8) {
@@ -191,6 +200,9 @@ struct SearchField: View {
                 .font(.system(size: 15))
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .focused(focused)
+                .submitLabel(.done)
+                .onSubmit { focused.wrappedValue = false }
             if !text.isEmpty {
                 Button { text = "" } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.faint)

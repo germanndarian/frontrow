@@ -107,14 +107,15 @@ struct WelcomeScreen: View {
             .safeAreaInset(edge: .bottom) {
                 VStack(spacing: 10) {
                     Button(action: onSignUp) {
-                        Text("Get started free")
+                        Text("Get started for free")
                             .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 15)
+                            .background(Theme.accent, in: Capsule())
+                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.white)
-                    .background(Theme.accent, in: Capsule())
+                    .buttonStyle(PressableButtonStyle())
 
                     Button(action: onGoogle) {
                         HStack(spacing: 9) {
@@ -122,23 +123,25 @@ struct WelcomeScreen: View {
                             Text("Continue with Google")
                                 .font(.system(size: 15, weight: .semibold))
                         }
+                        .foregroundStyle(Color(hex: 0x131313))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
+                        .background(.white, in: Capsule())
+                        .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Color(hex: 0x131313))
-                    .background(.white, in: Capsule())
+                    .buttonStyle(PressableButtonStyle())
 
                     Button(action: onSignIn) {
                         Text("I already have an account")
                             .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 15)
+                            .background(.white.opacity(0.08), in: Capsule())
+                            .overlay { Capsule().stroke(.white.opacity(0.22), lineWidth: 1) }
+                            .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.white)
-                    .background(.white.opacity(0.08), in: Capsule())
-                    .overlay { Capsule().stroke(.white.opacity(0.22), lineWidth: 1) }
+                    .buttonStyle(PressableButtonStyle())
 
                     Button("Look around as a guest", action: onGuest)
                         .font(.system(size: 13, weight: .semibold))

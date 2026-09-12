@@ -34,14 +34,14 @@ struct SignInSheet: View {
                             Text("Continue with Google")
                                 .font(.system(size: 15, weight: .semibold))
                         }
+                        .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .contentShape(Rectangle())
+                        .background(Theme.surface, in: Capsule())
+                        .overlay { Capsule().stroke(Theme.line, lineWidth: 1) }
+                        .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Theme.ink)
-                    .background(Theme.surface, in: Capsule())
-                    .overlay { Capsule().stroke(Theme.line, lineWidth: 1) }
+                    .buttonStyle(PressableButtonStyle())
                     .disabled(busy)
 
                     HStack(spacing: 10) {
@@ -81,12 +81,13 @@ struct SignInSheet: View {
                             Text(mode == .signIn ? "Sign in" : "Create account")
                                 .font(.system(size: 15, weight: .bold))
                         }
+                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
+                        .background(Theme.accent.opacity(canSubmit ? 1 : 0.4), in: Capsule())
+                        .contentShape(Capsule())
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.white)
-                    .background(Theme.accent.opacity(canSubmit ? 1 : 0.4), in: Capsule())
+                    .buttonStyle(PressableButtonStyle())
                     .disabled(!canSubmit || busy)
                     .padding(.top, 4)
 
@@ -113,7 +114,10 @@ struct SignInSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
+        // Creating an account is a form with a name, an email and a password:
+        // it wants the whole sheet. Signing in is two fields, so the half
+        // sheet still fits it.
+        .presentationDetents(mode == .signUp ? [.large] : [.medium, .large])
         .presentationDragIndicator(.visible)
     }
 
