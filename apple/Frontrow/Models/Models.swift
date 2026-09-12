@@ -43,6 +43,8 @@ struct GameSide: Codable, Sendable, Hashable {
     let record: String?
     let winner: Bool
     let rank: Int?
+    /// Runs, points or goals per period, oldest first.
+    let linescores: [Double]?
 }
 
 struct OddsLine: Codable, Sendable, Hashable {
@@ -70,6 +72,14 @@ struct Game: Codable, Sendable, Hashable, Identifiable {
     let week: Int?
 
     var startsAt: Date? { ISODate.parse(date) }
+
+    /// How many periods to draw in a line score: as many as either side
+    /// reported, so overtime columns appear on their own.
+    var periodCount: Int {
+        max(home.linescores?.count ?? 0, away.linescores?.count ?? 0)
+    }
+
+    var hasLineScore: Bool { periodCount > 0 }
 }
 
 /// A team the user follows. Until Phase 3 syncs follows from the account,

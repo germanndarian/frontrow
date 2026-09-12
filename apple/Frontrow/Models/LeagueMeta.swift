@@ -64,6 +64,32 @@ extension League {
     }
 }
 
+extension League {
+    /// What one column of a line score is called: a quarter, an inning, a
+    /// period. Anything past regulation is overtime.
+    func periodLabel(_ index: Int, of total: Int) -> String {
+        let regulation: Int
+        switch self {
+        case .mlb: regulation = 9
+        case .nhl: regulation = 3
+        case .nba, .nfl, .collegeFootball: regulation = 4
+        }
+        guard index < regulation else {
+            let extras = total - regulation
+            return extras > 1 ? "OT\(index - regulation + 1)" : "OT"
+        }
+        return "\(index + 1)"
+    }
+
+    /// The column head over the running total.
+    var totalLabel: String {
+        switch self {
+        case .mlb: "R"
+        default: "T"
+        }
+    }
+}
+
 /// What ESPN's clinch letters mean, spelled out under the table.
 enum Clinch {
     static func meaning(_ marker: String) -> String {

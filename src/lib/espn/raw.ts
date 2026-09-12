@@ -26,6 +26,10 @@ export interface RawRecordItem {
   summary?: string;
 }
 
+export interface RawLinescore {
+  value?: number;
+}
+
 export interface RawCompetitor {
   id?: string;
   homeAway?: string;
@@ -34,6 +38,7 @@ export interface RawCompetitor {
   score?: string | RawScore;
   records?: { type?: string; summary?: string }[];
   curatedRank?: { current?: number };
+  linescores?: RawLinescore[];
 }
 
 export interface RawStatusType {

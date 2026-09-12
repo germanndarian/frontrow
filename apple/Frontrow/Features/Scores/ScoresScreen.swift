@@ -4,10 +4,12 @@ import SwiftUI
 /// RESULTS. Followed teams' games get the accent border, as on the web.
 struct ScoresScreen: View {
     let preferences: Preferences
+    @Binding var sheet: AppSheet?
     @State private var model: ScoresModel
 
-    init(preferences: Preferences) {
+    init(preferences: Preferences, sheet: Binding<AppSheet?>) {
         self.preferences = preferences
+        _sheet = sheet
         _model = State(initialValue: ScoresModel(preferences: preferences))
     }
 
@@ -78,7 +80,13 @@ struct ScoresScreen: View {
                                     .padding(.bottom, 12)
                                 VStack(spacing: 12) {
                                     ForEach(group.games) { game in
-                                        GameCard(game: game, followed: model.marksFollowed && model.isFollowed(game))
+                                        Button {
+                                            sheet = .game(game)
+                                        } label: {
+                                            GameCard(game: game, followed: model.marksFollowed && model.isFollowed(game))
+                                                .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                        }
+                                        .buttonStyle(.plain)
                                     }
                                 }
                                 .padding(.horizontal, 18)
@@ -105,13 +113,21 @@ struct ScoresScreen: View {
             .toolbar {
                 if model.liveCount > 0 {
                     ToolbarItem(placement: .topBarTrailing) {
-                        HStack(spacing: 6) {
-                            LiveDot()
-                            Text("\(model.liveCount) LIVE")
-                                .font(.caption.weight(.bold))
-                                .tracking(0.8)
+                        Button {
+                            let live = model.visible.filter { $0.state == .in }
+                            sheet = live.count == 1 ? .game(live[0]) : .liveGames(live)
+                        } label: {
+                            HStack(spacing: 6) {
+                                LiveDot()
+                                Text("\(model.liveCount) LIVE")
+                                    .font(.caption.weight(.bold))
+                                    .tracking(0.8)
+                            }
+                            .foregroundStyle(Theme.live)
+                            .contentShape(Capsule())
                         }
-                        .foregroundStyle(Theme.live)
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(model.liveCount) live games")
                     }
                 }
             }
