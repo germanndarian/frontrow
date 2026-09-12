@@ -54,6 +54,10 @@ struct OnboardingFlow: View {
                 footer
             }
             .background(Theme.background)
+            // The keyboard covers the bottom of the list; it doesn't get to
+            // push the whole flow up, which left the footer stranded halfway
+            // up the screen. Picking or scrolling puts the keyboard away.
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
     }
 
@@ -83,18 +87,22 @@ struct OnboardingFlow: View {
 
     private var footer: some View {
         HStack(spacing: 12) {
-            if let previous = step.previous {
-                Button {
-                    withAnimation(.snappy(duration: 0.25)) { step = previous }
-                } label: {
+            Button(action: back) {
+                HStack(spacing: 5) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 15, weight: .semibold))
-                        .frame(width: 46, height: 46)
-                        .accessibilityLabel("Back")
+                        .font(.system(size: 13, weight: .bold))
+                    Text("Back")
+                        .font(.system(size: 14, weight: .semibold))
                 }
-                .buttonStyle(.glass)
-                .accessibilityIdentifier("Back")
+                .foregroundStyle(Theme.muted)
+                .padding(.horizontal, 15)
+                .frame(height: 46)
+                .contentShape(Capsule())
             }
+            .buttonStyle(.glass)
+            .accessibilityIdentifier("Back")
+            .opacity(canGoBack ? 1 : 0)
+            .disabled(!canGoBack)
             Text(count)
                 .font(.system(size: 12.5, weight: .semibold))
                 .foregroundStyle(Theme.faint)
@@ -135,7 +143,24 @@ struct OnboardingFlow: View {
         }
     }
 
+    /// Back walks the steps down; from the first one it leaves the flow
+    /// altogether, which a guest needs — they arrived here from the front door
+    /// and would otherwise be stuck in it.
+    private var canGoBack: Bool {
+        step.previous != nil || account.isGuest
+    }
+
+    private func back() {
+        dismissKeyboard()
+        guard let previous = step.previous else {
+            account.leaveOnboarding()
+            return
+        }
+        withAnimation(.snappy(duration: 0.25)) { step = previous }
+    }
+
     private func advance() {
+        dismissKeyboard()
         guard let next = step.next else {
             withAnimation(.snappy(duration: 0.2)) { done = true }
             return

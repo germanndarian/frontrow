@@ -141,6 +141,7 @@ final class AccountTests: XCTestCase {
         let yankees = row(app, "New York Yankees")
         XCTAssertTrue(yankees.waitForExistence(timeout: 10), "search narrows the list")
         XCTAssertGreaterThan(app.keyboards.count, 0, "the keyboard is up while searching")
+        attach(app, "4b-keyboard-up")
         yankees.tap()
         XCTAssertEqual(app.keyboards.count, 0, "and gone once a team is picked")
         attach(app, "5-onboarding-teams")
@@ -148,6 +149,26 @@ final class AccountTests: XCTestCase {
 
         // Step 4: players, from that team's roster.
         XCTAssertTrue(app.staticTexts["Star your players"].waitForExistence(timeout: 10))
+        // The footer stays at the bottom of the screen rather than riding up
+        // with the keyboard, so while typing it sits behind it — the return
+        // key, a scroll or a pick are the ways back to it.
+        let rosterSearch = app.textFields.firstMatch
+        if rosterSearch.waitForExistence(timeout: 5) {
+            rosterSearch.tap()
+            rosterSearch.typeText("a")
+            XCTAssertGreaterThan(app.keyboards.count, 0, "the keyboard is up while searching")
+            let footer = app.buttons["Back"]
+            XCTAssertFalse(footer.isHittable, "the footer doesn't jump above the keyboard")
+            rosterSearch.typeText("\n")
+            XCTAssertEqual(app.keyboards.count, 0, "return puts the keyboard away")
+            XCTAssertTrue(footer.isHittable, "and the footer is back where it was")
+            footer.tap()
+            XCTAssertTrue(app.staticTexts["Follow your teams"].waitForExistence(timeout: 5),
+                          "Back goes to the previous step")
+            XCTAssertEqual(app.keyboards.count, 0, "with no keyboard in tow")
+            app.buttons["Continue"].tap()
+            XCTAssertTrue(app.staticTexts["Star your players"].waitForExistence(timeout: 10))
+        }
         XCTAssertTrue(app.staticTexts["NEW YORK YANKEES"].waitForExistence(timeout: 30),
                       "the roster loads for the team just followed")
         attach(app, "6-onboarding-players")

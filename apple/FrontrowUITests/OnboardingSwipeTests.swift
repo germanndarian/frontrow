@@ -40,10 +40,10 @@ final class OnboardingSwipeTests: XCTestCase {
         attach(app, "1-after-swiping")
     }
 
-    /// Back walks the steps down and stops: at the first step there is no
-    /// previous step to go to, and no button offering one.
+    /// Back walks the steps down, and from the first step it leaves the flow
+    /// — a guest arrived from the front door and needs a way back to it.
     @MainActor
-    func testBackStopsAtTheFirstStep() throws {
+    func testBackWalksDownAndThenLeavesTheFlow() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing-reset"]
         app.launch()
@@ -51,7 +51,6 @@ final class OnboardingSwipeTests: XCTestCase {
         XCTAssertTrue(app.buttons["Look around as a guest"].waitForExistence(timeout: 20))
         app.buttons["Look around as a guest"].tap()
         XCTAssertTrue(app.staticTexts["Pick your sports"].waitForExistence(timeout: 10))
-        XCTAssertFalse(app.buttons["Back"].exists, "nothing to go back to from the first step")
 
         app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Baseball'")).firstMatch.tap()
         app.buttons["Continue"].tap()
@@ -61,9 +60,14 @@ final class OnboardingSwipeTests: XCTestCase {
         XCTAssertTrue(back.waitForExistence(timeout: 5))
         back.tap()
         XCTAssertTrue(app.staticTexts["Pick your sports"].waitForExistence(timeout: 5))
-        XCTAssertFalse(back.exists, "and the way back is gone again")
         XCTAssertEqual(app.state, .runningForeground)
         attach(app, "2-back-to-the-first-step")
+
+        // From the first step a guest can leave the flow entirely, back to
+        // the front door they came in through.
+        back.tap()
+        XCTAssertTrue(app.buttons["Get started for free"].waitForExistence(timeout: 10),
+                      "back from the first step leaves onboarding")
     }
 
     @MainActor

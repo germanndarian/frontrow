@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The small pieces the screens share: section rules, eyebrows, panels, stat
 /// tiles and the bar chart. Same shapes and weights as the website's.
@@ -280,35 +281,12 @@ struct RowButtonStyle: ButtonStyle {
     }
 }
 
-/// Google's mark, drawn rather than bundled — four arcs and a bar, which is
-/// enough to be recognised at 18pt without shipping their asset.
-struct GoogleMark: View {
-    var size: CGFloat = 18
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .trim(from: 0.0, to: 0.25)
-                .stroke(Color(hex: 0x4285F4), lineWidth: size * 0.28)
-                .rotationEffect(.degrees(-45))
-            Circle()
-                .trim(from: 0.25, to: 0.5)
-                .stroke(Color(hex: 0x34A853), lineWidth: size * 0.28)
-                .rotationEffect(.degrees(-45))
-            Circle()
-                .trim(from: 0.5, to: 0.75)
-                .stroke(Color(hex: 0xFBBC05), lineWidth: size * 0.28)
-                .rotationEffect(.degrees(-45))
-            Circle()
-                .trim(from: 0.75, to: 1.0)
-                .stroke(Color(hex: 0xEA4335), lineWidth: size * 0.28)
-                .rotationEffect(.degrees(-45))
-            Rectangle()
-                .fill(Color(hex: 0x4285F4))
-                .frame(width: size * 0.42, height: size * 0.26)
-                .offset(x: size * 0.2, y: 0)
-        }
-        .frame(width: size, height: size)
-        .accessibilityHidden(true)
-    }
+/// Puts the keyboard away from anywhere — a button in a footer has no path to
+/// the focus state of a text field several views away, and this is what UIKit
+/// offers for exactly that.
+@MainActor
+func dismissKeyboard() {
+    UIApplication.shared.sendAction(
+        #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil
+    )
 }

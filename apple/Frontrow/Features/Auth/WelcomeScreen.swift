@@ -123,10 +123,11 @@ struct WelcomeScreen: View {
                             Text("Continue with Google")
                                 .font(.system(size: 15, weight: .semibold))
                         }
-                        .foregroundStyle(Color(hex: 0x131313))
+                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
-                        .background(.white, in: Capsule())
+                        .background(Color(hex: 0x1A2130).opacity(0.85), in: Capsule())
+                        .overlay { Capsule().stroke(.white.opacity(0.16), lineWidth: 1) }
                         .contentShape(Capsule())
                     }
                     .buttonStyle(PressableButtonStyle())
@@ -151,9 +152,15 @@ struct WelcomeScreen: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
                 .padding(.bottom, 8)
+                // A short fade into solid ground: a long one let the page's last
+                // line read through the buttons sitting on top of it.
                 .background(
                     LinearGradient(
-                        colors: [Color(hex: 0x0F1622).opacity(0), Color(hex: 0x0F1622).opacity(0.88), Color(hex: 0x0F1622)],
+                        stops: [
+                            .init(color: Color(hex: 0x0F1622).opacity(0), location: 0),
+                            .init(color: Color(hex: 0x0F1622), location: 0.18),
+                            .init(color: Color(hex: 0x0F1622), location: 1),
+                        ],
                         startPoint: .top, endPoint: .bottom
                     )
                 )
