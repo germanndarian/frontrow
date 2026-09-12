@@ -6,6 +6,11 @@ import SwiftUI
 struct OnboardingFlow: View {
     @Environment(Account.self) private var account
     @State private var step: Step = .sports
+    /// The furthest step reached, which is as far as the pager goes. It moves
+    /// on Continue and never on its own: a page list that grows while a search
+    /// field is focused makes UIKit assert its way out of the app, and "only
+    /// where you have already been" is the behaviour we want anyway.
+    @State private var unlocked: Step = .sports
     @State private var done = false
 
     /// The steps are a type, not positions in an array. A paged TabView drives
@@ -38,6 +43,23 @@ struct OnboardingFlow: View {
         }
     }
 
+    /// The steps this run actually has. Choosing a league only means anything
+    /// when a sport offers more than one — football does, the rest don't — so
+    /// for everyone else that step isn't shown at all.
+    private var steps: [Step] {
+        var steps: [Step] = [.sports]
+        if account.sports.contains(where: { $0.leagues.count > 1 }) { steps.append(.leagues) }
+        steps += [.teams, .players]
+        return steps
+    }
+
+    /// How far the pager reaches: back through everything visited, forward no
+    /// further than the last step Continue has opened.
+    private var reachable: [Step] {
+        let limit = steps.firstIndex(of: unlocked) ?? 0
+        return Array(steps.prefix(limit + 1))
+    }
+
     var body: some View {
         if done {
             OnboardingDone { account.finishOnboarding() }
@@ -45,15 +67,15 @@ struct OnboardingFlow: View {
             VStack(spacing: 0) {
                 header
                 TabView(selection: $step) {
-                    SportStep().tag(Step.sports)
-                    LeagueStep().tag(Step.leagues)
-                    TeamStep().tag(Step.teams)
-                    PlayerStep().tag(Step.players)
+                    ForEach(reachable) { step in
+                        page(step).tag(step)
+                    }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 footer
             }
             .background(Theme.background)
+            .onChange(of: steps) { _, _ in clampStep() }
             // The keyboard covers the bottom of the list; it doesn't get to
             // push the whole flow up, which left the footer stranded halfway
             // up the screen. Picking or scrolling puts the keyboard away.
@@ -61,10 +83,20 @@ struct OnboardingFlow: View {
         }
     }
 
+    @ViewBuilder
+    private func page(_ step: Step) -> some View {
+        switch step {
+        case .sports: SportStep()
+        case .leagues: LeagueStep()
+        case .teams: TeamStep()
+        case .players: PlayerStep()
+        }
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
-                ForEach(Step.allCases) { bar in
+                ForEach(steps) { bar in
                     Capsule()
                         .fill(bar.rawValue <= step.rawValue ? Theme.accent : Theme.line)
                         .frame(height: 4)
@@ -108,7 +140,7 @@ struct OnboardingFlow: View {
                 .foregroundStyle(Theme.faint)
             Spacer(minLength: 0)
             Button(action: advance) {
-                Text(step.isLast ? "Finish" : "Continue")
+                Text(nextStep == nil ? "Finish" : "Continue")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 26)
@@ -147,12 +179,22 @@ struct OnboardingFlow: View {
     /// altogether, which a guest needs — they arrived here from the front door
     /// and would otherwise be stuck in it.
     private var canGoBack: Bool {
-        step.previous != nil || account.isGuest
+        previousStep != nil || account.isGuest
+    }
+
+    private var previousStep: Step? {
+        guard let index = steps.firstIndex(of: step), index > 0 else { return nil }
+        return steps[index - 1]
+    }
+
+    private var nextStep: Step? {
+        guard let index = steps.firstIndex(of: step), index + 1 < steps.count else { return nil }
+        return steps[index + 1]
     }
 
     private func back() {
         dismissKeyboard()
-        guard let previous = step.previous else {
+        guard let previous = previousStep else {
             account.leaveOnboarding()
             return
         }
@@ -161,11 +203,30 @@ struct OnboardingFlow: View {
 
     private func advance() {
         dismissKeyboard()
-        guard let next = step.next else {
+        guard let next = nextStep else {
             withAnimation(.snappy(duration: 0.2)) { done = true }
             return
         }
+        // Open the page first, then move to it: inserting a page and selecting
+        // it in one animation is what UIKit's pager dislikes.
+        if (steps.firstIndex(of: next) ?? 0) > (steps.firstIndex(of: unlocked) ?? 0) {
+            unlocked = next
+        }
         withAnimation(.snappy(duration: 0.25)) { step = next }
+    }
+
+    /// Deselecting a sport can take the leagues step away underneath the
+    /// pager — land somewhere that still exists.
+    private func clampStep() {
+        if !steps.contains(unlocked) { unlocked = steps.last ?? .sports }
+        if !steps.contains(step) { step = steps.last ?? .sports }
+        // Dropping a sport can leave the flow further along than it has any
+        // right to be — walk it back to the last step still answered.
+        if let stepIndex = steps.firstIndex(of: step),
+           let limit = steps.firstIndex(of: unlocked),
+           stepIndex > limit {
+            step = unlocked
+        }
     }
 }
 

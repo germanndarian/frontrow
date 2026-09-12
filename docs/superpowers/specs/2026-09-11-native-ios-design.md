@@ -198,6 +198,21 @@ are.
   regenerates, and every target needs one — an extension that inherits an empty
   team refuses to sign.
 
+## Setup is a shape, not a fixed four steps
+
+- The league step only appears when a **followed sport offers more than one**
+  league — football does, the rest don't — so most people go sports → teams →
+  players, and the progress rail counts three.
+- The pager reaches back through everything visited and forward no further than
+  the last step **Continue** opened. Swiping never opens a step.
+- That rule also fixes a crash: growing the pager's page list while a search
+  field inside it held focus made UIKit assert
+  (`_resignOrRebaseFirstResponderViewWithIndexPathMapping:`). Pages now change
+  only on Continue, after the keyboard has been dismissed.
+- Sports and leagues are editable from Settings, not just at setup: a
+  "Sports & leagues" panel lists what's followed and opens the same pickers,
+  with the leagues tab hidden under the same one-league rule.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the

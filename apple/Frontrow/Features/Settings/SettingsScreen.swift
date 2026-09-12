@@ -6,7 +6,7 @@ import SwiftUI
 struct SettingsScreen: View {
     @Environment(Account.self) private var account
     @State private var name = ""
-    @State private var editingFollows = false
+    @State private var editing: FollowEditor.Tab?
     @State private var confirmingDelete = false
     @State private var busy = false
     @State private var error: String?
@@ -17,6 +17,7 @@ struct SettingsScreen: View {
                 LazyVStack(spacing: 14) {
                     accountPanel
                     appearancePanel
+                    leaguesPanel
                     followsPanel
                     actions
                     Color.clear.frame(height: 24)
@@ -28,8 +29,8 @@ struct SettingsScreen: View {
             .navigationTitle("Settings")
             .navigationSubtitle(Text(account.isGuest ? "Guest session" : account.email))
         }
-        .sheet(isPresented: $editingFollows) {
-            FollowEditor()
+        .sheet(item: $editing) { tab in
+            FollowEditor(tab: tab)
         }
         .alert("Delete your account?", isPresented: $confirmingDelete) {
             Button("Delete", role: .destructive) { delete() }
@@ -202,6 +203,42 @@ struct SettingsScreen: View {
         }
     }
 
+    // ── Sports & leagues ─────────────────────────────────────────────────
+
+    private var leaguesPanel: some View {
+        Panel {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Eyebrow("What you follow at the top level")
+                        Text("Sports & leagues")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(Theme.ink)
+                    }
+                    Spacer(minLength: 8)
+                    Button("Edit") { editing = .sports }
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .buttonStyle(.glass)
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
+
+                if account.preferences.leagues.isEmpty {
+                    Text("Nothing followed yet.")
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(Theme.faint)
+                        .padding(.horizontal, 18)
+                        .padding(.bottom, 16)
+                } else {
+                    FlowingChips(labels: account.preferences.orderedLeagues.map(\.fullName))
+                        .padding(.horizontal, 18)
+                        .padding(.bottom, 16)
+                }
+            }
+        }
+    }
+
     // ── Follows ──────────────────────────────────────────────────────────
 
     private var followsPanel: some View {
@@ -215,7 +252,7 @@ struct SettingsScreen: View {
                             .foregroundStyle(Theme.ink)
                     }
                     Spacer(minLength: 8)
-                    Button("Edit") { editingFollows = true }
+                    Button("Edit") { editing = .teams }
                         .font(.system(size: 12.5, weight: .semibold))
                         .buttonStyle(.glass)
                 }
@@ -331,23 +368,34 @@ struct SettingsScreen: View {
     }
 }
 
-/// Adding follows after onboarding reuses the same two pickers.
+/// Changing what you follow, after setup, with the same pickers setup used.
 struct FollowEditor: View {
+    enum Tab: String, Identifiable, CaseIterable {
+        case sports, leagues, teams, players
+        var id: String { rawValue }
+        var label: String { rawValue.capitalized }
+    }
+
+    @Environment(Account.self) private var account
     @Environment(\.dismiss) private var dismiss
-    @State private var tab = 0
+    @State var tab: Tab
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 Picker("What to edit", selection: $tab) {
-                    Text("Teams").tag(0)
-                    Text("Players").tag(1)
+                    ForEach(tabs) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 18)
                 .padding(.bottom, 10)
 
-                if tab == 0 { TeamStep() } else { PlayerStep() }
+                switch tab {
+                case .sports: SportStep()
+                case .leagues: LeagueStep()
+                case .teams: TeamStep()
+                case .players: PlayerStep()
+                }
             }
             .background(Theme.background)
             .navigationTitle("Edit follows")
@@ -357,6 +405,17 @@ struct FollowEditor: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .onChange(of: tabs) { _, available in
+                if !available.contains(tab) { tab = .sports }
+            }
+        }
+    }
+
+    /// Leagues are only worth a tab when a followed sport has more than one —
+    /// the same rule onboarding uses.
+    private var tabs: [Tab] {
+        Tab.allCases.filter { tab in
+            tab != .leagues || account.sports.contains { $0.leagues.count > 1 }
         }
     }
 }
