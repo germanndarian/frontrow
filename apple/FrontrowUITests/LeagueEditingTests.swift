@@ -17,13 +17,17 @@ final class LeagueEditingTests: XCTestCase {
         app.tabBars.buttons["Settings"].tap()
         XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10))
 
-        XCTAssertTrue(app.staticTexts["Sports & leagues"].waitForExistence(timeout: 10),
-                      "Settings says what you follow at the top level")
+        // One panel, one Edit: leagues, teams and players are all the same
+        // question, and two buttons opened the same sheet.
+        XCTAssertTrue(app.staticTexts["What you follow"].waitForExistence(timeout: 10))
+        XCTAssertEqual(app.buttons.matching(identifier: "Edit").count, 1,
+                       "one Edit button, not one per kind of thing")
         XCTAssertTrue(app.staticTexts["Major League Baseball"].exists)
         XCTAssertTrue(app.staticTexts["College Football"].exists)
-        attach(app, "1-settings-leagues")
+        XCTAssertTrue(app.staticTexts["New York Yankees"].exists, "and the teams are in the same panel")
+        attach(app, "1-settings-follows")
 
-        app.buttons["Edit"].firstMatch.tap()
+        app.buttons["Edit"].tap()
         XCTAssertTrue(app.navigationBars["Edit follows"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["Sports"].exists, "sports are editable too")
         XCTAssertTrue(app.buttons["Leagues"].exists, "and leagues, since football is followed")
