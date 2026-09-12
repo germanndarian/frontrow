@@ -35,11 +35,27 @@ final class Account {
     private var pushTask: Task<Void, Never>?
     private var watchTask: Task<Void, Never>?
 
-    init(client: SupabaseClient = SupabaseClient(
-        supabaseURL: SupabaseConfig.url,
-        supabaseKey: SupabaseConfig.anonKey
-    )) {
+    init(client: SupabaseClient = Account.makeClient()) {
         self.client = client
+    }
+
+    /// `emitLocalSessionAsInitialSession` hands us the stored session straight
+    /// away instead of holding it back behind a token refresh. The old
+    /// behaviour meant a cold start on a slow network sat on the launch screen
+    /// waiting for the network before it would admit it had a session at all —
+    /// and the SDK warns that it is going away in the next major version.
+    /// An expired session still arrives; the SDK refreshes it underneath us.
+    static func makeClient() -> SupabaseClient {
+        SupabaseClient(
+            supabaseURL: SupabaseConfig.url,
+            supabaseKey: SupabaseConfig.anonKey,
+            options: SupabaseClientOptions(
+                auth: SupabaseClientOptions.AuthOptions(
+                    storage: AuthClient.Configuration.defaultLocalStorage,
+                    emitLocalSessionAsInitialSession: true
+                )
+            )
+        )
     }
 
     /// Whether the app should show the tabs rather than the front door.
@@ -77,6 +93,15 @@ final class Account {
                 await self.handle(event: event, session: session)
             }
         }
+
+        // Belt and braces: the SDK emits an initial session immediately now,
+        // but a launch screen that waits forever is the worst possible way to
+        // find out otherwise.
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(5))
+            guard let self, self.status == .loading else { return }
+            self.status = .signedOut
+        }
     }
 
     private func handle(event: AuthChangeEvent, session: Session?) async {
@@ -86,9 +111,13 @@ final class Account {
             return
         }
         email = user.email ?? ""
-        // A token refresh is the same user — no need to re-read the account.
-        guard userId != user.id.uuidString.lowercased() || status != .authed else { return }
-        userId = user.id.uuidString.lowercased()
+        let id = user.id.uuidString.lowercased()
+        // A token refresh is the same user and normally needs no re-read — but
+        // if the session that opened the app was expired, those reads came back
+        // empty, and the refreshed token is the moment to try them again.
+        let isNewUser = userId != id
+        userId = id
+        guard isNewUser || status != .authed || preferences.teams.isEmpty else { return }
         await hydrate()
     }
 
