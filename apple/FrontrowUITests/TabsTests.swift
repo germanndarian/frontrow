@@ -55,6 +55,9 @@ final class TabsTests: XCTestCase {
                       "the starred player's card should load from the API")
         XCTAssertTrue(app.staticTexts["AVG"].waitForExistence(timeout: 10),
                       "season stats render with their abbreviations")
+        // Starred names sit under the team they play for.
+        XCTAssertTrue(app.staticTexts["NEW YORK YANKEES"].exists, "players are grouped by team")
+        XCTAssertTrue(app.staticTexts["EDMONTON OILERS"].exists)
         attach(app, "4-players")
 
         // ── Player sheet ─────────────────────────────────────────────────

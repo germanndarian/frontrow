@@ -16,7 +16,7 @@ struct PlayersScreen: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 14) {
+                LazyVStack(alignment: .leading, spacing: 14) {
                     if model.followed.isEmpty {
                         ContentUnavailableView(
                             "No players starred",
@@ -25,13 +25,21 @@ struct PlayersScreen: View {
                         )
                         .padding(.top, 60)
                     } else {
-                        ForEach(model.followed) { follow in
-                            PlayerCardView(
-                                follow: follow,
-                                state: model.players[follow],
-                                onOpen: { sheet = .player(follow) },
-                                onRetry: { Task { await model.players.fetch(follow, force: true) } }
+                        ForEach(model.sections) { section in
+                            SectionRule(
+                                title: section.title.uppercased(),
+                                detail: section.teamAbbr,
+                                accent: Color(cssHex: section.color)
                             )
+                            .padding(.top, section.id == model.sections.first?.id ? 0 : 10)
+                            ForEach(section.players) { follow in
+                                PlayerCardView(
+                                    follow: follow,
+                                    state: model.players[follow],
+                                    onOpen: { sheet = .player(follow) },
+                                    onRetry: { Task { await model.players.fetch(follow, force: true) } }
+                                )
+                            }
                         }
                     }
                     Color.clear.frame(height: 24)
