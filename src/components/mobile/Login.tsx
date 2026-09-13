@@ -100,7 +100,7 @@ export function Login({ mode, onMode, onBack, onGuest }: { mode: Mode; onMode: (
               </Field>
               {signup && (
                 <Field label="Display name">
-                  <input className={inputClass} type="text" autoComplete="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Optional — used to greet you" />
+                  <input className={inputClass} type="text" autoComplete="name" maxLength={60} value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Optional — used to greet you" />
                 </Field>
               )}
               <div className="flex items-end gap-3 rounded-[16px] border border-line bg-surface px-4 py-[13px]">

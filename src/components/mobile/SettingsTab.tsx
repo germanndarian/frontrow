@@ -80,7 +80,7 @@ export function SettingsTab({ onEditFollows }: { onEditFollows: () => void }) {
             </div>
             <label className="mt-4 block">
               <Eyebrow>Display name</Eyebrow>
-              <input className={field} value={name} onChange={(e) => setName(e.target.value)} onBlur={() => name !== profile?.displayName && updateProfile({ displayName: name })} placeholder="How should we greet you?" />
+              <input className={field} maxLength={60} value={name} onChange={(e) => setName(e.target.value)} onBlur={() => name !== profile?.displayName && updateProfile({ displayName: name })} placeholder="How should we greet you?" />
             </label>
           </>
         )}
@@ -107,7 +107,7 @@ export function SettingsTab({ onEditFollows }: { onEditFollows: () => void }) {
       <Section title="Dashboard" sub="What greets you and which sections show.">
         <label className="mt-3.5 block">
           <Eyebrow>Greeting name</Eyebrow>
-          <input className={field} value={settings.greetingName} onChange={(e) => settings.set("greetingName", e.target.value)} placeholder={profile?.displayName || "Your name"} />
+          <input className={field} maxLength={40} value={settings.greetingName} onChange={(e) => settings.set("greetingName", e.target.value)} placeholder={profile?.displayName || "Your name"} />
         </label>
         <Eyebrow className="mt-3.5">Visible sections</Eyebrow>
         <div className="mt-1">

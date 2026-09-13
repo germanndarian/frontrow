@@ -340,6 +340,7 @@ function ProfileCard() {
           <input
             value={user.displayName}
             onChange={(e) => updateProfile({ displayName: e.target.value })}
+            maxLength={60}
             className="w-full rounded-md border border-line/70 bg-bg-2/60 px-3.5 py-2.5 text-[14px] text-ink transition-colors focus:border-primary/60"
           />
         </label>

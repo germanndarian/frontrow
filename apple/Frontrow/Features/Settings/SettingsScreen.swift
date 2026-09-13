@@ -96,6 +96,11 @@ struct SettingsScreen: View {
 
                         Eyebrow("Display name")
                         TextField("How should we greet you?", text: $name)
+                            .onChange(of: name) { _, value in
+                                // The database stops at 60; don't let someone
+                                // type past it and lose the save.
+                                if value.count > 60 { name = String(value.prefix(60)) }
+                            }
                             .font(.system(size: 16))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 12)
@@ -191,7 +196,7 @@ struct SettingsScreen: View {
                     Eyebrow("Greeting name")
                     TextField(account.profile?.displayName ?? "Your name", text: Binding(
                         get: { account.settings.greetingName },
-                        set: { account.update(\.greetingName, to: $0) }
+                        set: { account.update(\.greetingName, to: String($0.prefix(40))) }
                     ))
                     .font(.system(size: 16))
                     .padding(.horizontal, 14)
