@@ -58,6 +58,17 @@ export interface RawSituation {
   downDistanceText?: string;
   shortDownDistanceText?: string;
   lastPlay?: { text?: string };
+  /* Football, live only. */
+  down?: number;
+  /** Yards needed for a first down. */
+  distance?: number;
+  /** Ambiguous on its own — see toFieldPercent. */
+  yardLine?: number;
+  /** Team id of whoever has the ball. */
+  possession?: string;
+  /** Whose half the ball is on, and where: "TA&M 48". */
+  possessionText?: string;
+  isRedZone?: boolean;
 }
 
 export interface RawSeries {

@@ -101,7 +101,7 @@ enum SampleGames {
         home: side("EDM", "Oilers", "#fc4c02", 2, winner: true),
         away: side("FLA", "Panthers", "#c8102e", 1),
         venue: "Rogers Place", broadcast: "ESPN", situation: nil,
-        lastPlay: nil, period: "2nd", odds: nil, week: nil
+        lastPlay: nil, period: "2nd", odds: nil, week: nil, field: nil
     )
 
     static var upcoming: [Game] { [next, later] }
@@ -113,7 +113,7 @@ enum SampleGames {
         home: side("TEX", "Rangers", "#003278", nil),
         away: side("NYY", "Yankees", "#0c2340", nil),
         venue: nil, broadcast: "ESPN", situation: nil,
-        lastPlay: nil, period: nil, odds: nil, week: nil
+        lastPlay: nil, period: nil, odds: nil, week: nil, field: nil
     )
 
     static let later = Game(
@@ -123,7 +123,7 @@ enum SampleGames {
         home: side("DAL", "Cowboys", "#003594", nil),
         away: side("PHI", "Eagles", "#004c54", nil),
         venue: nil, broadcast: "FOX", situation: nil,
-        lastPlay: nil, period: nil, odds: nil, week: 2
+        lastPlay: nil, period: nil, odds: nil, week: 2, field: nil
     )
 
     private static func side(_ abbr: String, _ name: String, _ color: String, _ score: Int?, winner: Bool = false) -> GameSide {

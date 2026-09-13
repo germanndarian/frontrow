@@ -235,6 +235,39 @@ are.
   three periods for hockey, four quarters for football, and the total column
   is "R" for baseball and "T" everywhere else.
 
+## Where the ball is
+
+- A live football game draws a field above the line score: the away team's
+  endzone on the left in their colour, the home team's on the right, yard
+  lines and 10–50–10 numbers up both sidelines, the line of scrimmage in blue
+  and the chains in yellow, with the ball just behind the line on the side the
+  offense is driving from. When the feed says the drive is in the red zone,
+  the twenty being defended is tinted.
+- The endzone takes the team's colour and labels it white or ink, whichever
+  reads; a colour that can't carry either falls back to the app's own surface.
+  A washed-out abbreviation is worse than a neutral endzone.
+- Underneath sits the down and distance — "2nd & 9 at TA&M 48" — and the last
+  play, with the game clock in front of it when ESPN hasn't already put it
+  there.
+- Nothing draws before kick-off, after the whistle, or for the sports that
+  have no field. At the half, and between drives, the field draws with no
+  lines on it: ESPN keeps the situation block and stops saying where the ball
+  is, and an empty field is the honest picture.
+- `situation.yardLine` is the trap. It counts from a goal line ESPN doesn't
+  name, so the same "22" is the home 22 in one payload and the away 22 in the
+  next. The marker text says whose half it is out loud — "TA&M 48" — so
+  `toFieldPercent` reads that instead, from `possessionText` or the tail of a
+  spelled-out `downDistanceText`, and returns nothing when neither is there.
+  Positions ride to the app as percentages across the playing surface, 0 at
+  the away goal line and 100 at the home one, so the app draws what it's given
+  and never has to work out which way round the field is.
+- The chains sit downfield of the scrimmage line, which means below it for the
+  home team and above it for the away team, and goal-to-go lands exactly on
+  the goal line.
+- The sheet follows the Scores tab's own thirty-second poll through a shared
+  `LiveFeed` rather than starting a second one, and the lines slide to their
+  new positions instead of jumping.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the
