@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { LEAGUES } from "@/lib/leagues";
+import { isValidId } from "@/lib/espn/ids";
 import type { LeagueId } from "@/lib/types";
 import { espnFetch } from "@/lib/espn/client";
 import { espnUrl, REVALIDATE } from "@/lib/espn/endpoints";
@@ -16,6 +17,9 @@ export async function GET(
   const league = req.nextUrl.searchParams.get("league");
   if (!league || !VALID.has(league)) {
     return NextResponse.json({ error: "bad_league" }, { status: 400 });
+  }
+  if (!isValidId(id)) {
+    return NextResponse.json({ error: "bad_id" }, { status: 400 });
   }
   const l = league as LeagueId;
 
