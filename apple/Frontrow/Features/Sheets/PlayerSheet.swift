@@ -11,7 +11,10 @@ struct PlayerSheet: View {
             mark: follow.teamAbbr,
             color: state.value?.color ?? "#8C8C86",
             title: follow.fullName,
-            subtitle: state.value.map { "\($0.subtitle) · \($0.seasonLabel)" } ?? follow.teamAbbr
+            subtitle: state.value.map { "\($0.subtitle) · \($0.seasonLabel)" } ?? follow.teamAbbr,
+            // The follow carries the headshot, so the face is there from the
+            // first frame rather than waiting on the stats to land.
+            headshot: state.value?.headshot ?? follow.headshot
         ) {
             switch state {
             case .loading:

@@ -177,6 +177,9 @@ struct Headshot: View {
         .background(Color(cssHex: color) ?? Theme.faint)
         .clipShape(Circle())
         .overlay { Circle().stroke(Theme.line, lineWidth: 1) }
+        // An identifier, not a label: the name is always written beside the
+        // face, and VoiceOver shouldn't read it twice. This is for the tests.
+        .accessibilityIdentifier("headshot")
     }
 
     private var initials: String {
