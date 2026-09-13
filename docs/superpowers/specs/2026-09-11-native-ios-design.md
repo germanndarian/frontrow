@@ -312,6 +312,28 @@ are.
   nothing once the game ends, so finished games are swept on each load rather
   than syncing a column nobody would miss on their other phone.
 
+## The game on the Lock Screen
+
+- A live baseball or football game can be tracked: a card on the Lock Screen
+  and the same game in the Dynamic Island. One at a time — the tracker is for
+  the game you're watching, and a Lock Screen stacked with them is worse than
+  useless — so starting a second ends the first.
+- The card carries the score, the inning or quarter and the clock. Baseball
+  adds the count, the outs and a diamond with a filled base for each runner;
+  football adds the down and distance and a dot on whoever has the ball.
+- The island narrows by stages: expanded is the whole scoreline with the
+  diamond, compact is each side's score with the outs as pips, minimal is the
+  leading score alone.
+- Updates ride the Scores tab's own thirty-second poll, which means they
+  arrive while the app is awake. Keeping pace with a locked phone needs the
+  activity's push token and a server to push to it. Until that exists,
+  `staleDate` tells the system to dim the card rather than let it quietly go
+  wrong, and a finished game ends the activity after a few minutes with the
+  final score still showing.
+- A Live Activity can't be put on a simulator's Lock Screen and looked at, so
+  the widget gallery draws the same card from the same views, which is where
+  the tests read it.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the

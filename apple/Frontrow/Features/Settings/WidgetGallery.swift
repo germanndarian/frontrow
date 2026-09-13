@@ -35,6 +35,26 @@ struct WidgetGallery: View {
                 lockTile("Inline", width: 250, height: 26) {
                     LockInline(entry: entry)
                 }
+
+                Text("LIVE ACTIVITY")
+                    .font(.system(size: 11, weight: .black))
+                    .tracking(1.2)
+                    .foregroundStyle(Theme.faint)
+                    .padding(.top, 4)
+                // A Live Activity can't be put on a simulator's Lock Screen to
+                // be looked at, so the card it draws is shown here instead —
+                // from the same views the activity itself uses.
+                ForEach(GameActivity.samples) { sample in
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text(sample.title)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(Theme.faint)
+                        GameActivityView(attributes: sample.attributes, state: sample.state)
+                            .frame(width: 364)
+                            .background(Color.black.opacity(0.82))
+                            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                    }
+                }
             }
             .padding(18)
             .frame(maxWidth: .infinity, alignment: .leading)

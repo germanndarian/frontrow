@@ -51,17 +51,22 @@ final class GameDetailTests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.navigationBars["Live & Upcoming"].waitForExistence(timeout: 20))
-        app.buttons["MLB"].tap()
-        XCTAssertTrue(app.staticTexts["UPCOMING"].waitForExistence(timeout: 30),
-                      "there are games still to come")
 
-        // A card that hasn't started. Which one depends on the day's slate, so
-        // take the first and scroll it up if the live games pushed it down.
+        // Whichever league still has a game to come. Late on a Sunday every
+        // baseball game has started, and the test used to fail for want of a
+        // fixture rather than for want of a countdown.
         let scheduled = app.buttons.matching(
             NSPredicate(format: "label CONTAINS 'SCHEDULED'")
-        ).firstMatch
-        XCTAssertTrue(scheduled.waitForExistence(timeout: 10))
-        open(scheduled, in: app)
+        )
+        var found = scheduled.firstMatch.waitForExistence(timeout: 20)
+        for league in ["MLB", "NHL", "NFL", "NCAAF"] where !found {
+            let chip = app.buttons[league]
+            guard chip.exists else { continue }
+            chip.tap()
+            found = scheduled.firstMatch.waitForExistence(timeout: 25)
+        }
+        try XCTSkipUnless(found, "nothing on today's board has still to start")
+        open(scheduled.firstMatch, in: app)
 
         XCTAssertTrue(app.staticTexts["STARTS IN"].waitForExistence(timeout: 10))
         // The clock has to actually run. Match only the countdown's own shape

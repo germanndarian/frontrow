@@ -34,6 +34,7 @@ targets:
       - path: FrontrowWidgets/LockWidgets.swift
       - path: FrontrowWidgets/WidgetPieces.swift
       - path: FrontrowWidgets/Provider.swift
+      - path: FrontrowWidgets/GameActivityViews.swift
     dependencies:
       - package: Supabase
         product: Supabase
@@ -53,6 +54,8 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIApplicationSupportsIndirectInputEvents: true
         ITSAppUsesNonExemptEncryption: false
+        # Without this the system refuses every Activity.request.
+        NSSupportsLiveActivities: true
         # Where OAuth comes back to, and what a widget tap opens.
         CFBundleURLTypes:
           - CFBundleURLName: com.germanndarian.frontrow
@@ -103,36 +106,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.germanndarian.frontrow.uitests
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Frontrow
-  FrontrowWidgets:
-    type: app-extension
-    platform: iOS
-    sources:
-      - path: FrontrowWidgets
-      # The widget draws the same games with the same tokens as the app, so it
-      # compiles the same models rather than keeping a second copy of them.
-      - path: Frontrow/Models
-      - path: Frontrow/Networking
-      - path: Frontrow/Theme
-      - path: Frontrow/Account/Rows.swift
-      - path: Frontrow/Assets.xcassets
-        buildPhase: resources
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.germanndarian.frontrow.widgets
-        GENERATE_INFOPLIST_FILE: NO
-        SKIP_INSTALL: YES
-        TARGETED_DEVICE_FAMILY: "1"
-    info:
-      path: FrontrowWidgets/Info.plist
-      properties:
-        CFBundleDisplayName: Frontrow
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
-    entitlements:
-      path: FrontrowWidgets/FrontrowWidgets.entitlements
-      properties:
-        com.apple.security.application-groups: [group.com.germanndarian.frontrow]
-
 schemes:
   Frontrow:
     build:

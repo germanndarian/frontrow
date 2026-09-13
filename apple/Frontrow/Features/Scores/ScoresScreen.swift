@@ -7,6 +7,7 @@ struct ScoresScreen: View {
     @Binding var sheet: AppSheet?
     @Environment(LiveFeed.self) private var feed: LiveFeed?
     @Environment(Pins.self) private var pins: Pins?
+    @Environment(GameTracker.self) private var tracker: GameTracker?
     @State private var model: ScoresModel
 
     init(preferences: Preferences, sheet: Binding<AppSheet?>) {
@@ -155,6 +156,8 @@ struct ScoresScreen: View {
             feed?.publish(games)
             // A pinned game that has finished has nothing left to say.
             pins?.forget(finishedIn: games)
+            // The Lock Screen rides on this poll rather than one of its own.
+            tracker?.update(from: games)
         }
         .onChange(of: pins?.ids ?? [], initial: true) { _, ids in model.pinned = ids }
     }
