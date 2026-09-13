@@ -8,6 +8,7 @@ struct SettingsScreen: View {
     @State private var name = ""
     @State private var editing: FollowEditor.Tab?
     @State private var confirmingDelete = false
+    @State private var showingEverything = false
     @State private var busy = false
     @State private var error: String?
 
@@ -29,7 +30,10 @@ struct SettingsScreen: View {
             .navigationSubtitle(Text(account.isGuest ? "Guest session" : account.email))
         }
         .sheet(item: $editing) { tab in
-            FollowEditor(tab: tab)
+            FollowEditor(tab: tab).scrollIndicators(.hidden)
+        }
+        .sheet(isPresented: $showingEverything) {
+            FollowsList(summary: summary).environment(account)
         }
         .alert("Delete your account?", isPresented: $confirmingDelete) {
             Button("Delete", role: .destructive) { delete() }
@@ -235,20 +239,51 @@ struct SettingsScreen: View {
                         .padding(.bottom, 14)
                 }
 
-                ForEach(account.preferences.teams) { team in
-                    row(logo: team.logo, abbr: team.abbreviation, color: team.color,
-                        title: team.displayName, detail: team.league.name) {
+                // A preview, not the whole list: three of each keeps the
+                // panel a readable height however much you follow, and both
+                // kinds stay visible instead of the teams crowding the
+                // players out.
+                ForEach(account.preferences.teams.prefix(Self.preview)) { team in
+                    FollowRow(logo: team.logo, abbr: team.abbreviation, color: team.color,
+                              title: team.displayName, detail: team.league.name) {
                         withAnimation(.snappy(duration: 0.2)) { account.toggleTeam(team) }
                     }
                 }
-                ForEach(account.preferences.players) { player in
-                    row(logo: player.headshot, abbr: player.teamAbbr, color: "#8C8C86",
-                        title: player.fullName, detail: "\(player.teamAbbr) · \(player.position)", circular: true) {
+                ForEach(account.preferences.players.prefix(Self.preview)) { player in
+                    FollowRow(logo: player.headshot, abbr: player.teamAbbr, color: "#8C8C86",
+                              title: player.fullName,
+                              detail: "\(player.teamAbbr) · \(player.position)", circular: true) {
                         withAnimation(.snappy(duration: 0.2)) { account.togglePlayer(player) }
                     }
                 }
+                if hidden > 0 {
+                    Button { showingEverything = true } label: {
+                        HStack(spacing: 5) {
+                            Text("View all \(account.preferences.teams.count + account.preferences.players.count)")
+                                .font(.system(size: 13, weight: .semibold))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 10, weight: .bold))
+                                .opacity(0.5)
+                        }
+                        .foregroundStyle(Theme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(RowButtonStyle())
+                    .overlay(alignment: .top) { Rectangle().fill(Theme.lineSoft.opacity(0.7)).frame(height: 1) }
+                }
             }
         }
+    }
+
+    /// How many of each kind the panel shows before it stops.
+    private static let preview = 3
+
+    private var hidden: Int {
+        let teams = account.preferences.teams.count - Self.preview
+        let players = account.preferences.players.count - Self.preview
+        return max(0, teams) + max(0, players)
     }
 
     /// "3 leagues · 4 teams · 2 players", skipping whatever is empty.
@@ -260,37 +295,6 @@ struct SettingsScreen: View {
         ]
         let parts = counts.filter { $0.0 > 0 }.map { "\($0.0) \($0.1)\($0.0 == 1 ? "" : "s")" }
         return parts.isEmpty ? "Nothing yet" : parts.joined(separator: " · ")
-    }
-
-    private func row(logo: String, abbr: String, color: String, title: String, detail: String, circular: Bool = false, remove: @escaping () -> Void) -> some View {
-        HStack(spacing: 12) {
-            if circular {
-                Headshot(url: logo, name: title, color: color, size: 32)
-            } else {
-                TeamMark(logo: logo, abbreviation: abbr, color: color, size: 32)
-            }
-            VStack(alignment: .leading, spacing: 1) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
-                    .lineLimit(1)
-                Text(detail)
-                    .font(.system(size: 12))
-                    .foregroundStyle(Theme.faint)
-            }
-            Spacer(minLength: 8)
-            Button(role: .destructive, action: remove) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(Theme.faint)
-                    .frame(width: 34, height: 34)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Remove \(title)")
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 10)
-        .overlay(alignment: .top) { Rectangle().fill(Theme.lineSoft.opacity(0.7)).frame(height: 1) }
     }
 
     // ── Sign out / delete ────────────────────────────────────────────────
@@ -396,5 +400,95 @@ struct FollowEditor: View {
         Tab.allCases.filter { tab in
             tab != .leagues || account.sports.contains { $0.leagues.count > 1 }
         }
+    }
+}
+
+/// One followed team or player, with the button that stops following it.
+struct FollowRow: View {
+    let logo: String
+    let abbr: String
+    let color: String
+    let title: String
+    let detail: String
+    var circular = false
+    let remove: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            if circular {
+                Headshot(url: logo, name: title, color: color, size: 32)
+            } else {
+                TeamMark(logo: logo, abbreviation: abbr, color: color, size: 32)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(1)
+                Text(detail)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.faint)
+            }
+            Spacer(minLength: 8)
+            Button(role: .destructive, action: remove) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.faint)
+                    .frame(width: 34, height: 34)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Remove \(title)")
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 10)
+        .overlay(alignment: .top) { Rectangle().fill(Theme.lineSoft.opacity(0.7)).frame(height: 1) }
+    }
+}
+
+/// Everything you follow, when the Settings panel's preview isn't all of it.
+struct FollowsList: View {
+    let summary: String
+    @Environment(Account.self) private var account
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    if !account.preferences.teams.isEmpty {
+                        SheetGroupLabel(text: "Teams")
+                        ForEach(account.preferences.teams) { team in
+                            FollowRow(logo: team.logo, abbr: team.abbreviation, color: team.color,
+                                      title: team.displayName, detail: team.league.name) {
+                                withAnimation(.snappy(duration: 0.2)) { account.toggleTeam(team) }
+                            }
+                        }
+                    }
+                    if !account.preferences.players.isEmpty {
+                        SheetGroupLabel(text: "Players")
+                        ForEach(account.preferences.players) { player in
+                            FollowRow(logo: player.headshot, abbr: player.teamAbbr, color: "#8C8C86",
+                                      title: player.fullName,
+                                      detail: "\(player.teamAbbr) · \(player.position)", circular: true) {
+                                withAnimation(.snappy(duration: 0.2)) { account.togglePlayer(player) }
+                            }
+                        }
+                    }
+                    Color.clear.frame(height: 24)
+                }
+            }
+            .background(Theme.background)
+            .scrollIndicators(.hidden)
+            .navigationTitle("What you follow")
+            .navigationSubtitle(Text(summary))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }

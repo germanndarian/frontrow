@@ -275,6 +275,23 @@ are.
   a caller looking at another week can't catch today's games. Worst case is
   now twenty seconds of cache plus the app's thirty-second poll.
 
+## Yours, and only as much as you asked for
+
+- The scoreboard's first chip is "Your teams", not "My teams". Everything the
+  app names belongs to the reader — Your Teams, Your Players — and the chip
+  was the last place speaking in the first person.
+- A team's players fold away on the Players tab: the section rule is a button,
+  the chevron turns, and a folded rule carries the count so you can still see
+  what you've hidden. Folds last for the session and aren't saved — how you're
+  reading the screen now isn't a setting.
+- Settings previews what you follow rather than listing all of it: three teams
+  and three players, then "View all". Three of each rather than a flat count,
+  so the teams can't crowd the players out of the preview entirely. The full
+  list is a sheet with the same rows, grouped, and the same remove buttons.
+- No scroll bars anywhere. `.scrollIndicators(.hidden)` at the root covers
+  every screen; a sheet is presented outside that tree and doesn't inherit it,
+  so each sheet root repeats the line. Scrolling itself is untouched.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the

@@ -53,7 +53,7 @@ final class ScoresModel {
 
     var leagues: [League] { preferences.orderedLeagues }
 
-    /// "My teams" is the default view: the whole point of the app is the
+    /// "Your teams" is the default view: the whole point of the app is the
     /// handful of teams you follow, so an unfiltered week of 200 games is the
     /// wrong thing to open on. Picking a league shows that league in full,
     /// with your teams' games marked and sorted to the front of each group.
@@ -66,7 +66,7 @@ final class ScoresModel {
         return games.filter { $0.league == league }
     }
 
-    /// True while "My teams" is showing everything because there is nothing
+    /// True while "Your teams" is showing everything because there is nothing
     /// to narrow to.
     var showingEverything: Bool {
         league == nil && preferences.teams.isEmpty
@@ -100,7 +100,7 @@ final class ScoresModel {
     }
 
     /// A game is marked as yours only when it is sitting among games that
-    /// aren't — under "My teams" every card would be marked, which says
+    /// aren't — under "Your teams" every card would be marked, which says
     /// nothing and turns the whole list blue.
     var marksFollowed: Bool { league != nil }
 
