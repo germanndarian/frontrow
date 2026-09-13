@@ -3,6 +3,7 @@ import { hex } from "@/lib/utils";
 import { buildField } from "@/lib/espn/field";
 import type { CatalogPlayer, CatalogTeam } from "@/lib/catalog";
 import type {
+  BaseState,
   Game,
   GameSide,
   PlayerBio,
@@ -18,6 +19,8 @@ import type {
 import type {
   RawAthlete,
   RawCompetition,
+  RawSituation,
+  RawSituationAthlete,
   RawCompetitor,
   RawEvent,
   RawGamelog,
@@ -144,6 +147,29 @@ function extractOdds(comp: RawCompetition): OddsLine | undefined {
   };
 }
 
+/**
+ * The count, the outs and the runners, for a live baseball game.
+ *
+ * Everything is given a value rather than left out: a 0-0 count with nobody
+ * on is a real state that the tracker has to draw, and an absent number would
+ * be indistinguishable from it. The names are the exception — the feed drops
+ * them between innings, and a blank line is better than a stale one.
+ */
+function buildBases(s: RawSituation): BaseState {
+  const name = (a?: RawSituationAthlete) =>
+    a?.athlete?.shortName?.trim() || a?.athlete?.displayName?.trim() || undefined;
+  return {
+    balls: s.balls ?? 0,
+    strikes: s.strikes ?? 0,
+    outs: s.outs ?? 0,
+    onFirst: s.onFirst === true,
+    onSecond: s.onSecond === true,
+    onThird: s.onThird === true,
+    pitcher: name(s.pitcher),
+    batter: name(s.batter),
+  };
+}
+
 /** The leagues whose season is spoken about in weeks. */
 const WEEKLY_LEAGUES = new Set<LeagueId>(["nfl", "college-football"]);
 
@@ -186,6 +212,10 @@ export function normalizeScoreboard(raw: RawScoreboard, league: LeagueId): Game[
       field:
         state === "in" && sport === "football" && comp.situation
           ? buildField(comp.situation, homeSide, awaySide)
+          : undefined,
+      bases:
+        state === "in" && sport === "baseball" && comp.situation
+          ? buildBases(comp.situation)
           : undefined,
     };
   });

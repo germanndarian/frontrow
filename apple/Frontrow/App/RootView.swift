@@ -132,6 +132,8 @@ struct TabShell: View {
     @State private var feed = LiveFeed()
     /// Games pinned to the top of a league's list.
     @State private var pins = Pins()
+    /// The Lock Screen tracker, which follows the Scores tab's own poll.
+    @State private var tracker = GameTracker()
     /// A game a widget asked for, held until the scoreboard has loaded it.
     @State private var awaiting: String?
 
@@ -146,6 +148,7 @@ struct TabShell: View {
                 ScoresScreen(preferences: account.preferences, sheet: $sheet)
                     .environment(feed)
                     .environment(pins)
+                    .environment(tracker)
             }
             Tab("Teams", systemImage: "shield.checkered", value: .teams) {
                 TeamsScreen(preferences: account.preferences, sheet: $sheet)
@@ -194,6 +197,7 @@ struct TabShell: View {
             .scrollIndicators(.hidden)
         }
         .environment(pins)
+        .environment(tracker)
     }
 
     /// Opens the awaited game once the board has it, and stops waiting.

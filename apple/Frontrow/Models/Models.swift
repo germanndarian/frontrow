@@ -73,6 +73,8 @@ struct Game: Codable, Sendable, Hashable, Identifiable {
     /// Football, live only: where the ball is. Absent for every other sport
     /// and for a game that hasn't kicked off or has finished.
     let field: FieldSituation?
+    /// Baseball, live only: the count, the outs and the runners.
+    let bases: BaseState?
 
     var startsAt: Date? { ISODate.parse(date) }
 
@@ -120,6 +122,28 @@ struct FieldSituation: Codable, Sendable, Hashable {
               !down.localizedCaseInsensitiveContains(" at ") else { return down }
         return "\(down) at \(marker)"
     }
+}
+
+/// A live at-bat: the count, the outs, and who is standing where. Every
+/// number is given rather than optional — a 0-0 count with nobody on is a
+/// real state to draw, and a missing number would look the same.
+struct BaseState: Codable, Sendable, Hashable {
+    let balls: Int
+    let strikes: Int
+    let outs: Int
+    let onFirst: Bool
+    let onSecond: Bool
+    let onThird: Bool
+    /// Dropped by the feed between innings, so treated as absent not stale.
+    let pitcher: String?
+    let batter: String?
+
+    /// "1-1, 2 out" — the line under the diamond.
+    var countLine: String {
+        "\(balls)-\(strikes), \(outs) out\(outs == 1 ? "" : "s")"
+    }
+
+    var runnersOn: Bool { onFirst || onSecond || onThird }
 }
 
 /// A team the user follows. Until Phase 3 syncs follows from the account,

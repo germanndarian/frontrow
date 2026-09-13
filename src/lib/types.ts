@@ -101,6 +101,23 @@ export interface FieldSituation {
   isRedZone: boolean;
 }
 
+/**
+ * The state of a live at-bat: the count, the outs, and who is standing where.
+ * Baseball's answer to FieldSituation, and the thing a lock-screen tracker is
+ * really for — a glance should say whether the bases are loaded.
+ */
+export interface BaseState {
+  balls: number;
+  strikes: number;
+  outs: number;
+  onFirst: boolean;
+  onSecond: boolean;
+  onThird: boolean;
+  /** "J. Jobe", when the feed names them. */
+  pitcher?: string;
+  batter?: string;
+}
+
 export interface Game {
   id: string;
   league: LeagueId;
@@ -123,6 +140,8 @@ export interface Game {
   week?: number;
   /** Football, live only: the ball's place on the field. */
   field?: FieldSituation;
+  /** Baseball, live only: the count, the outs and the runners. */
+  bases?: BaseState;
 }
 
 export interface StandingRow {

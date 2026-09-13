@@ -6,5 +6,6 @@ struct FrontrowWidgetBundle: WidgetBundle {
     var body: some Widget {
         ScoresWidget()
         LockScoreWidget()
+        GameLiveActivity()
     }
 }

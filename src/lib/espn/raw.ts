@@ -48,6 +48,11 @@ export interface RawStatusType {
   shortDetail?: string;
 }
 
+export interface RawSituationAthlete {
+  athlete?: { shortName?: string; displayName?: string };
+  summary?: string;
+}
+
 export interface RawSituation {
   balls?: number;
   strikes?: number;
@@ -58,6 +63,9 @@ export interface RawSituation {
   downDistanceText?: string;
   shortDownDistanceText?: string;
   lastPlay?: { text?: string };
+  /** Who's on the mound and at the plate, live baseball only. */
+  pitcher?: RawSituationAthlete;
+  batter?: RawSituationAthlete;
   /* Football, live only. */
   down?: number;
   /** Yards needed for a first down. */

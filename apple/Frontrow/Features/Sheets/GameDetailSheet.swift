@@ -8,6 +8,7 @@ struct GameDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(LiveFeed.self) private var feed: LiveFeed?
     @Environment(Pins.self) private var pins: Pins?
+    @Environment(GameTracker.self) private var tracker: GameTracker?
 
     /// The freshest copy of this game the Scores tab has polled, falling back
     /// to the one the sheet was opened with.
@@ -22,6 +23,7 @@ struct GameDetailSheet: View {
                         Countdown(startsAt: live.startsAt)
                             .padding(.top, 18)
                     } else {
+                        trackButton
                         // Football's own graphic: where the ball is and what
                         // it will take to keep it. There is none for the other
                         // sports, nor for a game that isn't under way.
@@ -61,6 +63,34 @@ struct GameDetailSheet: View {
         // the front door's sign-up uses.
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+    }
+
+    /// Put the game on the Lock Screen. Only while it's on, and only for the
+    /// sports with something that moves between pitches or plays — a game
+    /// with nothing but a score would be a card that never changes.
+    @ViewBuilder
+    private var trackButton: some View {
+        if let tracker, tracker.canTrack(live) || tracker.isTracking(live) {
+            let on = tracker.isTracking(live)
+            Button {
+                withAnimation(.snappy(duration: 0.2)) {
+                    if on { tracker.stop() } else { tracker.start(live) }
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: on ? "bell.badge.slash" : "lock.iphone")
+                        .font(.system(size: 13, weight: .semibold))
+                    Text(on ? "Stop tracking" : "Track on Lock Screen")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 13)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.glass)
+            .tint(on ? Theme.live : Theme.accent)
+            .padding(.top, 18)
+        }
     }
 
     // ── The two teams and the score ──────────────────────────────────────
