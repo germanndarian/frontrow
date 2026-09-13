@@ -42,10 +42,49 @@ struct PlayerSheet: View {
                         .padding(.horizontal, 18)
                         .padding(.top, 18)
                     }
+                    bio(player)
                 }
             }
         }
         .task { await load() }
+    }
+
+    /// Height, weight, where they're from, where they were drafted — the
+    /// page around the numbers. Nothing is drawn for a player ESPN has only
+    /// stats on.
+    @ViewBuilder
+    private func bio(_ player: Player) -> some View {
+        if let bio = player.bio, !bio.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Eyebrow("Profile")
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(bio.rows.enumerated()), id: \.offset) { index, row in
+                        HStack(alignment: .firstTextBaseline, spacing: 12) {
+                            Text(row.0)
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(Theme.faint)
+                                .frame(width: 104, alignment: .leading)
+                            Text(row.1)
+                                .font(.system(size: 13.5, weight: .medium))
+                                .foregroundStyle(Theme.ink)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 11)
+                        .overlay(alignment: .top) {
+                            if index > 0 { Rectangle().fill(Theme.lineSoft).frame(height: 1) }
+                        }
+                    }
+                }
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Theme.line, lineWidth: 1)
+                }
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 20)
+        }
     }
 
     private func load() async {

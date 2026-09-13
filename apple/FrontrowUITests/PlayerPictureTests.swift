@@ -39,6 +39,29 @@ final class PlayerPictureTests: XCTestCase {
     }
 
     @MainActor
+    func testTheWholeCardOpensThePlayer() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-sample"]
+        app.launch()
+
+        app.tabBars.buttons["Players"].tap()
+        XCTAssertTrue(app.navigationBars["Your Players"].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.staticTexts["Aaron Judge"].waitForExistence(timeout: 25))
+
+        let card = app.buttons.matching(
+            NSPredicate(format: "label CONTAINS 'Aaron Judge'")
+        ).firstMatch
+        XCTAssertTrue(card.waitForExistence(timeout: 10))
+
+        // Low down the card, past the name and into the game log — the part
+        // that used to do nothing.
+        card.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.88)).tap()
+        XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 15),
+                      "the bottom of the card opens the player too")
+        attach(app, "2-opened-from-the-bottom")
+    }
+
+    @MainActor
     private func attach(_ app: XCUIApplication, _ name: String) {
         let shot = XCTAttachment(screenshot: app.screenshot())
         shot.name = name

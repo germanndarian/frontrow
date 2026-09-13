@@ -80,6 +80,10 @@ struct Player: Codable, Sendable, Hashable, Identifiable {
     let headshot: String
     let seasonLabel: String
     let stats: [PlayerSeasonStat]
+    /// Height, weight and the rest. Optional so an older API can't fail the
+    /// decode, and every field inside it optional for the same reason the
+    /// web says: which ones exist depends on the sport.
+    let bio: PlayerBio?
     let recent: RecentLog
     let placeholder: Bool?
 
@@ -98,6 +102,39 @@ struct Player: Codable, Sendable, Hashable, Identifiable {
             .replacingOccurrences(of: " regular season stats", with: "", options: .caseInsensitive)
             .replacingOccurrences(of: " season stats", with: "", options: .caseInsensitive)
     }
+}
+
+/// What ESPN keeps on a player besides their numbers. A college player has
+/// no draft, a hockey player often has no college, and bats/throws is
+/// baseball's alone — so a field that isn't there simply isn't drawn.
+struct PlayerBio: Codable, Sendable, Hashable {
+    let height: String?
+    let weight: String?
+    let age: Int?
+    let birthplace: String?
+    let batsThrows: String?
+    let experience: String?
+    let college: String?
+    let draft: String?
+    /// Only when it isn't "active".
+    let status: String?
+
+    /// The rows to draw, in reading order, skipping whatever is missing.
+    var rows: [(String, String)] {
+        var out: [(String, String)] = []
+        if let status, !status.isEmpty { out.append(("Status", status)) }
+        if let height, !height.isEmpty { out.append(("Height", height)) }
+        if let weight, !weight.isEmpty { out.append(("Weight", weight)) }
+        if let age { out.append(("Age", "\(age)")) }
+        if let birthplace, !birthplace.isEmpty { out.append(("Born", birthplace)) }
+        if let batsThrows, !batsThrows.isEmpty { out.append(("Bats/Throws", batsThrows)) }
+        if let experience, !experience.isEmpty { out.append(("Experience", experience)) }
+        if let college, !college.isEmpty { out.append(("College", college)) }
+        if let draft, !draft.isEmpty { out.append(("Draft", draft)) }
+        return out
+    }
+
+    var isEmpty: Bool { rows.isEmpty }
 }
 
 /// A player the user stars. Replaced by the account's follows in Phase 3.

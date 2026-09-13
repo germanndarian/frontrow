@@ -179,6 +179,29 @@ export interface GameLogEntry {
   primary: number;
 }
 
+/**
+ * The biography ESPN keeps on a player. Every field is optional on purpose:
+ * which ones exist depends on the sport and on where the player is in their
+ * career — a college player has no draft, a hockey player often has no
+ * college, and bats/throws is baseball's alone. A field that isn't there
+ * isn't drawn.
+ */
+export interface PlayerBio {
+  height?: string;
+  weight?: string;
+  age?: number;
+  birthplace?: string;
+  /** "Right/Right" — baseball. */
+  batsThrows?: string;
+  /** "11th Season", or "Junior" for a college player. */
+  experience?: string;
+  college?: string;
+  /** "2013: Rd 1, Pk 32 (NYY)". */
+  draft?: string;
+  /** Only when it isn't "active" — nobody needs telling a player is playing. */
+  status?: string;
+}
+
 export interface Player {
   id: string;
   league: LeagueId;
@@ -194,6 +217,7 @@ export interface Player {
   headshot: string;
   seasonLabel: string; // "2026 season stats"
   stats: PlayerSeasonStat[];
+  bio: PlayerBio;
   recent: {
     label: string; // what `primary` measures, e.g. "Hits"
     entries: GameLogEntry[];

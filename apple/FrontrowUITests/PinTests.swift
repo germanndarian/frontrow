@@ -23,35 +23,61 @@ final class PinTests: XCTestCase {
             ).firstMatch.waitForExistence(timeout: 30),
             "the league's slate loads"
         )
-
-        let cards = app.buttons.matching(NSPredicate(format: "label CONTAINS 'MLB'"))
-        XCTAssertGreaterThan(cards.count, 3, "a league has games to reorder")
         XCTAssertNil(pinnedIndex(in: app), "nothing is pinned yet")
 
-        // Not the first card, and not the first of its group either, so
-        // moving up is something you can actually see.
-        let targetIndex = 2
-        let target = cards.element(boundBy: targetIndex)
-        XCTAssertTrue(target.isHittable, "the card is on screen to press")
-        target.press(forDuration: 1.1)
+        // A card that isn't already the first of its group, since pinning one
+        // that is would look like nothing happening. Which card that is
+        // depends on the day's slate, so find one rather than assume an index.
+        let labels = cardLabels(in: app)
+        XCTAssertGreaterThan(labels.count, 1, "a league has games to reorder")
+        guard let target = labels.indices.first(where: { i in
+            labels[..<i].contains { group($0) == group(labels[i]) }
+        }) else {
+            throw XCTSkip("every game on today's slate is alone in its group")
+        }
+
+        let cards = app.buttons.matching(NSPredicate(format: "label CONTAINS 'MLB'"))
+        let card = cards.element(boundBy: target)
+        let list = app.scrollViews.firstMatch
+        for _ in 0..<8 where !card.isHittable { list.swipeUp(velocity: .fast) }
+        XCTAssertTrue(card.isHittable, "the card is on screen to press")
+        card.press(forDuration: 1.1)
 
         let pin = app.buttons["Pin to top"]
         XCTAssertTrue(pin.waitForExistence(timeout: 5), "the card offers a pin")
         pin.tap()
 
-        let after = pinnedIndex(in: app)
-        XCTAssertNotNil(after, "the pinned game says so on its card")
-        XCTAssertLessThan(after ?? .max, targetIndex, "and has moved up its group")
+        // The pinned game is now the first of its own group — above its
+        // neighbours, not above the whole board.
+        let after = cardLabels(in: app)
+        let pinnedAt = try XCTUnwrap(after.firstIndex { $0.contains("Pinned") },
+                                     "the pinned game says so on its card")
+        let ahead = after[..<pinnedAt].filter { group($0) == group(after[pinnedAt]) }
+        XCTAssertTrue(ahead.isEmpty, "nothing from its group is still above it")
         attach(app, "1-pinned")
 
-        // Unpinning puts it back.
+        // Unpinning releases it.
         let top = app.buttons.matching(NSPredicate(format: "label CONTAINS 'MLB'"))
-            .element(boundBy: after ?? 0)
+            .element(boundBy: pinnedAt)
+        for _ in 0..<8 where !top.isHittable { list.swipeUp(velocity: .fast) }
         top.press(forDuration: 1.1)
         let unpin = app.buttons["Unpin"]
         XCTAssertTrue(unpin.waitForExistence(timeout: 5))
         unpin.tap()
         XCTAssertNil(pinnedIndex(in: app), "unpinning releases it")
+    }
+
+    /// Which group a card belongs to, read off the status its label carries.
+    private func group(_ label: String) -> String {
+        if label.contains("SCHEDULED") { return "upcoming" }
+        if label.contains("FINAL") { return "results" }
+        return "live"
+    }
+
+    @MainActor
+    private func cardLabels(in app: XCUIApplication) -> [String] {
+        app.buttons.matching(NSPredicate(format: "label CONTAINS 'MLB'"))
+            .allElementsBoundByIndex.map(\.label)
     }
 
     @MainActor

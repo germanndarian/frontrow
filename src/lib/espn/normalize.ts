@@ -5,6 +5,7 @@ import type { CatalogPlayer, CatalogTeam } from "@/lib/catalog";
 import type {
   Game,
   GameSide,
+  PlayerBio,
   LeagueId,
   OddsLine,
   Outcome,
@@ -425,8 +426,34 @@ export function normalizePlayer(
     headshot: a.headshot?.href ?? "",
     seasonLabel: ss?.displayName ?? "Season",
     stats,
+    bio: buildBio(a),
     recent: buildRecent(gamelog, league),
     placeholder: stats.length === 0,
+  };
+}
+
+/**
+ * The bio rows, keeping only what ESPN actually filled in. Empty strings are
+ * dropped along with missing keys: the feed writes "" as readily as it omits
+ * a field, and a row with nothing in it is worse than no row.
+ */
+function buildBio(a: NonNullable<RawAthlete["athlete"]>): PlayerBio {
+  const text = (v?: string) => {
+    const trimmed = v?.trim();
+    return trimmed ? trimmed : undefined;
+  };
+  return {
+    height: text(a.displayHeight),
+    weight: text(a.displayWeight),
+    age: typeof a.age === "number" ? a.age : undefined,
+    birthplace: text(a.displayBirthPlace),
+    batsThrows: text(a.displayBatsThrows),
+    experience: text(a.displayExperience),
+    college: text(a.college?.name ?? a.college?.shortName),
+    draft: text(a.displayDraft),
+    // "Active" is the answer for almost everyone and tells a reader nothing;
+    // it is the injury or the suspension that is worth a row.
+    status: a.status?.type && a.status.type !== "active" ? text(a.status.name) : undefined,
   };
 }
 
