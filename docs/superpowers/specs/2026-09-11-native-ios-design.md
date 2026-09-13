@@ -267,6 +267,13 @@ are.
 - The sheet follows the Scores tab's own thirty-second poll through a shared
   `LiveFeed` rather than starting a second one, and the lines slide to their
   new positions instead of jumping.
+- The app asks for a week even when it only wants today, and a week is cached
+  for two minutes because it costs megabytes to fetch — which put the score,
+  and the ball with it, up to two and a half minutes behind. The scoreboard
+  route now lays today's board, cached for twenty seconds and a tenth the
+  size, over the week's before answering. It replaces by id and never adds, so
+  a caller looking at another week can't catch today's games. Worst case is
+  now twenty seconds of cache plus the app's thirty-second poll.
 
 ## Deferred
 

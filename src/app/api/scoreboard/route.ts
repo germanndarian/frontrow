@@ -4,6 +4,7 @@ import type { Game, LeagueId } from "@/lib/types";
 import { espnCached, espnFetch, espnFetchFresh } from "@/lib/espn/client";
 import { espnUrl, REVALIDATE } from "@/lib/espn/endpoints";
 import { normalizeScoreboard } from "@/lib/espn/normalize";
+import { includesToday, overlayFresh } from "@/lib/espn/overlay";
 import type { RawScoreboard } from "@/lib/espn/raw";
 
 const VALID = new Set(Object.keys(LEAGUES));
@@ -46,7 +47,13 @@ async function today(league: LeagueId): Promise<Game[]> {
 
 /** A week of baseball is well over a megabyte of raw JSON, which Next's fetch
     cache silently refuses to store — so cache the normalized games instead,
-    the way the schedule and team routes do. */
+    the way the schedule and team routes do.
+
+    That two-minute window is right for a slate and much too slow for a live
+    score, and the app asks for a week even when it only wants today. Today's
+    board is a tenth the size and cached for twenty seconds, so lay it over the
+    week rather than making the score wait out the longer window. It costs
+    nothing extra in practice: it's the same cached read the website makes. */
 async function week(league: LeagueId, dates: string): Promise<Game[]> {
   const { data } = await espnCached(
     ["scoreboard", league, dates],
@@ -56,5 +63,9 @@ async function week(league: LeagueId, dates: string): Promise<Game[]> {
       return normalizeScoreboard(raw, league);
     },
   );
-  return data;
+  if (!includesToday(dates)) return data;
+  // A slate that's two minutes old beats no slate at all, so a failed overlay
+  // is not worth failing the request for.
+  const fresh = await today(league).catch(() => []);
+  return overlayFresh(data, fresh);
 }
