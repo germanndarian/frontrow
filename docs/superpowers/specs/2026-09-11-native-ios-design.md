@@ -292,6 +292,26 @@ are.
   every screen; a sheet is presented outside that tree and doesn't inherit it,
   so each sheet root repeats the line. Scrolling itself is untouched.
 
+## A widget is a way in, and a pin is a way to keep something in view
+
+- A widget links to the game it is showing, not to the scoreboard. The large
+  widget links each row on its own, since it lists several games; a small one
+  has no room for that and links as a whole. Tapping opens that game's sheet.
+- The link names a game by id and arrives before the first poll answers, so
+  the shell holds the request until the board can fill it. A request that
+  lands during launch is set before the shell exists, so the watcher has to
+  fire on the initial value as well as on changes — otherwise it misses the
+  only change there is.
+- Pinning holds a game at the top of its group inside a league's list. Its
+  group, not the board: the live game stays with the live games, so a pin
+  lifts it above its neighbours rather than above everything. Press and hold a
+  card, or use the button in the game's sheet.
+- Under "Your teams" a pin does nothing at all — no mark, no reordering. That
+  list is already the games you care about, in the order you asked for.
+- Pins are local to the device. A pin is about the next few hours and means
+  nothing once the game ends, so finished games are swept on each load rather
+  than syncing a column nobody would miss on their other phone.
+
 ## Deferred
 
 - Brand fonts (Archivo / Hanken Grotesk): SF Pro in Phase 1; bundling the
