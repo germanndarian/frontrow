@@ -42,6 +42,9 @@ struct TeamCardView: View {
             actions(card)
         }
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        // The header's team-colour wash is a rectangle; without this it paints
+        // over the card's rounded top corners.
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(selected ? Theme.accent.opacity(0.6) : Theme.line, lineWidth: selected ? 1.5 : 1)
