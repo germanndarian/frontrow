@@ -100,13 +100,13 @@ export function Login({ mode, onMode, onBack, onGuest }: { mode: Mode; onMode: (
               </Field>
               {signup && (
                 <Field label="Display name">
-                  <input className={inputClass} type="text" autoComplete="name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Optional — used to greet you" />
+                  <input className={inputClass} type="text" autoComplete="name" maxLength={60} value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Optional — used to greet you" />
                 </Field>
               )}
               <div className="flex items-end gap-3 rounded-[16px] border border-line bg-surface px-4 py-[13px]">
                 <label className="block flex-1">
                   <span className="block text-[10.5px] font-semibold uppercase tracking-[0.12em] text-faint">Password</span>
-                  <input className={inputClass} type={shown ? "text" : "password"} autoComplete={signup ? "new-password" : "current-password"} required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••••" />
+                  <input className={inputClass} type={shown ? "text" : "password"} autoComplete={signup ? "new-password" : "current-password"} required minLength={signup ? 8 : 1} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••••" />
                 </label>
                 <button type="button" onClick={() => setShown((s) => !s)} className="-my-1.5 -mr-2 h-11 w-11 text-[14px] text-faint">
                   {shown ? "Hide" : "Show"}

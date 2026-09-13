@@ -121,8 +121,11 @@ struct SignInSheet: View {
         .presentationDragIndicator(.visible)
     }
 
+    /// Eight characters is the account minimum, but only for a new one: an
+    /// account made before the minimum rose still has its old password and
+    /// has to be able to sign in with it.
     private var canSubmit: Bool {
-        email.contains("@") && password.count >= 6
+        email.contains("@") && password.count >= (mode == .signUp ? 8 : 1)
     }
 
     private func field(_ label: String, text: Binding<String>, field: Field) -> some View {

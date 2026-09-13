@@ -66,6 +66,7 @@ function Field({
   placeholder,
   autoComplete,
   autoFocus,
+  minLength,
 }: {
   label: string;
   type?: string;
@@ -74,6 +75,7 @@ function Field({
   placeholder?: string;
   autoComplete?: string;
   autoFocus?: boolean;
+  minLength?: number;
 }) {
   const [show, setShow] = useState(false);
   const isPassword = type === "password";
@@ -92,6 +94,7 @@ function Field({
           placeholder={placeholder}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
+          minLength={minLength}
           className={cn(
             "w-full rounded-md border border-line/70 bg-bg-2/60 px-3.5 py-2.5 text-[14px] text-ink placeholder:text-faint/70 transition-colors focus:border-primary/60 focus:bg-bg-2",
             isPassword && "pr-11",
@@ -273,7 +276,10 @@ function LoginPageInner() {
             type="password"
             value={password}
             onChange={setPassword}
-            placeholder={mode === "signup" ? "At least 6 characters" : "••••••••"}
+            placeholder={mode === "signup" ? "At least 8 characters" : "••••••••"}
+            // Only when signing up: an account made before the minimum rose
+            // still has its old password, and must still be able to get in.
+            minLength={mode === "signup" ? 8 : undefined}
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
           />
 

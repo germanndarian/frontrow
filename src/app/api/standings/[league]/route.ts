@@ -5,6 +5,7 @@ import { espnFetch } from "@/lib/espn/client";
 import { espnUrl, REVALIDATE } from "@/lib/espn/endpoints";
 import { normalizeStandings } from "@/lib/espn/normalize";
 import type { RawStandings } from "@/lib/espn/raw";
+import { rateLimited } from "@/lib/rate-limit";
 
 const VALID = new Set(Object.keys(LEAGUES));
 
@@ -12,6 +13,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ league: string }> },
 ) {
+  const limited = rateLimited(req);
+  if (limited) return limited;
+
   const { league } = await params;
   if (!VALID.has(league)) {
     return NextResponse.json({ error: "bad_league" }, { status: 400 });

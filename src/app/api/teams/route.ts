@@ -6,10 +6,14 @@ import { espnFetch } from "@/lib/espn/client";
 import { espnUrl, REVALIDATE } from "@/lib/espn/endpoints";
 import { normalizeTeams } from "@/lib/espn/normalize";
 import type { RawTeamsList } from "@/lib/espn/raw";
+import { rateLimited } from "@/lib/rate-limit";
 
 const VALID = new Set(Object.keys(LEAGUES));
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimited(req);
+  if (limited) return limited;
+
   const param = req.nextUrl.searchParams.get("leagues") ?? "";
   const leagues = param
     .split(",")
