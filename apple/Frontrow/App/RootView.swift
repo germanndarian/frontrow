@@ -103,6 +103,8 @@ struct TabShell: View {
     let openScores: UUID
     @State private var selection: Area = .scores
     @State private var sheet: AppSheet?
+    /// The Scores tab's last poll, so an open sheet follows it.
+    @State private var feed = LiveFeed()
 
     enum Area: String, CaseIterable, Identifiable {
         case scores, teams, players, table, settings
@@ -113,6 +115,7 @@ struct TabShell: View {
         TabView(selection: $selection) {
             Tab("Scores", systemImage: "sportscourt", value: .scores) {
                 ScoresScreen(preferences: account.preferences, sheet: $sheet)
+                    .environment(feed)
             }
             Tab("Teams", systemImage: "shield.checkered", value: .teams) {
                 TeamsScreen(preferences: account.preferences, sheet: $sheet)
@@ -136,13 +139,14 @@ struct TabShell: View {
             case .schedule(let team): ScheduleSheet(team: team)
             case .bracket(let team): BracketSheet(team: team)
             case .player(let player): PlayerSheet(follow: player)
-            case .game(let game): GameDetailSheet(game: game)
+            case .game(let game): GameDetailSheet(game: game).environment(feed)
             case .liveGames(let games):
                 // Picking one swaps this sheet for that game's, which is the
                 // same sheet a tap on its card opens.
                 LiveGamesSheet(games: games) { game in
                     sheet = .game(game)
                 }
+                .environment(feed)
             }
         }
     }

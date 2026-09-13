@@ -6,18 +6,32 @@ import SwiftUI
 struct GameDetailSheet: View {
     let game: Game
     @Environment(\.dismiss) private var dismiss
+    @Environment(LiveFeed.self) private var feed: LiveFeed?
+
+    /// The freshest copy of this game the Scores tab has polled, falling back
+    /// to the one the sheet was opened with.
+    private var live: Game { feed?.fresh(game) ?? game }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     header
-                    if game.state == .pre {
-                        Countdown(startsAt: game.startsAt)
+                    if live.state == .pre {
+                        Countdown(startsAt: live.startsAt)
                             .padding(.top, 18)
-                    } else if game.hasLineScore {
-                        LineScore(game: game)
-                            .padding(.top, 18)
+                    } else {
+                        // Football's own graphic: where the ball is and what
+                        // it will take to keep it. There is none for the other
+                        // sports, nor for a game that isn't under way.
+                        if let field = live.field {
+                            FieldPosition(game: live, field: field)
+                                .padding(.top, 18)
+                        }
+                        if live.hasLineScore {
+                            LineScore(game: live)
+                                .padding(.top, 18)
+                        }
                     }
                     details
                         .padding(.top, 18)
@@ -27,8 +41,8 @@ struct GameDetailSheet: View {
                 .padding(.top, 6)
             }
             .background(Theme.background)
-            .navigationTitle(game.league.name)
-            .navigationSubtitle(Text(StatusLine.text(for: game)))
+            .navigationTitle(live.league.name)
+            .navigationSubtitle(Text(StatusLine.text(for: live)))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
@@ -47,27 +61,27 @@ struct GameDetailSheet: View {
     private var header: some View {
         VStack(spacing: 12) {
             HStack {
-                if game.state == .in {
+                if live.state == .in {
                     LiveDot()
-                    Text(game.shortDetail.isEmpty ? "LIVE" : game.shortDetail.uppercased())
+                    Text(live.shortDetail.isEmpty ? "LIVE" : live.shortDetail.uppercased())
                         .font(.system(size: 11, weight: .bold))
                         .tracking(0.8)
                         .foregroundStyle(Theme.live)
                 } else {
-                    Text(game.state == .post ? "FINAL" : "SCHEDULED")
+                    Text(live.state == .post ? "FINAL" : "SCHEDULED")
                         .font(.system(size: 11, weight: .bold))
                         .tracking(0.8)
                         .foregroundStyle(Theme.faint)
                 }
                 Spacer(minLength: 8)
-                if let week = game.week {
+                if let week = live.week {
                     Text("WEEK \(week)")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundStyle(Theme.muted)
                 }
             }
-            side(game.away)
-            side(game.home)
+            side(live.away)
+            side(live.home)
         }
         .padding(16)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -93,15 +107,15 @@ struct GameDetailSheet: View {
                 }
             }
             Spacer(minLength: 8)
-            Text(game.state == .pre ? "–" : "\(s.score ?? 0)")
+            Text(live.state == .pre ? "–" : "\(s.score ?? 0)")
                 .font(.system(size: 30, weight: .bold, design: .monospaced))
                 .foregroundStyle(leads ? Theme.ink : Theme.muted)
         }
     }
 
     private func leads(_ s: GameSide) -> Bool {
-        guard game.state != .pre else { return true }
-        let other = s.teamId == game.home.teamId ? game.away : game.home
+        guard live.state != .pre else { return true }
+        let other = s.teamId == live.home.teamId ? live.away : live.home
         return (s.score ?? 0) >= (other.score ?? 0)
     }
 
@@ -109,19 +123,19 @@ struct GameDetailSheet: View {
 
     private var details: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if let play = game.lastPlay ?? game.situation, !play.isEmpty {
+            if live.field == nil, let play = live.lastPlay ?? live.situation, !play.isEmpty {
                 detail("Last play", play)
             }
-            if let venue = game.venue, !venue.isEmpty { detail("Venue", venue) }
-            if let broadcast = game.broadcast, !broadcast.isEmpty { detail("TV", broadcast) }
-            if let odds = game.odds {
+            if let venue = live.venue, !venue.isEmpty { detail("Venue", venue) }
+            if let broadcast = live.broadcast, !broadcast.isEmpty { detail("TV", broadcast) }
+            if let odds = live.odds {
                 if let line = odds.details, !line.isEmpty { detail("Line", line) }
                 if let total = odds.overUnder { detail("Over/under", total.formatted()) }
             }
-            if let start = game.startsAt {
+            if let start = live.startsAt {
                 detail("Start", start.formatted(date: .abbreviated, time: .shortened))
             }
-            if !game.statusDetail.isEmpty { detail("Status", game.statusDetail) }
+            if !live.statusDetail.isEmpty { detail("Status", live.statusDetail) }
         }
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .overlay {
@@ -261,12 +275,13 @@ struct LiveGamesSheet: View {
     let games: [Game]
     let open: (Game) -> Void
     @Environment(\.dismiss) private var dismiss
+    @Environment(LiveFeed.self) private var feed: LiveFeed?
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 12) {
-                    ForEach(games) { game in
+                    ForEach(games.map { feed?.fresh($0) ?? $0 }) { game in
                         Button {
                             open(game)
                         } label: {

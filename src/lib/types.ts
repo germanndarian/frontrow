@@ -74,6 +74,33 @@ export interface OddsLine {
   provider?: string;
 }
 
+/**
+ * Where the ball is, for the live field graphic. Every position is a
+ * percentage across the 100-yard playing surface: 0 is the away team's goal
+ * line, 100 the home team's — the way the graphic draws them, away on the
+ * left. Both positions are null between drives and at the half, when the feed
+ * stops saying.
+ */
+export interface FieldSituation {
+  /** The line of scrimmage. */
+  ballOn: number | null;
+  /** Where the chains are: downfield of the scrimmage line, so on the low
+      side when the home team has the ball and the high side when the away
+      team does. */
+  firstDown: number | null;
+  /** Which way the offense is driving. Null when the feed didn't name a
+      team we recognise. */
+  homeHasBall: boolean | null;
+  down?: number;
+  /** Yards to go. */
+  distance?: number;
+  /** "2nd & 9" — ESPN's own wording. */
+  downDistanceText?: string;
+  /** "TA&M 48" — the marker the headline quotes. */
+  possessionText?: string;
+  isRedZone: boolean;
+}
+
 export interface Game {
   id: string;
   league: LeagueId;
@@ -94,6 +121,8 @@ export interface Game {
   odds?: OddsLine;
   /** Week of the season, for the leagues that count in weeks (NFL, NCAAF). */
   week?: number;
+  /** Football, live only: the ball's place on the field. */
+  field?: FieldSituation;
 }
 
 export interface StandingRow {

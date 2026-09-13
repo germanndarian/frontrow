@@ -70,6 +70,9 @@ struct Game: Codable, Sendable, Hashable, Identifiable {
     let odds: OddsLine?
     /// Week of the season — football only; the API drops it elsewhere.
     let week: Int?
+    /// Football, live only: where the ball is. Absent for every other sport
+    /// and for a game that hasn't kicked off or has finished.
+    let field: FieldSituation?
 
     var startsAt: Date? { ISODate.parse(date) }
 
@@ -80,6 +83,43 @@ struct Game: Codable, Sendable, Hashable, Identifiable {
     }
 
     var hasLineScore: Bool { periodCount > 0 }
+}
+
+/// Where the ball sits on a football field. Positions are percentages across
+/// the 100-yard playing surface: 0 is the away team's goal line, 100 the home
+/// team's, matching the way the graphic draws them with the away side on the
+/// left. Both go nil between drives and at the half.
+struct FieldSituation: Codable, Sendable, Hashable {
+    /// The line of scrimmage.
+    let ballOn: Double?
+    /// Where the chains are — downfield of the scrimmage line, so below it
+    /// when the home team has the ball and above it when the away team does.
+    let firstDown: Double?
+    /// Which way the offense is driving, or nil when the feed didn't say.
+    let homeHasBall: Bool?
+    let down: Int?
+    let distance: Int?
+    /// "2nd & 9", as ESPN writes it — sometimes with the marker spelled out.
+    let downDistanceText: String?
+    /// "TA&M 48".
+    let possessionText: String?
+    /// Optional so an older build of the API can't fail the whole decode.
+    let isRedZone: Bool?
+
+    var inRedZone: Bool { isRedZone == true }
+
+    /// True once there's a drive to draw; false at the half, when the feed
+    /// keeps the situation but stops saying where the ball is.
+    var hasBall: Bool { ballOn != nil }
+
+    /// "2nd & 9 at TA&M 48" — ESPN spells the marker out in some feeds and
+    /// leaves it to the caller in others, so only add it when it's missing.
+    var headline: String? {
+        guard let down = downDistanceText, !down.isEmpty else { return nil }
+        guard let marker = possessionText, !marker.isEmpty,
+              !down.localizedCaseInsensitiveContains(" at ") else { return down }
+        return "\(down) at \(marker)"
+    }
 }
 
 /// A team the user follows. Until Phase 3 syncs follows from the account,

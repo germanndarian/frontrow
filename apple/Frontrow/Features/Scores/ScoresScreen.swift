@@ -5,6 +5,7 @@ import SwiftUI
 struct ScoresScreen: View {
     let preferences: Preferences
     @Binding var sheet: AppSheet?
+    @Environment(LiveFeed.self) private var feed: LiveFeed?
     @State private var model: ScoresModel
 
     init(preferences: Preferences, sheet: Binding<AppSheet?>) {
@@ -134,6 +135,10 @@ struct ScoresScreen: View {
         }
         .task { await model.load() }
         .task(id: preferences) { await model.apply(preferences) }
+        // Hand every poll to the sheets stacked above this screen, so an open
+        // game follows the same refresh rather than freezing on the score it
+        // was opened with.
+        .onChange(of: model.games, initial: true) { _, games in feed?.publish(games) }
     }
 
     /// League filter chips, with "All" in front of the followed leagues.

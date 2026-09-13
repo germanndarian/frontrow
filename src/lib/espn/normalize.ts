@@ -1,5 +1,6 @@
 import { LEAGUES } from "@/lib/leagues";
 import { hex } from "@/lib/utils";
+import { buildField } from "@/lib/espn/field";
 import type { CatalogPlayer, CatalogTeam } from "@/lib/catalog";
 import type {
   Game,
@@ -158,6 +159,8 @@ export function normalizeScoreboard(raw: RawScoreboard, league: LeagueId): Game[
       comp.broadcasts?.find((b) => b.names?.length)?.names?.[0] ??
       comp.geoBroadcasts?.[0]?.media?.shortName;
     const sit = state === "in" ? buildSituation(comp, sport) : {};
+    const homeSide = side(home);
+    const awaySide = side(away);
     return {
       id: ev.id ?? `${league}-${ev.date ?? Math.random()}`,
       league,
@@ -165,8 +168,8 @@ export function normalizeScoreboard(raw: RawScoreboard, league: LeagueId): Game[
       statusDetail: st.detail ?? "",
       shortDetail: st.shortDetail ?? st.detail ?? "",
       date: ev.date ?? "",
-      home: side(home),
-      away: side(away),
+      home: homeSide,
+      away: awaySide,
       venue: comp.venue?.fullName,
       broadcast: broadcast || undefined,
       situation: sit.situation,
@@ -177,6 +180,12 @@ export function normalizeScoreboard(raw: RawScoreboard, league: LeagueId): Game[
       // Only football numbers its weeks in a way anyone quotes; baseball and
       // hockey carry a week index that means nothing to a viewer.
       week: WEEKLY_LEAGUES.has(league) ? ev.week?.number : undefined,
+      // The field graphic is football's alone, and only while the ball is in
+      // play. No situation block means no drive to draw.
+      field:
+        state === "in" && sport === "football" && comp.situation
+          ? buildField(comp.situation, homeSide, awaySide)
+          : undefined,
     };
   });
 }
