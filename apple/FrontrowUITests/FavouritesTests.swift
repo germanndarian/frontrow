@@ -1,6 +1,6 @@
 import XCTest
 
-/// The scoreboard leads with the teams you follow: "My teams" is the default
+/// The scoreboard leads with the teams you follow: "Your teams" is the default
 /// view, a league shows that league in full with your games first and marked,
 /// and the mark is meant to be visible at a glance.
 final class FavouritesTests: XCTestCase {
@@ -15,15 +15,17 @@ final class FavouritesTests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.navigationBars["Live & Upcoming"].waitForExistence(timeout: 20))
-        let mine = app.buttons["My teams"]
+        let mine = app.buttons["Your teams"]
         XCTAssertTrue(mine.waitForExistence(timeout: 10), "the first chip is your teams, not everything")
 
         let group = app.staticTexts.matching(
             NSPredicate(format: "label IN {'UPCOMING', 'LIVE NOW', 'RESULTS'}")
         ).firstMatch
         XCTAssertTrue(group.waitForExistence(timeout: 30), "your teams' games load")
+        // Exactly the marker's own label: "Your teams" is also the first
+        // chip, and CONTAINS would count the chip as a marked game.
         let marked = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "label CONTAINS 'Your team'"))
+            .matching(NSPredicate(format: "label == 'Your team'"))
         XCTAssertEqual(marked.count, 0,
                        "nothing is marked here — every game already belongs to you")
         attach(app, "1-my-teams")
@@ -38,7 +40,7 @@ final class FavouritesTests: XCTestCase {
                       "a league's groups count your games inside the full slate")
         XCTAssertTrue(
             app.descendants(matching: .any)
-                .matching(NSPredicate(format: "label CONTAINS 'Your team'")).firstMatch
+                .matching(NSPredicate(format: "label == 'Your team'")).firstMatch
                 .waitForExistence(timeout: 10),
             "and your games are marked among the rest"
         )

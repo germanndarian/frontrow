@@ -27,7 +27,7 @@ final class ShellTests: XCTestCase {
         XCTAssertTrue(settings.exists)
 
         // The tab bar only minimises against a list long enough to scroll, and
-        // "My teams" is deliberately short — a league's whole week is not.
+        // "Your teams" is deliberately short — a league's whole week is not.
         let list = app.scrollViews.firstMatch
         XCTAssertTrue(list.waitForExistence(timeout: 15))
         XCTAssertTrue(app.buttons["MLB"].waitForExistence(timeout: 15))

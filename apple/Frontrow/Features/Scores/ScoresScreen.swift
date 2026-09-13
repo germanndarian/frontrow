@@ -144,7 +144,7 @@ struct ScoresScreen: View {
     /// League filter chips, with "All" in front of the followed leagues.
     private var chips: some View {
         ChipRow {
-            Chip(label: model.showingEverything ? "All" : "My teams", on: model.league == nil) { model.league = nil }
+            Chip(label: model.showingEverything ? "All" : "Your teams", on: model.league == nil) { model.league = nil }
             ForEach(model.leagues) { league in
                 Chip(label: league.name, on: model.league == league) { model.league = league }
             }

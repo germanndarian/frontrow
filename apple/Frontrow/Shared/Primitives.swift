@@ -7,17 +7,49 @@ struct SectionRule: View {
     let title: String
     var detail: String? = nil
     var accent: Color? = nil
+    /// Set both to make the rule fold its section away. Left alone, it is the
+    /// plain divider every other screen uses.
+    var collapsed: Bool? = nil
+    var toggle: (() -> Void)? = nil
 
     var body: some View {
+        if let toggle, let collapsed {
+            Button(action: toggle) {
+                rule(collapsed: collapsed)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(title)
+            .accessibilityValue(collapsed ? "Collapsed" : "Expanded")
+            .accessibilityHint("Double tap to \(collapsed ? "expand" : "collapse")")
+        } else {
+            rule(collapsed: nil)
+        }
+    }
+
+    private func rule(collapsed: Bool?) -> some View {
         HStack(spacing: 10) {
+            if let collapsed {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10, weight: .black))
+                    .foregroundStyle(accent ?? Theme.faint)
+                    .rotationEffect(.degrees(collapsed ? -90 : 0))
+                    .frame(width: 12)
+            }
             Text(title)
                 .font(.system(size: 13, weight: .black))
                 .tracking(0.8)
                 .foregroundStyle(Theme.ink)
+                // The rule gives up its width before the title wraps.
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .layoutPriority(1)
             if let detail {
                 Text(detail)
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
                     .foregroundStyle(accent ?? Theme.faint)
+                    .lineLimit(1)
+                    .layoutPriority(1)
             }
             Rectangle().fill(Theme.line).frame(height: 1)
         }

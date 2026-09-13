@@ -42,12 +42,18 @@ struct RootView: View {
             }
         }
         .environment(account)
+        // No scroll bars anywhere in the app. This reaches every scroll view
+        // under it, but a sheet is presented outside this tree and doesn't
+        // inherit it — so each sheet root repeats the line.
+        .scrollIndicators(.hidden)
         .tint(account.settings.accent.color)
         .preferredColorScheme(colorScheme)
         .animation(.snappy(duration: 0.2), value: account.status)
         .animation(.snappy(duration: 0.2), value: needsOnboarding)
         .sheet(item: $signIn) { mode in
-            SignInSheet(mode: mode).environment(account)
+            SignInSheet(mode: mode)
+                .environment(account)
+                .scrollIndicators(.hidden)
         }
         .task { await account.start() }
         .onOpenURL { url in
@@ -135,19 +141,22 @@ struct TabShell: View {
             withAnimation(.snappy(duration: 0.2)) { selection = .scores }
         }
         .sheet(item: $sheet) { which in
-            switch which {
-            case .schedule(let team): ScheduleSheet(team: team)
-            case .bracket(let team): BracketSheet(team: team)
-            case .player(let player): PlayerSheet(follow: player)
-            case .game(let game): GameDetailSheet(game: game).environment(feed)
-            case .liveGames(let games):
-                // Picking one swaps this sheet for that game's, which is the
-                // same sheet a tap on its card opens.
-                LiveGamesSheet(games: games) { game in
-                    sheet = .game(game)
+            Group {
+                switch which {
+                case .schedule(let team): ScheduleSheet(team: team)
+                case .bracket(let team): BracketSheet(team: team)
+                case .player(let player): PlayerSheet(follow: player)
+                case .game(let game): GameDetailSheet(game: game).environment(feed)
+                case .liveGames(let games):
+                    // Picking one swaps this sheet for that game's, which is
+                    // the same sheet a tap on its card opens.
+                    LiveGamesSheet(games: games) { game in
+                        sheet = .game(game)
+                    }
+                    .environment(feed)
                 }
-                .environment(feed)
             }
+            .scrollIndicators(.hidden)
         }
     }
 }

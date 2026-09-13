@@ -6,6 +6,9 @@ struct PlayersScreen: View {
     let preferences: Preferences
     @Binding var sheet: AppSheet?
     @State private var model: PlayersModel
+    /// Teams folded away, by abbreviation. Kept for the session only — a fold
+    /// is how you're reading the screen now, not a setting.
+    @State private var collapsed: Set<String> = []
 
     init(preferences: Preferences, sheet: Binding<AppSheet?>) {
         self.preferences = preferences
@@ -26,19 +29,29 @@ struct PlayersScreen: View {
                         .padding(.top, 60)
                     } else {
                         ForEach(model.sections) { section in
+                            let folded = collapsed.contains(section.id)
                             SectionRule(
                                 title: section.title.uppercased(),
-                                detail: section.teamAbbr,
-                                accent: Color(cssHex: section.color)
+                                // Folded away, the count stands in for the
+                                // cards you can no longer see.
+                                detail: folded
+                                    ? "\(section.teamAbbr) · \(section.players.count)"
+                                    : section.teamAbbr,
+                                accent: Color(cssHex: section.color),
+                                collapsed: folded,
+                                toggle: { toggle(section.id) }
                             )
                             .padding(.top, section.id == model.sections.first?.id ? 0 : 10)
-                            ForEach(section.players) { follow in
-                                PlayerCardView(
-                                    follow: follow,
-                                    state: model.players[follow],
-                                    onOpen: { sheet = .player(follow) },
-                                    onRetry: { Task { await model.players.fetch(follow, force: true) } }
-                                )
+                            if !folded {
+                                ForEach(section.players) { follow in
+                                    PlayerCardView(
+                                        follow: follow,
+                                        state: model.players[follow],
+                                        onOpen: { sheet = .player(follow) },
+                                        onRetry: { Task { await model.players.fetch(follow, force: true) } }
+                                    )
+                                    .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
+                                }
                             }
                         }
                     }
@@ -54,6 +67,16 @@ struct PlayersScreen: View {
         }
         .task { await model.load() }
         .task(id: preferences) { await model.apply(preferences) }
+    }
+
+    private func toggle(_ team: String) {
+        withAnimation(.snappy(duration: 0.25)) {
+            if collapsed.contains(team) {
+                collapsed.remove(team)
+            } else {
+                collapsed.insert(team)
+            }
+        }
     }
 }
 
