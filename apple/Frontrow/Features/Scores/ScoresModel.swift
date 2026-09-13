@@ -20,6 +20,8 @@ final class ScoresModel {
     private let api: APIClient
     private var preferences: Preferences
     private var pollTask: Task<Void, Never>?
+    /// Ids of pinned games, mirrored from the store so the sort can see them.
+    var pinned: Set<String> = []
     private var loadToken = 0
 
     init(api: APIClient = .shared, preferences: Preferences = .empty) {
@@ -84,11 +86,15 @@ final class ScoresModel {
         let shown = visible
         return buckets
             .map { bucket in
-                // Your teams first inside each group, then kick-off order.
+                // Pinned games first, then your teams, then kick-off order.
                 let inBucket = shown
                     .filter { $0.state == bucket.0 }
                     .enumerated()
                     .sorted { a, b in
+                        if pinsApply {
+                            let up = (pinned.contains(a.element.id), pinned.contains(b.element.id))
+                            if up.0 != up.1 { return up.0 }
+                        }
                         let mine = (isFollowed(a.element), isFollowed(b.element))
                         if mine.0 != mine.1 { return mine.0 }
                         return a.offset < b.offset
@@ -103,6 +109,12 @@ final class ScoresModel {
     /// aren't — under "Your teams" every card would be marked, which says
     /// nothing and turns the whole list blue.
     var marksFollowed: Bool { league != nil }
+
+    /// Pins order a league's list and nothing else. Under "Your teams" the
+    /// list is already the games you care about, sorted the way you asked
+    /// for; jumping one to the top there would be answering a question
+    /// nobody asked.
+    var pinsApply: Bool { league != nil }
 
     /// How many of the games on screen are your teams', for the group rule.
     func followedCount(in games: [Game]) -> Int {

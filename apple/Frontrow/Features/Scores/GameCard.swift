@@ -5,6 +5,9 @@ import SwiftUI
 struct GameCard: View {
     let game: Game
     let followed: Bool
+    /// Held at the top of its league's list. Default off, so the sheets that
+    /// show a card outside that list don't have to say so.
+    var pinned = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -14,6 +17,12 @@ struct GameCard: View {
                         .font(.system(size: 10))
                         .foregroundStyle(Theme.accent)
                         .accessibilityLabel("Your team")
+                }
+                if pinned {
+                    Image(systemName: "pin.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.gold)
+                        .accessibilityLabel("Pinned")
                 }
                 Text(game.league.name)
                     .font(.system(size: 10.5, weight: .bold, design: .monospaced))

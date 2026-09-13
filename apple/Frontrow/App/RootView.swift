@@ -9,6 +9,8 @@ struct RootView: View {
     @State private var googleError: String?
     /// Changes when a widget asks for the scoreboard, so the shell can switch.
     @State private var openScores = UUID()
+    /// Set when a widget asks for one game in particular.
+    @State private var openGame: GameRequest?
 
     var body: some View {
         Group {
@@ -35,7 +37,7 @@ struct RootView: View {
                     OnboardingFlow()
                         .transition(.opacity)
                 } else {
-                    TabShell(openScores: openScores)
+                    TabShell(openScores: openScores, openGame: openGame)
                         .transition(.opacity)
                 }
             }
@@ -56,12 +58,28 @@ struct RootView: View {
                 .scrollIndicators(.hidden)
         }
         .task { await account.start() }
-        .onOpenURL { url in
-            // frontrow://scores comes from a widget; the auth callback is the
-            // Supabase SDK's business and needs nothing from us here.
-            if url.host == "scores" { openScores = UUID() }
+        .onOpenURL { url in follow(url) }
+        .task {
+            // A UI test can't hand the app a URL the way the home screen
+            // does, so it passes one as a launch argument. Same door.
+            if let url = DeepLink.testingURL { follow(url) }
         }
         .onChange(of: account.settings.accent) { _, accent in Theme.accent = accent.color }
+    }
+
+    /// A widget asks for the scoreboard or for one game. The auth callback
+    /// comes through the same door and is the Supabase SDK's business, not
+    /// ours, so anything we don't recognise is left alone.
+    private func follow(_ url: URL) {
+        switch DeepLink.destination(of: url) {
+        case .scores:
+            openScores = UUID()
+        case .game(let id):
+            openGame = GameRequest(id: id)
+            openScores = UUID()
+        case nil:
+            break
+        }
     }
 
     private var showingGoogleError: Binding<Bool> {
@@ -107,10 +125,15 @@ struct LaunchScreen: View {
 struct TabShell: View {
     @Environment(Account.self) private var account
     let openScores: UUID
+    let openGame: GameRequest?
     @State private var selection: Area = .scores
     @State private var sheet: AppSheet?
     /// The Scores tab's last poll, so an open sheet follows it.
     @State private var feed = LiveFeed()
+    /// Games pinned to the top of a league's list.
+    @State private var pins = Pins()
+    /// A game a widget asked for, held until the scoreboard has loaded it.
+    @State private var awaiting: String?
 
     enum Area: String, CaseIterable, Identifiable {
         case scores, teams, players, table, settings
@@ -122,6 +145,7 @@ struct TabShell: View {
             Tab("Scores", systemImage: "sportscourt", value: .scores) {
                 ScoresScreen(preferences: account.preferences, sheet: $sheet)
                     .environment(feed)
+                    .environment(pins)
             }
             Tab("Teams", systemImage: "shield.checkered", value: .teams) {
                 TeamsScreen(preferences: account.preferences, sheet: $sheet)
@@ -140,6 +164,17 @@ struct TabShell: View {
         .onChange(of: openScores) { _, _ in
             withAnimation(.snappy(duration: 0.2)) { selection = .scores }
         }
+        // A widget names a game by id; the game itself arrives with the next
+        // scoreboard load, which may be after the app has finished launching.
+        // Hold the request until the board can answer it.
+        // `initial` matters: a link that arrives during launch sets this
+        // before the shell exists, so waiting for a *change* would miss the
+        // only one there is.
+        .onChange(of: openGame, initial: true) { _, request in
+            awaiting = request?.id
+            open(awaiting)
+        }
+        .onChange(of: feed.games) { _, _ in open(awaiting) }
         .sheet(item: $sheet) { which in
             Group {
                 switch which {
@@ -158,5 +193,20 @@ struct TabShell: View {
             }
             .scrollIndicators(.hidden)
         }
+        .environment(pins)
     }
+
+    /// Opens the awaited game once the board has it, and stops waiting.
+    private func open(_ id: String?) {
+        guard let id, let game = feed.games.first(where: { $0.id == id }) else { return }
+        sheet = .game(game)
+        awaiting = nil
+    }
+}
+
+/// A widget's request for one game. The token makes a second tap on the same
+/// game a new request rather than a no-op.
+struct GameRequest: Equatable {
+    let id: String
+    let token = UUID()
 }
