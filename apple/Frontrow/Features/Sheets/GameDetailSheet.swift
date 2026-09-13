@@ -7,6 +7,7 @@ struct GameDetailSheet: View {
     let game: Game
     @Environment(\.dismiss) private var dismiss
     @Environment(LiveFeed.self) private var feed: LiveFeed?
+    @Environment(Pins.self) private var pins: Pins?
 
     /// The freshest copy of this game the Scores tab has polled, falling back
     /// to the one the sheet was opened with.
@@ -45,6 +46,12 @@ struct GameDetailSheet: View {
             .navigationSubtitle(Text(StatusLine.text(for: live)))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if let pins {
+                    ToolbarItem(placement: .topBarLeading) {
+                        PinButton(game: live, pins: pins)
+                            .labelStyle(.iconOnly)
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }

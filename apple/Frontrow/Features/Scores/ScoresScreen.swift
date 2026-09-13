@@ -6,6 +6,7 @@ struct ScoresScreen: View {
     let preferences: Preferences
     @Binding var sheet: AppSheet?
     @Environment(LiveFeed.self) private var feed: LiveFeed?
+    @Environment(Pins.self) private var pins: Pins?
     @State private var model: ScoresModel
 
     init(preferences: Preferences, sheet: Binding<AppSheet?>) {
@@ -84,10 +85,22 @@ struct ScoresScreen: View {
                                         Button {
                                             sheet = .game(game)
                                         } label: {
-                                            GameCard(game: game, followed: model.marksFollowed && model.isFollowed(game))
-                                                .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                            GameCard(
+                                                game: game,
+                                                followed: model.marksFollowed && model.isFollowed(game),
+                                                pinned: model.pinsApply && pins?.contains(game) == true
+                                            )
+                                            .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                                         }
                                         .buttonStyle(.plain)
+                                        // Press and hold to pin. Only inside a
+                                        // league, since that is the only list
+                                        // a pin reorders.
+                                        .contextMenu {
+                                            if model.pinsApply, let pins {
+                                                PinButton(game: game, pins: pins)
+                                            }
+                                        }
                                     }
                                 }
                                 .padding(.horizontal, 18)
@@ -138,7 +151,12 @@ struct ScoresScreen: View {
         // Hand every poll to the sheets stacked above this screen, so an open
         // game follows the same refresh rather than freezing on the score it
         // was opened with.
-        .onChange(of: model.games, initial: true) { _, games in feed?.publish(games) }
+        .onChange(of: model.games, initial: true) { _, games in
+            feed?.publish(games)
+            // A pinned game that has finished has nothing left to say.
+            pins?.forget(finishedIn: games)
+        }
+        .onChange(of: pins?.ids ?? [], initial: true) { _, ids in model.pinned = ids }
     }
 
     /// League filter chips, with "All" in front of the followed leagues.

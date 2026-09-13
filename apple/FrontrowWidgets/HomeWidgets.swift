@@ -10,7 +10,10 @@ struct ScoresWidget: Widget {
         StaticConfiguration(kind: "frontrow.scores", provider: ScoreProvider()) { entry in
             ScoresWidgetView(entry: entry)
                 .containerBackground(for: .widget) { WidgetGround(accent: entry.accent) }
-                .widgetURL(URL(string: "frontrow://scores"))
+                // Straight to the game on the tile, so a tap answers the
+                // question the tile just raised. With nothing to show it
+                // falls back to the scoreboard.
+                .widgetURL(entry.headline.map { DeepLink.game($0.id) } ?? DeepLink.scores)
         }
         .configurationDisplayName("Live & Next")
         .description("The game your teams are playing, and what's next.")
@@ -203,20 +206,26 @@ struct LargeWidget: View {
                 .foregroundStyle(WidgetInk.faint)
                 .padding(.bottom, 6)
 
+            // A row is its own target here: the tile shows several games, and
+            // the one you tapped is the one you meant. (Small widgets have no
+            // room for this — widgetURL covers those.)
             ForEach(rest) { game in
-                HStack {
-                    Text(Matchup.text(for: game))
-                        .font(.system(size: 12.5, weight: .bold))
-                        .foregroundStyle(WidgetInk.primary)
-                        .lineLimit(1)
-                    Spacer(minLength: 8)
-                    Text(StartTime.text(for: game))
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(WidgetInk.faint)
-                        .lineLimit(1)
+                Link(destination: DeepLink.game(game.id)) {
+                    HStack {
+                        Text(Matchup.text(for: game))
+                            .font(.system(size: 12.5, weight: .bold))
+                            .foregroundStyle(WidgetInk.primary)
+                            .lineLimit(1)
+                        Spacer(minLength: 8)
+                        Text(StartTime.text(for: game))
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(WidgetInk.faint)
+                            .lineLimit(1)
+                    }
+                    .contentShape(Rectangle())
+                    .padding(.vertical, 8)
+                    .overlay(alignment: .top) { Rectangle().fill(WidgetInk.hairline).frame(height: 1) }
                 }
-                .padding(.vertical, 8)
-                .overlay(alignment: .top) { Rectangle().fill(WidgetInk.hairline).frame(height: 1) }
             }
             if rest.isEmpty {
                 Text("Nothing else scheduled this week.")

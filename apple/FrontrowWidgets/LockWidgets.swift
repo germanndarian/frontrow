@@ -9,7 +9,7 @@ struct LockScoreWidget: Widget {
         StaticConfiguration(kind: "frontrow.lock", provider: ScoreProvider()) { entry in
             LockScoreView(entry: entry)
                 .containerBackground(.clear, for: .widget)
-                .widgetURL(URL(string: "frontrow://scores"))
+                .widgetURL(entry.headline.map { DeepLink.game($0.id) } ?? DeepLink.scores)
         }
         .configurationDisplayName("Frontrow score")
         .description("Your team's game, on the lock screen.")
