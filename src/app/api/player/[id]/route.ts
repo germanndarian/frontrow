@@ -6,6 +6,7 @@ import { espnFetch } from "@/lib/espn/client";
 import { espnUrl, REVALIDATE } from "@/lib/espn/endpoints";
 import { normalizePlayer } from "@/lib/espn/normalize";
 import type { RawAthlete, RawGamelog } from "@/lib/espn/raw";
+import { rateLimited } from "@/lib/rate-limit";
 
 const VALID = new Set(Object.keys(LEAGUES));
 
@@ -13,6 +14,9 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const limited = rateLimited(req);
+  if (limited) return limited;
+
   const { id } = await params;
   const league = req.nextUrl.searchParams.get("league");
   if (!league || !VALID.has(league)) {

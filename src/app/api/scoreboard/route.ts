@@ -6,6 +6,7 @@ import { espnUrl, REVALIDATE } from "@/lib/espn/endpoints";
 import { normalizeScoreboard } from "@/lib/espn/normalize";
 import { includesToday, overlayFresh } from "@/lib/espn/overlay";
 import type { RawScoreboard } from "@/lib/espn/raw";
+import { rateLimited } from "@/lib/rate-limit";
 
 const VALID = new Set(Object.keys(LEAGUES));
 
@@ -14,6 +15,9 @@ const VALID = new Set(Object.keys(LEAGUES));
 const DATES = /^\d{8}(-\d{8})?$/;
 
 export async function GET(req: NextRequest) {
+  const limited = rateLimited(req);
+  if (limited) return limited;
+
   const param = req.nextUrl.searchParams.get("leagues") ?? "";
   const leagues = param
     .split(",")

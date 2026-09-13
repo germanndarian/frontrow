@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimited } from "@/lib/rate-limit";
 
 /**
  * Hard-deletes the signed-in user's account. Deleting an auth user requires the
@@ -12,6 +13,9 @@ import { createClient } from "@/lib/supabase/server";
  * token is verified by Supabase before anything is deleted.
  */
 export async function DELETE(req: Request) {
+  const limited = rateLimited(req);
+  if (limited) return limited;
+
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
     return NextResponse.json(

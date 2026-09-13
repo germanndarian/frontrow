@@ -3,13 +3,17 @@ import { LEAGUES } from "@/lib/leagues";
 import type { LeagueId, PlayoffBracket } from "@/lib/types";
 import { fetchBracket } from "@/lib/espn/bracket";
 import { jsonCached } from "@/lib/espn/response";
+import { rateLimited } from "@/lib/rate-limit";
 
 const VALID = new Set(Object.keys(LEAGUES));
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ league: string }> },
 ) {
+  const limited = rateLimited(req);
+  if (limited) return limited;
+
   const { league } = await params;
   if (!VALID.has(league)) {
     return NextResponse.json({ error: "bad_league" }, { status: 400 });
