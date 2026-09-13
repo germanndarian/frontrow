@@ -393,6 +393,7 @@ export const PLAYERS: Record<string, Player> = {
     jersey: "99",
     headshot: headshot("mlb", "33192"),
     seasonLabel: "2026 season",
+    bio: { height: "6' 7\"", weight: "282 lbs", age: 34, birthplace: "Linden, CA", batsThrows: "Right/Right", experience: "11th Season", college: "Fresno State", draft: "2013: Rd 1, Pk 32 (NYY)" },
     stats: [
       { name: "avg", abbr: "AVG", label: "Batting Average", value: ".311", rank: 6, rankDisplay: "6th" },
       { name: "homeRuns", abbr: "HR", label: "Home Runs", value: "24", rank: 1, rankDisplay: "1st" },
@@ -427,6 +428,7 @@ export const PLAYERS: Record<string, Player> = {
     jersey: "97",
     headshot: headshot("nhl", "3895074"),
     seasonLabel: "2026 playoffs",
+    bio: { height: "6' 1\"", weight: "194 lbs", age: 29, birthplace: "Richmond Hill, ON", experience: "11th Season", draft: "2015: Rd 1, Pk 1 (EDM)" },
     stats: [
       { name: "goals", abbr: "G", label: "Goals", value: "9", rank: 2, rankDisplay: "2nd" },
       { name: "assists", abbr: "A", label: "Assists", value: "24", rank: 1, rankDisplay: "1st" },
@@ -461,6 +463,7 @@ export const PLAYERS: Record<string, Player> = {
     jersey: "1",
     headshot: headshot("nfl", "4040715"),
     seasonLabel: "2025 season",
+    bio: { height: "6' 1\"", weight: "223 lbs", age: 28, birthplace: "Houston, TX", experience: "7th Season", college: "Oklahoma", draft: "2020: Rd 2, Pk 53 (PHI)" },
     stats: [
       { name: "passYards", abbr: "YDS", label: "Passing Yards", value: "3,512", rank: 12, rankDisplay: "12th" },
       { name: "passTD", abbr: "TD", label: "Passing TD", value: "26", rank: 8, rankDisplay: "8th" },
@@ -493,6 +496,7 @@ export const PLAYERS: Record<string, Player> = {
     jersey: "16",
     headshot: headshot("college-football", "4870906"),
     seasonLabel: "2025 season",
+    bio: { height: "6' 4\"", weight: "222 lbs", birthplace: "New Orleans, LA", experience: "Junior", college: "Texas" },
     stats: [
       { name: "passYards", abbr: "YDS", label: "Passing Yards", value: "3,941", rank: 4, rankDisplay: "4th" },
       { name: "passTD", abbr: "TD", label: "Passing TD", value: "34", rank: 3, rankDisplay: "3rd" },

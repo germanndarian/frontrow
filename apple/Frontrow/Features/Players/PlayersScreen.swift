@@ -44,12 +44,19 @@ struct PlayersScreen: View {
                             .padding(.top, section.id == model.sections.first?.id ? 0 : 10)
                             if !folded {
                                 ForEach(section.players) { follow in
-                                    PlayerCardView(
-                                        follow: follow,
-                                        state: model.players[follow],
-                                        onOpen: { sheet = .player(follow) },
-                                        onRetry: { Task { await model.players.fetch(follow, force: true) } }
-                                    )
+                                    // The whole card opens the player, not
+                                    // just the name at the top of it.
+                                    Button {
+                                        sheet = .player(follow)
+                                    } label: {
+                                        PlayerCardView(
+                                            follow: follow,
+                                            state: model.players[follow],
+                                            onRetry: { Task { await model.players.fetch(follow, force: true) } }
+                                        )
+                                        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                    }
+                                    .buttonStyle(.plain)
                                     .transition(.opacity.combined(with: .scale(scale: 0.98, anchor: .top)))
                                 }
                             }
@@ -83,7 +90,6 @@ struct PlayersScreen: View {
 struct PlayerCardView: View {
     let follow: FollowedPlayer
     let state: Loadable<Player>
-    let onOpen: () -> Void
     let onRetry: () -> Void
 
     var body: some View {
@@ -113,7 +119,7 @@ struct PlayerCardView: View {
     private func loaded(_ player: Player) -> some View {
         Panel(radius: 22) {
             VStack(alignment: .leading, spacing: 0) {
-                Button(action: onOpen) {
+                Group {
                     HStack(spacing: 13) {
                         Headshot(url: player.headshot, name: player.fullName, color: player.color)
                         VStack(alignment: .leading, spacing: 3) {
@@ -136,9 +142,7 @@ struct PlayerCardView: View {
                             .overlay { Capsule().stroke(Theme.line, lineWidth: 1) }
                     }
                     .padding(16)
-                    .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
 
                 if player.isEmpty {
                     Text("Season stats and recent games appear here once the feed has them.")

@@ -88,6 +88,7 @@ function synthPlayer(cp: CatalogPlayer): Player {
     headshot: cp.headshot,
     seasonLabel: "—",
     stats: [],
+    bio: {},
     recent: { label: "", entries: [] },
     placeholder: true,
   };

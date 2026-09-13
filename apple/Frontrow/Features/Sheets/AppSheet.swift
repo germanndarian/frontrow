@@ -29,6 +29,9 @@ struct SheetScaffold<Content: View>: View {
     let color: String
     let title: String
     let subtitle: String
+    /// A player's headshot, when the sheet is about a person rather than a
+    /// team. Falls back to the team tile when there's no picture to show.
+    var headshot: String? = nil
     @ViewBuilder var content: Content
     @Environment(\.dismiss) private var dismiss
 
@@ -42,7 +45,11 @@ struct SheetScaffold<Content: View>: View {
         .background(Theme.background)
         .safeAreaInset(edge: .top, spacing: 0) {
             HStack(spacing: 12) {
-                TeamMark(logo: "", abbreviation: mark, color: color, size: 38)
+                if let headshot, !headshot.isEmpty {
+                    Headshot(url: headshot, name: title, color: color, size: 38)
+                } else {
+                    TeamMark(logo: "", abbreviation: mark, color: color, size: 38)
+                }
                 VStack(alignment: .leading, spacing: 1) {
                     Text(title)
                         .font(.system(size: 17, weight: .heavy))

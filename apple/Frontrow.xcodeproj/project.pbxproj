@@ -34,6 +34,7 @@
 		38732A435974C373815F15C0 /* PlayersModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E67BD6243658AD826E129BD /* PlayersModel.swift */; };
 		3953249CB640BC9680225219 /* TeamsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6C00B8B9C95A21F8AF8601 /* TeamsScreen.swift */; };
 		3954AD75FB28616104706DDA /* TeamStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE70839B14BA405D31DEE1DD /* TeamStats.swift */; };
+		3C3A73959B6401931C7AA286 /* PlayerPictureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FD27D18EF8E573F538C08B4 /* PlayerPictureTests.swift */; };
 		3D17E1A9CF8F2DCE08EE85A0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F143133B4A35B31A08654FC /* Models.swift */; };
 		3D82CFFD1790E11C981AF3F9 /* ShellTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1DACC40DFE8AC31B99652AF /* ShellTests.swift */; };
 		3D90B97C8E33C137CF338055 /* TeamCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02285A0D1036C1B070651EBD /* TeamCardView.swift */; };
@@ -179,6 +180,7 @@
 		8A6AA021E3FCD7C4EDA5A5AA /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		8AF3BD0B9F8D17BFAF22805F /* OnboardingSwipeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingSwipeTests.swift; sourceTree = "<group>"; };
 		8C8CFA8121B21F2FC3EF447F /* WidgetGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetGallery.swift; sourceTree = "<group>"; };
+		8FD27D18EF8E573F538C08B4 /* PlayerPictureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerPictureTests.swift; sourceTree = "<group>"; };
 		94D997893A5BFC2434FCAF37 /* FrontrowUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FrontrowUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		986D896A6050DA833F87C1E6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		98A070E367E34435AEA9CE79 /* FrontrowWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = FrontrowWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -364,6 +366,7 @@
 				DE692A571AA48183C71CE267 /* LeagueEditingTests.swift */,
 				8AF3BD0B9F8D17BFAF22805F /* OnboardingSwipeTests.swift */,
 				5ADD137762CA90EB07734BB6 /* PinTests.swift */,
+				8FD27D18EF8E573F538C08B4 /* PlayerPictureTests.swift */,
 				B1DACC40DFE8AC31B99652AF /* ShellTests.swift */,
 				CC9F25E26E583E12547E916F /* StepGatingTests.swift */,
 				D1C5EB83FE251174CEE412C9 /* TabsTests.swift */,
@@ -600,6 +603,7 @@
 				F79A5C8B5D8C73CDC4CABA30 /* LeagueEditingTests.swift in Sources */,
 				E85E84ABDEE275E38036BEFD /* OnboardingSwipeTests.swift in Sources */,
 				0481A307782B610E9F1E141F /* PinTests.swift in Sources */,
+				3C3A73959B6401931C7AA286 /* PlayerPictureTests.swift in Sources */,
 				3D82CFFD1790E11C981AF3F9 /* ShellTests.swift in Sources */,
 				8E8309591B360B7BC16310D5 /* StepGatingTests.swift in Sources */,
 				D719D4FB1BA98AFEF45CD9CD /* TabsTests.swift in Sources */,

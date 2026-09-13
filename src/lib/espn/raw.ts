@@ -168,6 +168,18 @@ export interface RawAthlete {
     headshot?: { href?: string };
     team?: RawTeam;
     statsSummary?: { displayName?: string; statistics?: RawAthleteStat[] };
+    /* Bio. Which of these ESPN fills depends on the sport: a college player
+       has no draft, a hockey player often has no college, and bats/throws is
+       baseball's alone. */
+    age?: number;
+    displayHeight?: string;
+    displayWeight?: string;
+    displayBirthPlace?: string;
+    displayDraft?: string;
+    displayExperience?: string;
+    displayBatsThrows?: string;
+    college?: { name?: string; shortName?: string };
+    status?: { name?: string; type?: string };
   };
 }
 
