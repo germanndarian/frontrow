@@ -20,15 +20,17 @@ function seg(league: LeagueId): string {
 }
 
 export const espnUrl = {
-  /** Today's slate, or a window ("YYYYMMDD" / "YYYYMMDD-YYYYMMDD"). A window
-      needs the raised limit: ESPN pages a week of baseball otherwise. */
-  scoreboard: (l: LeagueId, dates?: string) =>
-    dates
-      ? `${SITE}/${seg(l)}/scoreboard?dates=${dates}&limit=400`
+  /** Today's slate, or a whole month ("202609").
+
+      Not a range. `dates=20260914-20260920` answered for years and now returns
+      400 "Failed to get events endpoint." on every league and on both ESPN
+      hosts, so callers ask for the months their window touches and slice it
+      themselves (see `espn/window.ts`). The raised limit is load-bearing: a
+      month comes back capped at 100 events without it. */
+  scoreboard: (l: LeagueId, month?: string) =>
+    month
+      ? `${SITE}/${seg(l)}/scoreboard?dates=${month}&limit=400`
       : `${SITE}/${seg(l)}/scoreboard`,
-  /** Playoff games over a date window, "YYYYMMDD-YYYYMMDD". */
-  playoffScoreboard: (l: LeagueId, dates: string) =>
-    `${SITE}/${seg(l)}/scoreboard?dates=${dates}&limit=400`,
   team: (l: LeagueId, id: string) => `${SITE}/${seg(l)}/teams/${id}`,
   schedule: (l: LeagueId, id: string, seasontype?: number) =>
     `${SITE}/${seg(l)}/teams/${id}/schedule${seasontype ? `?seasontype=${seasontype}` : ""}`,
@@ -44,8 +46,10 @@ export const espnUrl = {
     informal ~2.5k/day budget even with several followed leagues. */
 export const REVALIDATE = {
   scoreboard: 20,
-  /** A week's slate moves slower than today's, and costs more to fetch. */
-  scoreboardWeek: 120,
+  /** A month's slate moves slower than today's, and costs much more to fetch —
+      and every week of that month reads the same cached copy. Live scores come
+      from today's board laid over the top, so this window never holds one back. */
+  scoreboardMonth: 120,
   bracket: 300,
   team: 300,
   standings: 300,

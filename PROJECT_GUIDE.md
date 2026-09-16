@@ -291,6 +291,13 @@ These are firm working rules (some are persisted across sessions):
   effect to read URL params — read `useSearchParams()` and seed `useState`, wrapping in
   `<Suspense>` (see `login/page.tsx`).
 - **ESPN scoreboard = today only.** Use schedule endpoints for future games (§5).
+- **ESPN's `dates=` takes a day or a month, never a range.** `dates=20260914-20260920`
+  answered for years and now returns 400 "Failed to get events endpoint." on every league
+  and on both the `site.api` and `site.web` hosts. Ask for the months a window touches
+  (`dates=202609&limit=400` — the limit is load-bearing, a month caps at 100 events without
+  it) and slice the window yourself with `src/lib/espn/window.ts`. Slice on the **US Eastern**
+  day, not UTC: ESPN files a game under its Eastern date, so `dates=20260915` returns games
+  through `2026-09-16T01:40Z`, and a UTC slice silently drops every late game off the end.
 - **Supabase migrations are manual** — adding a column/policy means writing a new
   `supabase/migrations/000N_*.sql` *and* telling the maintainer to run it in the SQL Editor
   before the dependent code deploys.
