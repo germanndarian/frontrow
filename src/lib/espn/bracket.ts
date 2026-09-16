@@ -20,6 +20,7 @@ import type {
 import { hex } from "@/lib/utils";
 import { espnCached, espnFetchFresh, type Cached } from "./client";
 import { espnUrl, REVALIDATE } from "./endpoints";
+import { monthsSpanning, withinWindow } from "./window";
 import type { RawCompetition, RawCompetitor, RawScoreboard } from "./raw";
 
 const BRACKET_NAME: Record<LeagueId, string> = {
@@ -224,7 +225,9 @@ export function normalizeBracket(raw: RawScoreboard, league: LeagueId): PlayoffB
   return { league, name: BRACKET_NAME[league], rounds };
 }
 
-function dateWindow(now = new Date()): string {
+/** The window a postseason in progress — or one just finished — sits in:
+    eighty days back, ten forward. */
+function bracketWindow(now = new Date()): [string, string] {
   const fmt = (d: Date) =>
     `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(
       d.getDate(),
@@ -233,18 +236,36 @@ function dateWindow(now = new Date()): string {
   start.setDate(start.getDate() - 80);
   const end = new Date(now);
   end.setDate(end.getDate() + 10);
-  return `${fmt(start)}-${fmt(end)}`;
+  return [fmt(start), fmt(end)];
 }
 
 export async function fetchBracket(league: LeagueId): Promise<Cached<PlayoffBracket>> {
-  const dates = dateWindow();
-  // The postseason scoreboard is ~10MB — way over the fetch-cache ceiling — so
+  const [start, end] = bracketWindow();
+  const months = monthsSpanning(start, end);
+  // A postseason scoreboard is ~10MB — way over the fetch-cache ceiling — so
   // the normalized bracket is what gets cached. The window is part of the key
-  // so it rolls forward with the date instead of pinning to a stale range.
-  return espnCached(["bracket", league, dates], REVALIDATE.bracket, async () => {
-    const raw = await espnFetchFresh<RawScoreboard>(
-      espnUrl.playoffScoreboard(league, dates),
+  // so it rolls forward with the date instead of pinning to a stale one.
+  return espnCached([
+    "bracket",
+    league,
+    `${start}-${end}`,
+  ], REVALIDATE.bracket, async () => {
+    // ESPN stopped answering date ranges, so we ask for whole months and clip
+    // back to the window here (see `espn/window.ts`). The clip is not
+    // decoration: a month reaches up to thirty days past the window at each
+    // end, and next season's schedule lands there as placeholder TBD-vs-TBD
+    // fixtures. Keeping them turns "no playoffs yet" into a bracket of empty
+    // slots.
+    const raws = await Promise.all(
+      months.map((month) =>
+        espnFetchFresh<RawScoreboard>(espnUrl.scoreboard(league, month)),
+      ),
     );
-    return normalizeBracket(raw, league);
+    // Merged before normalizing, not after: a series runs across months, and
+    // grouping each month on its own would split one series into two brackets.
+    const events = raws
+      .flatMap((raw) => raw.events ?? [])
+      .filter((event) => withinWindow(event.date ?? "", start, end));
+    return normalizeBracket({ events }, league);
   });
 }
