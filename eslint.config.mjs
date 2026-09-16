@@ -14,6 +14,12 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // The native iOS app — Swift, plus whatever SwiftPM checks out.
     "apple/**",
+    // The browser tests' own build, and what a run leaves behind. Build output
+    // is generated code; linting it reports thousands of problems we can't fix.
+    ".next-e2e/**",
+    "test-results/**",
+    "playwright-report/**",
+    "blob-report/**",
   ]),
 ]);
 

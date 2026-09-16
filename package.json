@@ -8,6 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "e2e": "playwright test --project=app --project=mobile",
+    "e2e:all": "playwright test",
+    "e2e:upstream": "playwright test --project=upstream",
+    "e2e:report": "playwright show-report",
+    "e2e:build": "E2E=true NEXT_PUBLIC_USE_MOCK=true NEXT_DIST_DIR=.next-e2e NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:59999 NEXT_PUBLIC_SUPABASE_ANON_KEY=e2e-not-a-real-key next build",
+    "e2e:server": "npm run e2e:build && NEXT_DIST_DIR=.next-e2e next start -p ${E2E_PORT:-3100}",
     "native:gen": "cd apple && xcodegen generate",
     "native:open": "open apple/Frontrow.xcodeproj",
     "native:build": "xcodebuild -project apple/Frontrow.xcodeproj -scheme Frontrow -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -quiet build",
@@ -29,6 +35,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

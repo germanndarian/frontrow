@@ -202,8 +202,41 @@ npm run dev                     # http://localhost:3000
 npm run build && npm run start  # production build
 npm run lint                    # ESLint
 npx tsc --noEmit                # type-check
-npm test                        # Vitest
+npm test                        # Vitest — pure functions in src/lib
+npm run e2e                     # Playwright — the app in a real browser
+npm run e2e:upstream            # Playwright — the live ESPN contract
 ```
+
+### What the two test suites are for
+
+They fail for different reasons on purpose, and the split is the point.
+
+| | `npm test` (Vitest) | `npm run e2e` (Playwright) | `npm run e2e:upstream` |
+| --- | --- | --- | --- |
+| Covers | pure functions in `src/lib` | every screen, in Chromium + WebKit | ESPN's API, for real |
+| Data | none | bundled demo dataset | live |
+| Network | none | none | ESPN |
+| In the merge gate | ✅ | ✅ | ❌ — on a schedule |
+
+The unit tests and the browser tests are both **hermetic**: no ESPN, no Supabase,
+so a red run means our code broke, never that a third party had a bad afternoon.
+That is what lets them block a merge.
+
+**`e2e:upstream` is the one that calls ESPN**, and it exists because of the
+September 2026 outage: 137 unit tests stayed green while the iOS Scores tab was
+dead, because nothing in CI ever talked to ESPN. It runs twice a day from
+`.github/workflows/upstream.yml`, where a failure means "the contract moved, go
+look" rather than "this PR is bad".
+
+**Browser tests run on the demo dataset** (`NEXT_PUBLIC_USE_MOCK=true`) with a
+Supabase URL that points nowhere, and get past the auth gate through **guest
+mode**, which is a real button on `/login`. Two things to know before writing
+one: guest mode is in-memory, so `page.goto` after signing in silently signs you
+back out — navigate by clicking. And onboarding keeps all four steps mounted, so
+scope locators to what is visible. `e2e/helpers.ts` covers both.
+
+The mock build writes to `.next-e2e`, so running the browser tests never
+clobbers the `.next` you already have.
 
 ### Environment variables
 ESPN needs **no key**. Accounts need Supabase.
@@ -274,8 +307,8 @@ These are firm working rules (some are persisted across sessions):
   auto-deleted, so never reuse a merged branch name (doing so re-creates a stale remote branch).
   Pull/fetch `origin/main` first, branch, commit, push, open PR.
 - **Keep PRs small and single-purpose**, matching the existing history.
-- **Quality gate before opening a PR:** run `npm run lint`, `npx tsc --noEmit`, `npm test`, and
-  `npm run build` — `main` is protected and nothing merges red.
+- **Quality gate before opening a PR:** run `npm run lint`, `npx tsc --noEmit`, `npm test`,
+  `npm run e2e`, and `npm run build` — `main` is protected and nothing merges red.
 
 ---
 
