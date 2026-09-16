@@ -34,7 +34,17 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
+  /* Everything we serve is https in production, so this costs nothing there and
+     closes a mixed-content hole if anything ever isn't.
+
+     It is dropped for the browser-test build, which is the same production
+     build served over plain http on localhost. Chromium treats 127.0.0.1 as a
+     trustworthy origin and exempts it; WebKit does not, and upgrades every
+     script and font to https://127.0.0.1, where there is no TLS listener. The
+     result is a page whose assets all fail, React never hydrates, and every
+     route sits on its splash forever. Nothing is weakened on Vercel by this —
+     `E2E` is set by `npm run e2e:build` and by nothing else. */
+  ...(process.env.E2E === "true" ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 /** Applied to every response, HTML and API alike. */
@@ -59,6 +69,10 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // The browser tests build with the demo dataset compiled in, which is a
+  // different build from the one you deploy. Letting them write somewhere else
+  // means running them never clobbers the `.next` you already have.
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   // Source maps stay off in production: they hand a reader the original
   // sources, and this is the default rather than something we rely on.
   productionBrowserSourceMaps: false,

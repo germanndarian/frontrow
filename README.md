@@ -116,7 +116,7 @@ change degrades to a placeholder instead of a crash.
 
 `Next.js 16` · `React 19` · `TypeScript` · `Tailwind CSS v4` (OKLCH tokens)
 `Supabase` (Auth · Postgres · RLS) · `TanStack Query` · `Zustand` · `Motion` · `Recharts`
-`Vitest` · `GitHub Actions` · `Vercel` (Analytics · Speed Insights)
+`Vitest` · `Playwright` · `GitHub Actions` · `Vercel` (Analytics · Speed Insights)
 
 </div>
 
@@ -149,9 +149,15 @@ supabase/migrations/        SQL schema + Row-Level Security
 ```bash
 npm run lint        #  ESLint
 npx tsc --noEmit    #  type-check
-npm test            #  Vitest
+npm test            #  Vitest      · pure functions in src/lib
+npm run e2e         #  Playwright  · every screen, Chromium + WebKit
 npm run build       #  production build
 ```
+
+Both suites are hermetic — the browser tests drive the real app against the bundled
+demo dataset, so no ESPN and no Supabase. A separate `npm run e2e:upstream` calls
+ESPN for real and runs twice a day on a schedule rather than in the merge gate, so
+an upstream change gets noticed without a third party being able to block a release.
 
 <div align="center">
 <br/>

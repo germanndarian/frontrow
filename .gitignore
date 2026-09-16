@@ -59,3 +59,10 @@ apple/*.xcodeproj/project.xcworkspace/xcuserdata/
 apple/build/
 apple/DerivedData/
 apple/.swiftpm/
+
+# browser tests
+/.next-e2e
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
