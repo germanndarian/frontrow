@@ -82,8 +82,8 @@ export function Dashboard() {
     [teams],
   );
 
-  // Shared scoreboard query (header live count + strip read the same cache).
-  // Count only the user's own teams that are live, matching the strip + copy.
+  // Today's board, for the header's LIVE pill and the greeting: your teams'
+  // games that are live right now, whichever week the board below is showing.
   const scoreboard = useScoreboard(leagues);
   const liveGames = useMemo(
     () =>
