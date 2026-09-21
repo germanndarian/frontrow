@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import { usePreferences } from "@/lib/store";
 import { useAppReady, useIsAuthed } from "@/lib/auth";
 import { DEFAULT_PREFERENCES } from "@/lib/mock";
-import { LEAGUES, SPORTS, SPORT_ORDER, leaguesForSports } from "@/lib/leagues";
+import { LEAGUES, leaguesForSports } from "@/lib/leagues";
 import type { FollowedPlayer, FollowedTeam, LeagueId, SportId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { SwipePager } from "@/components/mobile/SwipePager";
-import { CheckMark } from "./CheckMark";
+import { LeaguePicker, SportPicker } from "./SportLeaguePickers";
 import { TeamPicker } from "./TeamPicker";
 import { PlayerPicker } from "./PlayerPicker";
 import { SetupDone } from "./SetupDone";
@@ -27,74 +27,6 @@ const STEPS = [
   { title: "Follow your teams", subtitle: "Search and tap the teams you want on your dashboard." },
   { title: "Star your players", subtitle: "Optional. Add the names you tune in for." },
 ] as const;
-
-/* Mark-tile colours from the mockup, keyed by sport and league. */
-const SPORT_MARK: Record<SportId, string> = { football: "#5a1414", basketball: "#c8512b", baseball: "#0c2340", hockey: "#1d3557" };
-const LEAGUE_MARK: Record<LeagueId, string> = { nfl: "#5a1414", "college-football": "#bf5700", nba: "#c8512b", mlb: "#0c2340", nhl: "#1d3557" };
-const LEAGUE_TAG: Record<LeagueId, string> = { nfl: "NFL", "college-football": "NCAA", nba: "NBA", mlb: "MLB", nhl: "NHL" };
-
-function SportGlyph({ sport }: { sport: SportId }) {
-  const common = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8 } as const;
-  if (sport === "football")
-    return (
-      <svg {...common}>
-        <ellipse cx="12" cy="12" rx="9" ry="5.5" transform="rotate(-30 12 12)" />
-        <path d="M9.5 14.5 14.5 9.5M10.5 11.5l1 1M12.5 9.5l1 1M11.5 12.5l1 1" />
-      </svg>
-    );
-  if (sport === "baseball")
-    return (
-      <svg {...common}>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M6.5 5.8c2 1.6 3 4 3 6.2s-1 4.6-3 6.2M17.5 5.8c-2 1.6-3 4-3 6.2s1 4.6 3 6.2" />
-      </svg>
-    );
-  if (sport === "basketball")
-    return (
-      <svg {...common}>
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 3v18M3 12h18M5.6 5.6c2.4 2 3.9 4.8 3.9 6.4s-1.5 4.4-3.9 6.4M18.4 5.6c-2.4 2-3.9 4.8-3.9 6.4s1.5 4.4 3.9 6.4" />
-      </svg>
-    );
-  return (
-    <svg {...common}>
-      <ellipse cx="12" cy="15" rx="8" ry="3" />
-      <path d="M4 12.5v2.5M20 12.5v2.5M12 12v6" strokeWidth="1.4" opacity="0.5" />
-      <ellipse cx="12" cy="12" rx="8" ry="3" />
-    </svg>
-  );
-}
-
-/** One tappable row: a 44px mark, a name and a line under it, and a check. */
-function PickRow({ active, onToggle, mark, name, sub }: { active: boolean; onToggle: () => void; mark: React.ReactNode; name: string; sub: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-pressed={active}
-      className={cn(
-        "flex w-full items-center gap-3.5 rounded-[18px] border p-[15px] text-left",
-        "transition-[transform,background-color,border-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.98]",
-        active ? "border-primary/55 bg-primary/8" : "border-line bg-surface hover:bg-surface-2/60",
-      )}
-    >
-      {mark}
-      <span className="min-w-0 flex-1">
-        <span className="block font-display text-[16px] font-bold text-ink">{name}</span>
-        <span className="mt-0.5 block truncate text-[12.5px] text-faint">{sub}</span>
-      </span>
-      <CheckMark active={active} />
-    </button>
-  );
-}
-
-function Mark({ color, children }: { color: string; children: React.ReactNode }) {
-  return (
-    <span className="grid h-11 w-11 flex-none place-items-center rounded-[13px] font-mono text-[10px] font-bold text-white" style={{ background: color }}>
-      {children}
-    </span>
-  );
-}
 
 /** `after` is where onboarding lands; `loginHref` where an unauthenticated
     visitor is bounced. The iOS app points both at /app so the flow never drops
@@ -152,7 +84,6 @@ export function SetupFlow({
     );
   }
 
-  const availableLeagues = leaguesForSports(sports);
   const canContinue = step === 0 ? sports.length > 0 : step === 1 ? leagues.length > 0 : step === 2 ? teams.length > 0 : true;
 
   function goNext() {
@@ -200,23 +131,8 @@ export function SetupFlow({
   const selectedCount = step === 0 ? sports.length : step === 1 ? leagues.length : step === 2 ? teams.length : players.length;
 
   function stepContent(i: number) {
-    if (i === 0)
-      return (
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          {SPORT_ORDER.map((s) => (
-            <PickRow key={s} active={sports.includes(s)} onToggle={() => toggleSport(s)} mark={<Mark color={SPORT_MARK[s]}><SportGlyph sport={s} /></Mark>} name={SPORTS[s].name} sub={SPORTS[s].leagues.map((l) => LEAGUES[l].name).join(" · ")} />
-          ))}
-        </div>
-      );
-    if (i === 1)
-      return (
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          {availableLeagues.map((l) => {
-            const meta = LEAGUES[l];
-            return <PickRow key={l} active={leagues.includes(l)} onToggle={() => toggleLeague(l)} mark={<Mark color={LEAGUE_MARK[l]}>{LEAGUE_TAG[l]}</Mark>} name={meta.name} sub={`${meta.fullName} · ${meta.inSeason ? "In season" : meta.seasonHint}`} />;
-          })}
-        </div>
-      );
+    if (i === 0) return <SportPicker selected={sports} onToggle={toggleSport} />;
+    if (i === 1) return <LeaguePicker sports={sports} selected={leagues} onToggle={toggleLeague} />;
     if (i === 2) return <TeamPicker leagues={leagues} selected={teams} onToggle={toggleTeam} />;
     return <PlayerPicker teams={teams} selected={players} onToggle={togglePlayer} />;
   }

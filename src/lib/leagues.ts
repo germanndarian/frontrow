@@ -114,3 +114,10 @@ export const LEAGUE_ORDER: LeagueId[] = ["nba", "mlb", "nhl", "nfl", "college-fo
 export function leaguesForSports(sports: SportId[]): LeagueId[] {
   return LEAGUE_ORDER.filter((id) => sports.includes(LEAGUES[id].sport));
 }
+
+/** Whether choosing leagues means anything for these sports: only when one of
+    them has more than one — football does, the rest don't. Setup only asks,
+    and Settings only offers the Leagues tab, when it does. */
+export function offersLeagueChoice(sports: SportId[]): boolean {
+  return sports.some((sport) => SPORTS[sport].leagues.length > 1);
+}
