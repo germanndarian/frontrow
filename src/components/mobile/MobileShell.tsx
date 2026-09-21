@@ -5,6 +5,7 @@ import { AnimatePresence } from "motion/react";
 import { usePreferences } from "@/lib/store";
 import { useTeamSlate } from "@/lib/queries";
 import { useCurrentUser } from "@/lib/auth";
+import { now } from "@/lib/clock";
 import type { FollowedPlayer, FollowedTeam } from "@/lib/types";
 import { StaleNotice } from "@/components/dashboard/StaleNotice";
 import { TabBar, TABS, type TabKey } from "./TabBar";
@@ -24,7 +25,7 @@ import { BracketSheet, PlayerSheet, ScheduleSheet } from "./sheets";
 type SheetState = { kind: "schedule" | "bracket"; team: FollowedTeam } | { kind: "player"; player: FollowedPlayer } | null;
 
 function todayLabel() {
-  return new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }).toUpperCase();
+  return new Date(now()).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" }).toUpperCase();
 }
 
 export function MobileShell({ onEditFollows }: { onEditFollows: () => void }) {

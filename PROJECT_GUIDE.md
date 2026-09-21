@@ -335,4 +335,7 @@ These are firm working rules (some are persisted across sessions):
   `supabase/migrations/000N_*.sql` *and* telling the maintainer to run it in the SQL Editor
   before the dependent code deploys.
 - **`inSeason` (in `leagues.ts`)** drives whether a league shows live data or a "season hasn't
-  started" state. As of mid-2026: MLB/NHL/NBA in season; NFL/NCAAF off-season.
+  started" state. It is worked out from the date (`seasons.ts`, windows that repeat every year),
+  so nothing needs updating by hand when a season starts. Demo mode runs on the demo dataset's
+  own evening — 7:30 PM ET, Friday 5 June 2026 (`clock.ts`) — so its seasons, weeks and
+  countdowns always match the games it holds.

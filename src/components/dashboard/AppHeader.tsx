@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { now } from "@/lib/clock";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { AccountMenu } from "./AccountMenu";
 
 function todayLabel() {
-  return new Date().toLocaleDateString(undefined, {
+  return new Date(now()).toLocaleDateString(undefined, {
     weekday: "long",
     month: "short",
     day: "numeric",

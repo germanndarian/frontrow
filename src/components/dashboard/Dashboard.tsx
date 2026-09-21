@@ -6,6 +6,7 @@ import { usePreferences, useHasHydrated } from "@/lib/store";
 import { useCurrentUser } from "@/lib/auth";
 import { useSettings, type SectionId } from "@/lib/settings";
 import { useScoreboard } from "@/lib/queries";
+import { now } from "@/lib/clock";
 import { LEAGUES } from "@/lib/leagues";
 import type { FollowedTeam } from "@/lib/types";
 import { AppHeader } from "./AppHeader";
@@ -23,7 +24,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
 
 function greeting() {
-  const h = new Date().getHours();
+  const h = new Date(now()).getHours();
   if (h < 5) return "Late night";
   if (h < 12) return "Good morning";
   if (h < 18) return "Good afternoon";

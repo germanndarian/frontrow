@@ -3,6 +3,7 @@
    footer lines a game card shows. No React, no fetching — unit-tested. */
 
 import { LEAGUES } from "@/lib/leagues";
+import { now as clockNow } from "@/lib/clock";
 import type { Game, LeagueId } from "@/lib/types";
 
 export type GameGroup = { key: Game["state"]; title: string; games: Game[] };
@@ -45,7 +46,7 @@ export function isFollowed(g: Game, followed: Set<string>): boolean {
 }
 
 /** "Today · 8:20 PM", "Tomorrow · 1:05 PM", or "Sep 10 · 8:20 PM". */
-export function whenLabel(iso: string, now: Date = new Date()): string {
+export function whenLabel(iso: string, now: Date = new Date(clockNow())): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });

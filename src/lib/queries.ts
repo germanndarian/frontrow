@@ -11,6 +11,7 @@ import type {
   ScheduleGame,
 } from "./types";
 import { LEAGUES } from "./leagues";
+import { now } from "./clock";
 import {
   getCatalogTeams,
   getPlayer,
@@ -101,7 +102,7 @@ export function useTeamSlate(teams: FollowedTeam[]) {
 
   const followed = new Set(teams.map((t) => `${t.league}:${t.teamId}`));
   // Captured once at mount; the scoreboard refetch keeps live games current.
-  const [now] = useState(() => Date.now());
+  const [asOf] = useState(now);
   const byId = new Map<string, Game>();
 
   // Live / today's games from the scoreboard (skip finished ones), my teams only.
@@ -119,7 +120,7 @@ export function useTeamSlate(teams: FollowedTeam[]) {
     const team = teams[i];
     if (!team || !q.data) return;
     const upcoming = q.data
-      .filter((sg) => sg.state === "pre" && new Date(sg.date).getTime() > now)
+      .filter((sg) => sg.state === "pre" && new Date(sg.date).getTime() > asOf)
       .slice(0, 6);
     for (const sg of upcoming) {
       if (!byId.has(sg.id)) byId.set(sg.id, scheduleToGame(sg, team));
