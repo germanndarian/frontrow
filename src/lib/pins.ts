@@ -39,9 +39,11 @@ export const usePins = create<PinState>()(
     {
       name: "frontrow.pinnedGames",
       storage: createJSONStorage(() => {
-        // No storage at all (some private modes, the server): keep pins in memory.
-        if (typeof localStorage === "undefined" || !localStorage) throw new Error("No storage");
-        return localStorage;
+        // No storage on the server, nor in some private modes: keep pins in
+        // memory. Asking `window` first keeps the server's own `localStorage`
+        // global (Node 25+) out of it.
+        if (typeof window === "undefined" || !window.localStorage) throw new Error("No storage");
+        return window.localStorage;
       }),
       partialize: (s) => ({ ids: s.ids }),
     },
