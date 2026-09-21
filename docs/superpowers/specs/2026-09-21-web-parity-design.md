@@ -1,7 +1,7 @@
 # The iPhone app's features, on the website — design
 
 **Date:** 2026-09-21
-**Status:** approved, pending implementation
+**Status:** built — one PR, a commit per piece
 
 ## Goal
 

@@ -107,8 +107,8 @@ src/
     providers.tsx           React Query + system providers
     dashboard/page.tsx      Auth-gated dashboard (redirects to /login or /setup)
     login/page.tsx          Email + Google + GitHub auth; reads ?mode=signup; back-to-home pill
-    setup/page.tsx          Four-step onboarding (sports → leagues → teams → players)
-    settings/page.tsx       Profile · appearance · dashboard · follows
+    setup/page.tsx          Onboarding: sports → (leagues, for football) → teams → players
+    settings/page.tsx       Profile · appearance · dashboard · what you follow
     auth/confirm/route.ts   Email-confirmation / OAuth callback handler
     api/                    Server route handlers (ESPN proxy + account):
       scoreboard/ team/[id]/ standings/[league]/ player/[id]/ playoffs/[league]/
@@ -128,24 +128,40 @@ src/
       normalize.ts          Defensive normalizers → lib/types shapes (incl. odds, conceded)
       bracket.ts            Playoff bracket normalization
     leagues.ts              LEAGUES/SPORTS config, inSeason flags, standings columns, ordering
+    seasons.ts              Each league's season window by date → inSeason + seasonHint
+    clock.ts                now(): the real time, or the demo evening's in demo mode
+    week.ts                 Week windows (last week → 16 ahead), labels, ranges, dates=
+    scores.ts               Board rules: what a filter shows, rows, sort (pinned → yours →
+                            time), counts, "NFL Week 3" note; card footers (also used by /app)
+    game-detail.ts          Game sheet: line-score columns, countdown, status, detail rows
+    field-graphic.ts        Football field: line positions, direction, endzone colours, words
+    game-link.ts            ?game=<id> in the address bar (history.replaceState)
+    pins.ts                 Pinned games (Zustand, persisted to localStorage)
+    players.ts              Players grouped by team; a player's profile rows
+    follows.ts              Settings' "What you follow" summary + preview
+    setup-steps.ts          Which setup steps a set of sports earns; how far the pager reaches
     types.ts                Normalized domain models (Game, TeamCard, Player, OddsLine, etc.)
     data.ts                 Client data facade → calls /api/* (or mock when NEXT_PUBLIC_USE_MOCK)
     data.mock.ts / mock.ts  Offline demo dataset
-    queries.ts              React Query hooks (useScoreboard, useTeamSlate, useTeamCard, ...)
+    queries.ts              React Query hooks (useScoreboard, useWeekScoreboard, useFreshGame,
+                            useTeamSlate, useTeamCard, ...)
     catalog.ts              Catalog (team/player picker) types
     bracket-layout.ts       Bracket geometry
     utils.ts                Misc helpers
     __tests__/              Vitest unit tests
   components/
     brand/Wordmark.tsx      Logo (stadium image via next/image)
-    dashboard/              AppHeader, Dashboard, ScoreboardStrip, GameCard, TeamCardView,
-                            PlayerCardView, StandingsCard, SeasonTrendCard, TeamStatCards,
-                            Section, LeagueFilter, MatchupCard, Bracket, BracketModal,
-                            ScheduleModal, AccountMenu
-    setup/                  SetupFlow, TeamPicker, PlayerPicker, CheckMark
+    dashboard/              AppHeader, Dashboard, WeekBoard, GameCard, GameModal (+ LineScore,
+                            FieldGraphic, Countdown), LiveGamesModal, TeamCardView,
+                            PlayersSection, PlayerCardView, PlayerModal, StandingsCard,
+                            SeasonTrendCard, TeamStatCards, Section, LeagueFilter, MatchupCard,
+                            Bracket, BracketModal, ScheduleModal, AccountMenu
+    settings/               FollowsPanel, FollowsListModal, FollowEditorModal, FollowRows
+    setup/                  SetupFlow, SportLeaguePickers, TeamPicker, PlayerPicker,
+                            SetupDone, DrawnCheck, CheckMark
     system/                 AuthBridge (boots auth), ThemeController (applies settings to <html>)
-    ui/                     Card, Badge, Modal, Skeleton, Sparkline, States, TeamLogo, Headshot,
-                            SearchInput
+    ui/                     Card, Badge, Modal, SheetFrame, HScroller, Skeleton, Sparkline,
+                            States, TeamLogo, Headshot, SearchInput
 supabase/migrations/        SQL schema + RLS (applied manually)
 docs/                       Design specs (e.g. playoff bracket)
 public/                     Static assets (logo, etc.)
@@ -167,12 +183,16 @@ public/                     Static assets (logo, etc.)
   `useScoreboard`'s `refetchInterval` gated on `hasLiveGame`).
 - **Normalizers are defensive:** an upstream ESPN field change degrades to a placeholder instead
   of crashing.
-- **Key ESPN quirk:** the `/scoreboard` endpoint returns **only today's games**. To show a
-  team's *next* game days out, `useTeamSlate` (in `src/lib/queries.ts`) merges live/today games
-  from the scoreboard with **future games from each followed team's full-season schedule**,
-  dedupes by id, and sorts chronologically. This is why "Live & Upcoming" correctly orders games
-  across leagues with different season calendars (the bug where "Braves had games before the NFL
-  season" came from relying on the scoreboard alone).
+- **Key ESPN quirk:** ESPN's `/scoreboard` returns **only today's games** unless asked for a
+  date. The dashboard's "Live & Upcoming" is a week at a time, like the iPhone app: it asks
+  `/api/scoreboard?leagues=…&dates=YYYYMMDD-YYYYMMDD` (`useWeekScoreboard`), which fetches the
+  months the window touches, slices it on the US Eastern day and lays today's 20-second board
+  over it. The league filter decides what's on it — "All" is your teams' games, a league is that
+  league in full with yours marked and first. `useTeamSlate` (today's board plus each followed
+  team's schedule) still serves the Done screen and `/app`.
+- **Open sheets follow the board.** A game sheet looks its game up by id in whatever
+  scoreboard query is freshest (`useFreshGame`), so it moves with the page's own 30-second
+  poll rather than starting another.
 - **Theming:** the app is almost entirely driven by semantic OKLCH tokens (`--color-bg`,
   `--color-surface`, `--color-ink`, `--color-primary`, …). `applySettings()` (in `settings.ts`,
   applied by `ThemeController`) writes CSS vars + `data-*` attributes (e.g.
@@ -319,11 +339,14 @@ These are firm working rules (some are persisted across sessions):
   favors a brief explanatory comment block at the top of non-trivial modules.
 - **Tokens over hardcoded colors.** Style via the OKLCH semantic tokens so theming keeps working;
   the only hardcoded colors are team-color fallbacks and scrims.
-- **React 19 / hooks purity:** don't call `Date.now()` (or other impure reads) directly in
-  render — seed with `useState(() => Date.now())` (see `useTeamSlate`). Don't set state in an
+- **Read the time from `clock.ts`,** not `Date.now()`: in demo mode it's the demo evening's, and
+  weeks, countdowns and seasons all depend on it. The browser tests also pin `en-US` and New
+  York time (`playwright.config.ts`), so where a week starts doesn't depend on the machine.
+- **React 19 / hooks purity:** don't call `now()` (or other impure reads) directly in
+  render — seed with `useState(now)` (see `useTeamSlate`, `Countdown`). Don't set state in an
   effect to read URL params — read `useSearchParams()` and seed `useState`, wrapping in
   `<Suspense>` (see `login/page.tsx`).
-- **ESPN scoreboard = today only.** Use schedule endpoints for future games (§5).
+- **ESPN scoreboard = today only,** unless you pass `dates` — the week board does (§5).
 - **ESPN's `dates=` takes a day or a month, never a range.** `dates=20260914-20260920`
   answered for years and now returns 400 "Failed to get events endpoint." on every league
   and on both the `site.api` and `site.web` hosts. Ask for the months a window touches
