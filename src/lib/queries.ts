@@ -18,7 +18,7 @@ import type {
 } from "./types";
 import { LEAGUES } from "./leagues";
 import { now } from "./clock";
-import { weekQuery, type WeekWindow } from "./week";
+import { firstDayOfWeek, weekQuery, weekWindow, type WeekWindow } from "./week";
 import {
   getCatalogTeams,
   getPlayer,
@@ -57,13 +57,28 @@ export function useScoreboard(leagues: LeagueId[]) {
 export function useWeekScoreboard(leagues: LeagueId[], week: WeekWindow) {
   const dates = weekQuery(week);
   return useQuery({
-    queryKey: ["scoreboard", [...leagues].sort(), dates],
+    queryKey: weekScoreboardKey(leagues, dates),
     queryFn: () => getScoreboard(leagues, dates),
     refetchInterval: (query) =>
       week.offset === 0 && hasLiveGame(query.state.data) ? LIVE_POLL_MS : false,
     placeholderData: (previous, previousQuery) =>
       previousQuery?.queryKey[2] === dates ? previous : undefined,
     enabled: leagues.length > 0,
+  });
+}
+
+function weekScoreboardKey(leagues: LeagueId[], dates: string) {
+  return ["scoreboard", [...leagues].sort(), dates];
+}
+
+/** Fetch this week's board ahead of time — the Done screen warms it while it's
+    read, so the dashboard opens on games rather than placeholders. */
+export function prefetchThisWeek(client: QueryClient, leagues: LeagueId[]) {
+  if (leagues.length === 0) return;
+  const dates = weekQuery(weekWindow(new Date(now()), 0, firstDayOfWeek()));
+  void client.prefetchQuery({
+    queryKey: weekScoreboardKey(leagues, dates),
+    queryFn: () => getScoreboard(leagues, dates),
   });
 }
 
