@@ -12,13 +12,14 @@ import { GAME_PARAM, setGameParam } from "@/lib/game-link";
 import { usePins } from "@/lib/pins";
 import { now } from "@/lib/clock";
 import { LEAGUES } from "@/lib/leagues";
-import type { FollowedTeam, Game } from "@/lib/types";
+import type { FollowedPlayer, FollowedTeam, Game } from "@/lib/types";
 import { AppHeader } from "./AppHeader";
 import { Section } from "./Section";
 import { LeagueFilter, type LeagueFilterValue } from "./LeagueFilter";
 import { WeekBoard } from "./WeekBoard";
 import { TeamCardView } from "./TeamCardView";
-import { PlayerCardView } from "./PlayerCardView";
+import { PlayersSection } from "./PlayersSection";
+import { PlayerModal } from "./PlayerModal";
 import { StandingsCard } from "./StandingsCard";
 import { SeasonTrendCard } from "./SeasonTrendCard";
 import { TeamStatCards } from "./TeamStatCards";
@@ -111,6 +112,12 @@ export function Dashboard() {
     setSnapshot(shown);
     setGameParam(null);
   }, []);
+  // The player sheet keeps its player while it animates away.
+  const [playerSheet, setPlayerSheet] = useState<{ follow: FollowedPlayer | null; open: boolean }>({
+    follow: null,
+    open: false,
+  });
+
   // One live game opens straight away; several open the list to pick from.
   function openLive() {
     if (liveGames.length === 1) openGame(liveGames[0]);
@@ -283,11 +290,11 @@ export function Dashboard() {
             {/* Players */}
             {!isHidden("players") && shownPlayers.length > 0 && (
               <Section title="Your Players" count={shownPlayers.length} className="rise">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {shownPlayers.map((p) => (
-                    <PlayerCardView key={p.id} follow={p} />
-                  ))}
-                </div>
+                <PlayersSection
+                  players={shownPlayers}
+                  teams={teams}
+                  onOpen={(follow) => setPlayerSheet({ follow, open: true })}
+                />
               </Section>
             )}
 
@@ -314,6 +321,11 @@ export function Dashboard() {
         </footer>
       </main>
 
+      <PlayerModal
+        open={playerSheet.open}
+        follow={playerSheet.follow}
+        onClose={() => setPlayerSheet((sheet) => ({ ...sheet, open: false }))}
+      />
       <LiveGamesModal
         open={liveList.open}
         games={liveList.games}

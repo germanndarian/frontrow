@@ -42,7 +42,9 @@ function StatTile({ stat }: { stat: PlayerSeasonStat }) {
   );
 }
 
-export function PlayerCardView({ follow }: { follow: FollowedPlayer }) {
+/** A followed player's season at a glance. With `onOpen`, the whole card opens
+    the player's sheet — not just the name at the top of it. */
+export function PlayerCardView({ follow, onOpen }: { follow: FollowedPlayer; onOpen?: () => void }) {
   const { data, isPending, isError, refetch } = usePlayer(follow.league, follow.id);
 
   if (isPending) {
@@ -78,7 +80,7 @@ export function PlayerCardView({ follow }: { follow: FollowedPlayer }) {
   const recentSlice = data.recent.entries.slice(0, 4);
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={cn("relative overflow-hidden", onOpen && "transition-[border-color] duration-200 hover:border-line")}>
       <div className="flex items-center gap-3 px-4 pt-4">
         <Headshot src={data.headshot} name={data.fullName} color={data.color} size={56} />
         <div className="min-w-0 flex-1">
@@ -156,6 +158,17 @@ export function PlayerCardView({ follow }: { follow: FollowedPlayer }) {
         </div>
       </div>
         </>
+      )}
+
+      {/* The whole card is the target, laid over the content so the stats stay
+          readable to a screen reader as they are. */}
+      {onOpen && (
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={`Open ${data.fullName}`}
+          className="absolute inset-0 rounded-lg"
+        />
       )}
     </Card>
   );
