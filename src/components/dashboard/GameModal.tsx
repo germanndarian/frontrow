@@ -3,6 +3,7 @@
 import type { Game, GameSide } from "@/lib/types";
 import { LEAGUES } from "@/lib/leagues";
 import { detailRows, hasLineScore, isLeading, statusLine } from "@/lib/game-detail";
+import { usePins } from "@/lib/pins";
 import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
 import { SheetFrame } from "@/components/ui/SheetFrame";
@@ -22,13 +23,10 @@ export function GameModal({
   open,
   game,
   onClose,
-  action,
 }: {
   open: boolean;
   game: Game | null;
   onClose: () => void;
-  /** A control for the header, beside the close button. */
-  action?: React.ReactNode;
 }) {
   return (
     <Modal open={open && !!game} onClose={onClose} labelledBy="game-sheet-title">
@@ -37,7 +35,7 @@ export function GameModal({
           titleId="game-sheet-title"
           title={LEAGUES[game.league].name}
           subtitle={statusLine(game)}
-          action={action}
+          action={<PinButton game={game} />}
           onClose={onClose}
           closeLabel="Close game"
           bodyClassName="space-y-3 bg-bg/50 p-4"
@@ -57,6 +55,31 @@ export function GameModal({
         </SheetFrame>
       )}
     </Modal>
+  );
+}
+
+/** Pin a game to the front of its row in its league's view, or let it go. */
+function PinButton({ game }: { game: Game }) {
+  const pinned = usePins((s) => s.ids.includes(game.id));
+  const toggle = usePins((s) => s.toggle);
+  return (
+    <button
+      type="button"
+      onClick={() => toggle(game.id)}
+      aria-pressed={pinned}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] font-semibold",
+        "transition-[transform,background-color,border-color,color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96]",
+        pinned
+          ? "border-gold/50 bg-gold/12 text-gold"
+          : "border-line/70 bg-bg-2/50 text-muted hover:border-line hover:text-ink",
+      )}
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill={pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden>
+        <path d="M16 3a1 1 0 0 1 .7 1.7L15 6.4v4.2l2.7 2.7a1 1 0 0 1-.7 1.7H13v5a1 1 0 0 1-2 0v-5H7a1 1 0 0 1-.7-1.7L9 10.6V6.4L7.3 4.7A1 1 0 0 1 8 3h8Z" />
+      </svg>
+      {pinned ? "Unpin" : "Pin to top"}
+    </button>
   );
 }
 

@@ -9,6 +9,7 @@ import { useSettings, type SectionId } from "@/lib/settings";
 import { useFreshGame, useScoreboard, useWeekScoreboard } from "@/lib/queries";
 import { firstDayOfWeek, weekLabel, weekRange, weekWindows } from "@/lib/week";
 import { GAME_PARAM, setGameParam } from "@/lib/game-link";
+import { usePins } from "@/lib/pins";
 import { now } from "@/lib/clock";
 import { LEAGUES } from "@/lib/leagues";
 import type { FollowedTeam, Game } from "@/lib/types";
@@ -27,8 +28,6 @@ import { LiveGamesModal } from "./LiveGamesModal";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
-
-const NO_PINS = new Set<string>();
 
 function greeting() {
   const h = new Date(now()).getHours();
@@ -124,6 +123,18 @@ export function Dashboard() {
   const [weekOffset, setWeekOffset] = useState(0);
   const week = weeks.find((w) => w.offset === weekOffset) ?? weeks[1];
   const board = useWeekScoreboard(leagues, week);
+
+  // Pins only reorder a league's view. A pinned game that has finished has
+  // nothing left to say, so any board that shows it final lets it go.
+  const pinIds = usePins((s) => s.ids);
+  const pinned = useMemo(() => new Set(pinIds), [pinIds]);
+  const forgetFinished = usePins((s) => s.forgetFinished);
+  useEffect(() => {
+    if (board.data) forgetFinished(board.data);
+  }, [board.data, forgetFinished]);
+  useEffect(() => {
+    if (scoreboard.data) forgetFinished(scoreboard.data);
+  }, [scoreboard.data, forgetFinished]);
 
   const visibleLeagues = useMemo(
     () => (selected === "all" ? leagues : leagues.filter((l) => l === selected)),
@@ -223,7 +234,7 @@ export function Dashboard() {
                   board={board}
                   filter={selected}
                   followedKeys={followedKeys}
-                  pinned={NO_PINS}
+                  pinned={pinned}
                   onOpen={openGame}
                 />
               </Section>
