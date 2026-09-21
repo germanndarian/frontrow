@@ -18,6 +18,7 @@ import type {
 } from "./types";
 import { LEAGUES } from "./leagues";
 import { now } from "./clock";
+import { weekQuery, type WeekWindow } from "./week";
 import {
   getCatalogTeams,
   getPlayer,
@@ -42,6 +43,26 @@ export function useScoreboard(leagues: LeagueId[]) {
       hasLiveGame(query.state.data) ? LIVE_POLL_MS : false,
     // Keep the last good board visible through a refetch / momentary ESPN hiccup.
     placeholderData: keepPreviousData,
+    enabled: leagues.length > 0,
+  });
+}
+
+/**
+ * One week of the scoreboard for the leagues you follow — the dashboard's
+ * board. It refreshes only while it's showing this week and a game is live,
+ * and keeps the board on screen through a refresh, but never carries one
+ * week's games over to another week's heading: a new week shows placeholders
+ * until it arrives.
+ */
+export function useWeekScoreboard(leagues: LeagueId[], week: WeekWindow) {
+  const dates = weekQuery(week);
+  return useQuery({
+    queryKey: ["scoreboard", [...leagues].sort(), dates],
+    queryFn: () => getScoreboard(leagues, dates),
+    refetchInterval: (query) =>
+      week.offset === 0 && hasLiveGame(query.state.data) ? LIVE_POLL_MS : false,
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[2] === dates ? previous : undefined,
     enabled: leagues.length > 0,
   });
 }

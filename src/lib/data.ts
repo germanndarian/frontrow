@@ -27,10 +27,12 @@ async function get<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-export async function getScoreboard(leagues: LeagueId[]): Promise<Game[]> {
+/** Today's games, or a window's — "20260921-20260927" — when `dates` is given. */
+export async function getScoreboard(leagues: LeagueId[], dates?: string): Promise<Game[]> {
   if (leagues.length === 0) return [];
-  if (USE_MOCK) return (await import("./data.mock")).getScoreboard(leagues);
-  return get<Game[]>(`/api/scoreboard?leagues=${leagues.join(",")}`);
+  if (USE_MOCK) return (await import("./data.mock")).getScoreboard(leagues, dates);
+  const range = dates ? `&dates=${dates}` : "";
+  return get<Game[]>(`/api/scoreboard?leagues=${leagues.join(",")}${range}`);
 }
 
 export async function getTeamCard(

@@ -6,7 +6,7 @@ import { useTeamCard } from "@/lib/queries";
 import { LEAGUES } from "@/lib/leagues";
 import type { FollowedTeam, TeamCard } from "@/lib/types";
 import { currentStreak, mean, parseRecord, scoreNoun, winPct } from "@/lib/team-stats";
-import { whenLabel } from "@/lib/mobile-scores";
+import { whenLabel } from "@/lib/scores";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 import { EmptyState } from "@/components/ui/States";
 import { Bars, Eyebrow, Panel, Rule, StatTile, TeamCardSkeleton } from "./primitives";

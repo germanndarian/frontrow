@@ -5,7 +5,7 @@ import { usePreferences } from "@/lib/store";
 import { useScoreboard, useTeamSlate } from "@/lib/queries";
 import { LEAGUES, LEAGUE_ORDER } from "@/lib/leagues";
 import type { Game, GameSide, LeagueId } from "@/lib/types";
-import { filterLeague, followKey, gameFoot, groupGames, isFollowed, leagueLine, mergeSlate } from "@/lib/mobile-scores";
+import { filterLeague, followKey, gameFoot, groupGames, isFollowed, leagueLine, mergeSlate } from "@/lib/scores";
 import { EmptyState, ErrorState } from "@/components/ui/States";
 import { Chip, ChipRow, GameRowSkeleton, Mark, Rule } from "./primitives";
 import { cn } from "@/lib/utils";

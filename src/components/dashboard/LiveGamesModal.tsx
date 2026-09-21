@@ -9,8 +9,6 @@ import { GameCard } from "./GameCard";
 /* When more than one of your games is on at once: pick which to watch.
    Picking one swaps this list for that game's sheet. */
 
-const NONE = new Set<string>();
-
 export function LiveGamesModal({
   open,
   games,
@@ -46,5 +44,5 @@ export function LiveGamesModal({
 function LiveCard({ game, onPick }: { game: Game; onPick: (game: Game) => void }) {
   const fresh = useFreshGame(game.id, game) ?? game;
   // Every game here is one of yours, so nothing needs marking as yours.
-  return <GameCard game={fresh} followedKeys={NONE} onOpen={onPick} className="w-full" />;
+  return <GameCard game={fresh} onOpen={onPick} className="w-full" />;
 }

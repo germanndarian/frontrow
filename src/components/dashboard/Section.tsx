@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 export function Section({
   title,
   count,
+  detail,
   action,
   children,
   className,
@@ -15,6 +16,8 @@ export function Section({
 }: {
   title: string;
   count?: number;
+  /** A short note beside the title, e.g. which week is showing. */
+  detail?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -28,6 +31,11 @@ export function Section({
           {count != null && (
             <span className="tnum text-[13px] font-semibold tracking-normal text-faint">
               {count}
+            </span>
+          )}
+          {detail && (
+            <span className="text-[12.5px] font-medium normal-case tracking-normal text-faint">
+              {detail}
             </span>
           )}
         </h2>

@@ -6,7 +6,8 @@ import { useSearchParams } from "next/navigation";
 import { usePreferences, useHasHydrated } from "@/lib/store";
 import { useCurrentUser } from "@/lib/auth";
 import { useSettings, type SectionId } from "@/lib/settings";
-import { useFreshGame, useScoreboard } from "@/lib/queries";
+import { useFreshGame, useScoreboard, useWeekScoreboard } from "@/lib/queries";
+import { firstDayOfWeek, weekLabel, weekRange, weekWindows } from "@/lib/week";
 import { GAME_PARAM, setGameParam } from "@/lib/game-link";
 import { now } from "@/lib/clock";
 import { LEAGUES } from "@/lib/leagues";
@@ -14,7 +15,7 @@ import type { FollowedTeam, Game } from "@/lib/types";
 import { AppHeader } from "./AppHeader";
 import { Section } from "./Section";
 import { LeagueFilter, type LeagueFilterValue } from "./LeagueFilter";
-import { ScoreboardStrip } from "./ScoreboardStrip";
+import { WeekBoard } from "./WeekBoard";
 import { TeamCardView } from "./TeamCardView";
 import { PlayerCardView } from "./PlayerCardView";
 import { StandingsCard } from "./StandingsCard";
@@ -26,6 +27,8 @@ import { LiveGamesModal } from "./LiveGamesModal";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
+
+const NO_PINS = new Set<string>();
 
 function greeting() {
   const h = new Date(now()).getHours();
@@ -115,6 +118,13 @@ export function Dashboard() {
     else if (liveGames.length > 1) setLiveList({ games: liveGames, open: true });
   }
 
+  // The week on the board. The windows are worked out once, when the dashboard
+  // opens, from the reader's own calendar.
+  const [weeks] = useState(() => weekWindows(new Date(now()), firstDayOfWeek()));
+  const [weekOffset, setWeekOffset] = useState(0);
+  const week = weeks.find((w) => w.offset === weekOffset) ?? weeks[1];
+  const board = useWeekScoreboard(leagues, week);
+
   const visibleLeagues = useMemo(
     () => (selected === "all" ? leagues : leagues.filter((l) => l === selected)),
     [selected, leagues],
@@ -180,7 +190,8 @@ export function Dashboard() {
               )}
             </p>
           </div>
-          {leagues.length > 1 && (
+          {/* Even with one league: picking it is how you see that league in full. */}
+          {leagues.length > 0 && (
             <LeagueFilter leagues={leagues} value={selected} onChange={setSelected} />
           )}
         </div>
@@ -204,11 +215,15 @@ export function Dashboard() {
           <div className="space-y-10">
             {/* Live & upcoming */}
             {!isHidden("scoreboard") && (
-              <Section title="Live & Upcoming" className="rise">
-                <ScoreboardStrip
-                  teams={teams}
-                  only={selected === "all" ? undefined : selected}
+              <Section title="Live & Upcoming" detail={`${weekLabel(week)} · ${weekRange(week)}`} className="rise">
+                <WeekBoard
+                  weeks={weeks}
+                  week={week}
+                  onWeek={setWeekOffset}
+                  board={board}
+                  filter={selected}
                   followedKeys={followedKeys}
+                  pinned={NO_PINS}
                   onOpen={openGame}
                 />
               </Section>
@@ -296,7 +311,7 @@ export function Dashboard() {
       />
       {/* Reading the address bar needs a Suspense boundary of its own. */}
       <Suspense fallback={null}>
-        <GameSheet snapshot={snapshot} boardReady={scoreboard.isSuccess} onClose={closeGame} />
+        <GameSheet snapshot={snapshot} boardReady={board.isSuccess} onClose={closeGame} />
       </Suspense>
     </>
   );

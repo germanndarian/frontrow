@@ -1,5 +1,5 @@
 import type { Game, GameSide, LeagueId } from "./types";
-import { whenLabel } from "./mobile-scores";
+import { whenLabel } from "./scores";
 
 /* What a game's sheet says, apart from the field drawing: the line score's
    columns, the countdown to the start, the status line and the details list.
