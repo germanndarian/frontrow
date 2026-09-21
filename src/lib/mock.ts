@@ -66,6 +66,7 @@ export const GAMES: Game[] = [
     away: side({
       teamId: "2",
       abbreviation: "BOS",
+      linescores: [0, 1, 0, 2, 0, 0, 0],
       displayName: "Boston Red Sox",
       shortName: "Red Sox",
       logo: logo("mlb", "bos"),
@@ -76,6 +77,7 @@ export const GAMES: Game[] = [
     home: side({
       teamId: "10",
       abbreviation: "NYY",
+      linescores: [1, 0, 0, 0, 2, 1, 0],
       displayName: "New York Yankees",
       shortName: "Yankees",
       logo: logo("mlb", "nyy"),
@@ -99,6 +101,7 @@ export const GAMES: Game[] = [
     away: side({
       teamId: "19",
       abbreviation: "LAD",
+      linescores: [0, 1, 0, 1, 0],
       displayName: "Los Angeles Dodgers",
       shortName: "Dodgers",
       logo: logo("mlb", "lad"),
@@ -109,6 +112,7 @@ export const GAMES: Game[] = [
     home: side({
       teamId: "25",
       abbreviation: "SD",
+      linescores: [2, 0, 0, 0],
       displayName: "San Diego Padres",
       shortName: "Padres",
       logo: logo("mlb", "sd"),
@@ -128,6 +132,7 @@ export const GAMES: Game[] = [
     away: side({
       teamId: "21",
       abbreviation: "NYM",
+      linescores: [0, 0, 1, 0, 0, 1, 0, 0, 0],
       displayName: "New York Mets",
       shortName: "Mets",
       logo: logo("mlb", "nym"),
@@ -138,6 +143,7 @@ export const GAMES: Game[] = [
     home: side({
       teamId: "22",
       abbreviation: "PHI",
+      linescores: [2, 0, 0, 3, 0, 0, 1, 0],
       displayName: "Philadelphia Phillies",
       shortName: "Phillies",
       logo: logo("mlb", "phi"),
@@ -190,6 +196,7 @@ export const GAMES: Game[] = [
     away: side({
       teamId: "26",
       abbreviation: "FLA",
+      linescores: [1, 0],
       displayName: "Florida Panthers",
       shortName: "Panthers",
       logo: logo("nhl", "fla"),
@@ -200,6 +207,7 @@ export const GAMES: Game[] = [
     home: side({
       teamId: "6",
       abbreviation: "EDM",
+      linescores: [1, 1],
       displayName: "Edmonton Oilers",
       shortName: "Oilers",
       logo: logo("nhl", "edm"),
@@ -219,6 +227,7 @@ export const GAMES: Game[] = [
     away: side({
       teamId: "25",
       abbreviation: "DAL",
+      linescores: [1, 1, 1, 0],
       displayName: "Dallas Stars",
       shortName: "Stars",
       logo: logo("nhl", "dal"),
@@ -229,6 +238,7 @@ export const GAMES: Game[] = [
     home: side({
       teamId: "17",
       abbreviation: "COL",
+      linescores: [0, 2, 1, 1],
       displayName: "Colorado Avalanche",
       shortName: "Avalanche",
       logo: logo("nhl", "col"),

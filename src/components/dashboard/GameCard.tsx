@@ -68,12 +68,27 @@ function Row({
   );
 }
 
+/** What a screen reader hears for the card: who, the score and the clock, or
+    who and when. */
+function cardLabel(game: Game): string {
+  if (game.state === "pre") {
+    return `${game.away.shortName} at ${game.home.shortName}, ${relativeTime(game.date)}`;
+  }
+  const status = game.state === "in" ? game.shortDetail || "live" : game.shortDetail || "final";
+  return `${game.away.shortName} ${game.away.score ?? 0}, ${game.home.shortName} ${game.home.score ?? 0}, ${status}`;
+}
+
+/** One game. The whole card is a button that opens the game's sheet. */
 export function GameCard({
   game,
   followedKeys,
+  onOpen,
+  className,
 }: {
   game: Game;
   followedKeys: Set<string>;
+  onOpen?: (game: Game) => void;
+  className?: string;
 }) {
   const league = LEAGUES[game.league];
   const homeFollowed = followedKeys.has(`${game.league}:${game.home.teamId}`);
@@ -90,11 +105,15 @@ export function GameCard({
       : false;
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => onOpen?.(game)}
+      aria-label={cardLabel(game)}
       className={cn(
-        "flex w-[270px] shrink-0 snap-start flex-col rounded-md border bg-surface/70 p-3.5",
-        "transition-colors duration-200",
-        isFollowed ? "border-primary/35" : "border-line/60",
+        "flex w-[270px] shrink-0 snap-start flex-col rounded-md border bg-surface/70 p-3.5 text-left",
+        "transition-[border-color,background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-surface active:scale-[0.99]",
+        isFollowed ? "border-primary/35 hover:border-primary/55" : "border-line/60 hover:border-line",
+        className,
       )}
     >
       <div className="mb-2.5 flex items-center justify-between">
@@ -161,6 +180,6 @@ export function GameCard({
           </div>
         )}
       </div>
-    </div>
+    </button>
   );
 }

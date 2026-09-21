@@ -1,5 +1,6 @@
 import type {
   Game,
+  GameSide,
   LeagueId,
   PlayoffBracket,
   PlayoffSide,
@@ -27,19 +28,26 @@ function jitter() {
   return LATENCY[0] + Math.random() * (LATENCY[1] - LATENCY[0]);
 }
 
+/** A run in the period being played: the line score moves with the score. */
+function score(side: GameSide) {
+  side.score = (side.score ?? 0) + 1;
+  const periods = side.linescores;
+  if (periods?.length) periods[periods.length - 1] += 1;
+}
+
 function tickLiveGames(games: Game[]): Game[] {
   return games.map((g) => {
     if (g.state !== "in") return g;
     const roll = Math.random();
     const next: Game = structuredClone(g);
     if (roll < 0.18 && next.home.score != null) {
-      next.home.score += 1;
+      score(next.home);
       next.lastPlay =
         g.league === "nhl"
           ? `${next.home.shortName} score! Tip-in off the rush`
           : `${next.home.shortName} plate a run on a sac fly`;
     } else if (roll < 0.34 && next.away.score != null) {
-      next.away.score += 1;
+      score(next.away);
       next.lastPlay =
         g.league === "nhl"
           ? `${next.away.shortName} answer on the power play`

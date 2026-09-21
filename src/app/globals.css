@@ -41,6 +41,10 @@
   --color-loss: oklch(0.66 0.205 23);
   --color-gold: oklch(0.81 0.13 84);
 
+  /* The football field on a live game's sheet — the graphic's own turf, darker
+     at night like the broadcasts' */
+  --color-turf: #235339;
+
   /* Typography — set from next/font variables on <html> */
   --font-display: var(--font-archivo), "Archivo", system-ui, sans-serif;
   --font-sans: var(--font-hanken), "Hanken Grotesk", system-ui, sans-serif;
@@ -93,6 +97,8 @@ html[data-appearance="light"] {
   --color-win: oklch(0.6 0.16 158);
   --color-loss: oklch(0.58 0.21 25);
   --color-gold: oklch(0.66 0.13 74);
+
+  --color-turf: #3d8b57;
 }
 
 @layer base {

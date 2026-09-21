@@ -45,7 +45,7 @@ from `Features`.
 | `week.ts` | The week windows: last week to sixteen weeks ahead, their labels ("Last week", "This week", "Next week", "Oct 5"), ranges ("Sep 21 – 27", "Sep 28 – Oct 4") and `dates` query strings. A week starts on the browser locale's first day, Monday when the browser doesn't say — the way the app follows the phone's calendar |
 | `scores.ts` | Today's `mobile-scores.ts`, renamed now the website uses it. Gains the board rules: which games a filter shows, the groups and their order, the counts, the week note, when marks and pins apply |
 | `seasons.ts` | Each league's season window, and what to say outside it |
-| `game-detail.ts` | Line-score columns (nine innings, three periods or four quarters, then `OT`, `OT2`), the total's label (`R` or `T`), the countdown text, the details rows |
+| `game-detail.ts` | Line-score columns (innings keep counting into extras; three periods or four quarters, then `OT`, `OT2`), the total's label (`R` or `T`), the countdown text, the details rows |
 | `field-graphic.ts` | Where each line of the field goes, which way the ball faces, the endzone colours, the down-and-distance headline and the last-play line |
 | `pins.ts` | The pinned games, kept in the browser |
 | `players.ts` | Players grouped by team, and the rows of a player's profile |

@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { usePreferences, useHasHydrated } from "@/lib/store";
 import { useCurrentUser } from "@/lib/auth";
 import { useSettings, type SectionId } from "@/lib/settings";
-import { useScoreboard } from "@/lib/queries";
+import { useFreshGame, useScoreboard } from "@/lib/queries";
+import { GAME_PARAM, setGameParam } from "@/lib/game-link";
 import { now } from "@/lib/clock";
 import { LEAGUES } from "@/lib/leagues";
-import type { FollowedTeam } from "@/lib/types";
+import type { FollowedTeam, Game } from "@/lib/types";
 import { AppHeader } from "./AppHeader";
 import { Section } from "./Section";
 import { LeagueFilter, type LeagueFilterValue } from "./LeagueFilter";
@@ -19,6 +21,8 @@ import { StandingsCard } from "./StandingsCard";
 import { SeasonTrendCard } from "./SeasonTrendCard";
 import { TeamStatCards } from "./TeamStatCards";
 import { StaleNotice } from "./StaleNotice";
+import { GameModal } from "./GameModal";
+import { LiveGamesModal } from "./LiveGamesModal";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
@@ -78,13 +82,38 @@ export function Dashboard() {
   // Shared scoreboard query (header live count + strip read the same cache).
   // Count only the user's own teams that are live, matching the strip + copy.
   const scoreboard = useScoreboard(leagues);
-  const liveCount =
-    scoreboard.data?.filter(
-      (g) =>
-        g.state === "in" &&
-        (followedKeys.has(`${g.league}:${g.home.teamId}`) ||
-          followedKeys.has(`${g.league}:${g.away.teamId}`)),
-    ).length ?? 0;
+  const liveGames = useMemo(
+    () =>
+      scoreboard.data?.filter(
+        (g) =>
+          g.state === "in" &&
+          (followedKeys.has(`${g.league}:${g.home.teamId}`) ||
+            followedKeys.has(`${g.league}:${g.away.teamId}`)),
+      ) ?? [],
+    [scoreboard.data, followedKeys],
+  );
+  const liveCount = liveGames.length;
+
+  // The game sheet. Which game is open lives in the address bar (?game=), so a
+  // link opens it; `snapshot` is the copy the card was holding when clicked,
+  // for a game no scoreboard carries.
+  const [snapshot, setSnapshot] = useState<Game | null>(null);
+  const [liveList, setLiveList] = useState<{ games: Game[]; open: boolean }>({ games: [], open: false });
+  const openGame = useCallback((game: Game) => {
+    setLiveList((list) => ({ ...list, open: false }));
+    setSnapshot(game);
+    setGameParam(game.id);
+  }, []);
+  const closeGame = useCallback((shown: Game | null) => {
+    // Keep what was on screen, so it stays there while the sheet animates away.
+    setSnapshot(shown);
+    setGameParam(null);
+  }, []);
+  // One live game opens straight away; several open the list to pick from.
+  function openLive() {
+    if (liveGames.length === 1) openGame(liveGames[0]);
+    else if (liveGames.length > 1) setLiveList({ games: liveGames, open: true });
+  }
 
   const visibleLeagues = useMemo(
     () => (selected === "all" ? leagues : leagues.filter((l) => l === selected)),
@@ -128,7 +157,7 @@ export function Dashboard() {
 
   return (
     <>
-      <AppHeader liveCount={liveCount} />
+      <AppHeader liveCount={liveCount} onLive={openLive} />
 
       <main className="mx-auto max-w-6xl px-4 pb-24 pt-7 sm:px-6">
         <StaleNotice />
@@ -180,6 +209,7 @@ export function Dashboard() {
                   teams={teams}
                   only={selected === "all" ? undefined : selected}
                   followedKeys={followedKeys}
+                  onOpen={openGame}
                 />
               </Section>
             )}
@@ -257,6 +287,44 @@ export function Dashboard() {
           data, refreshed as games unfold.
         </footer>
       </main>
+
+      <LiveGamesModal
+        open={liveList.open}
+        games={liveList.games}
+        onPick={openGame}
+        onClose={() => setLiveList((list) => ({ ...list, open: false }))}
+      />
+      {/* Reading the address bar needs a Suspense boundary of its own. */}
+      <Suspense fallback={null}>
+        <GameSheet snapshot={snapshot} boardReady={scoreboard.isSuccess} onClose={closeGame} />
+      </Suspense>
     </>
   );
+}
+
+/**
+ * The open game's sheet, driven by `?game=` in the address bar. The game is
+ * the freshest copy any scoreboard holds, so the sheet follows the board's own
+ * refresh. A link to a game the board doesn't have is let go once the board
+ * has answered, rather than waiting on it forever.
+ */
+function GameSheet({
+  snapshot,
+  boardReady,
+  onClose,
+}: {
+  snapshot: Game | null;
+  boardReady: boolean;
+  onClose: (shown: Game | null) => void;
+}) {
+  const id = useSearchParams().get(GAME_PARAM);
+  const requested = useFreshGame(id, snapshot?.id === id ? snapshot : null);
+  const kept = useFreshGame(snapshot?.id, snapshot);
+  const shown = requested ?? kept;
+
+  useEffect(() => {
+    if (id && !requested && boardReady) setGameParam(null);
+  }, [id, requested, boardReady]);
+
+  return <GameModal open={!!requested} game={shown} onClose={() => onClose(shown)} />;
 }

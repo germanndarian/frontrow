@@ -34,10 +34,12 @@ export function ScoreboardStrip({
   teams,
   only,
   followedKeys,
+  onOpen,
 }: {
   teams: FollowedTeam[];
   only?: LeagueId;
   followedKeys: Set<string>;
+  onOpen: (game: Game) => void;
 }) {
   // Live + upcoming for the user's teams only, already in chronological order.
   const { games, liveCount, isPending, isError, refetch, isFetching } = useTeamSlate(teams);
@@ -129,7 +131,7 @@ export function ScoreboardStrip({
       >
         {sorted.map((game, i) => (
           <div key={game.id} className="rise shrink-0" style={{ animationDelay: `${i * 45}ms` }}>
-            <GameCard game={game} followedKeys={followedKeys} />
+            <GameCard game={game} followedKeys={followedKeys} onOpen={onOpen} />
           </div>
         ))}
       </div>

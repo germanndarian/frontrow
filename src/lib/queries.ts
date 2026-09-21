@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
+import { useCallback, useState, useSyncExternalStore } from "react";
+import {
+  keepPreviousData,
+  useQueries,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import type {
   FollowedTeam,
   Game,
@@ -142,6 +148,40 @@ export function useTeamSlate(teams: FollowedTeam[]) {
       schedules.forEach((q) => q.refetch());
     },
   };
+}
+
+/** The freshest copy of a game any scoreboard query holds — whichever was
+    updated last — or null when none of them has it. */
+export function freshestGame(client: QueryClient, id: string): Game | null {
+  let best: Game | null = null;
+  let at = -1;
+  for (const query of client.getQueryCache().findAll({ queryKey: ["scoreboard"] })) {
+    const hit = (query.state.data as Game[] | undefined)?.find((g) => g.id === id);
+    if (hit && query.state.dataUpdatedAt > at) {
+      best = hit;
+      at = query.state.dataUpdatedAt;
+    }
+  }
+  return best;
+}
+
+/**
+ * A game kept up to date by whichever scoreboard the page is already
+ * refreshing, so an open sheet follows the same 30-second poll as the board
+ * beneath it without starting one of its own. Falls back to the copy the caller
+ * holds — a game from a team's schedule, say, which no scoreboard carries.
+ */
+export function useFreshGame(id: string | null | undefined, fallback: Game | null = null): Game | null {
+  const client = useQueryClient();
+  const subscribe = useCallback(
+    (onChange: () => void) => client.getQueryCache().subscribe(onChange),
+    [client],
+  );
+  const read = useCallback(
+    () => (id ? freshestGame(client, id) : null) ?? fallback,
+    [client, id, fallback],
+  );
+  return useSyncExternalStore(subscribe, read, () => fallback);
 }
 
 export function useTeamCard(league: LeagueId, teamId: string) {
