@@ -231,6 +231,8 @@ export function usePlayer(league: LeagueId, id: string) {
   return useQuery({
     queryKey: ["player", league, id],
     queryFn: () => getPlayer(league, id),
+    // A follow without an id has nothing to look up; don't ask ESPN for "undefined".
+    enabled: Boolean(id),
   });
 }
 

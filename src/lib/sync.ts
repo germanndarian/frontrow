@@ -28,8 +28,34 @@ interface PreferencesRow {
   sports: SportId[];
   leagues: LeagueId[];
   teams: FollowedTeam[];
-  players: FollowedPlayer[];
+  players: StoredPlayer[];
   onboarded: boolean;
+}
+
+/**
+ * A followed player as the `preferences` row holds it. Two clients write this
+ * row and they name the player's id differently: the website says `id`, the
+ * iPhone app says `playerId` (its `FollowedPlayer` is a Swift Codable with no
+ * key mapping). Whichever wrote last decides which key is there — and a
+ * player read without its id asks ESPN for `/api/player/undefined`. So reads
+ * take either, and writes carry both, which each client's decoder accepts.
+ */
+type StoredPlayer = Omit<FollowedPlayer, "id"> & { id?: string; playerId?: string };
+
+/** The players in a row, each with its id, whichever client saved them. A
+    player saved with neither key can't be looked up, so it's left out. */
+export function playersFromRow(players: StoredPlayer[] | null | undefined): FollowedPlayer[] {
+  return (players ?? []).flatMap((p) => {
+    const id = p.id ?? p.playerId;
+    if (!id) return [];
+    return [{ league: p.league, id, fullName: p.fullName, teamAbbr: p.teamAbbr, headshot: p.headshot, position: p.position }];
+  });
+}
+
+/** The players as the row keeps them: under both keys, so the website and the
+    iPhone app can each read what the other saved. */
+export function playersToRow(players: FollowedPlayer[]): StoredPlayer[] {
+  return players.map((p) => ({ ...p, playerId: p.id }));
 }
 
 interface SettingsRow {
@@ -81,7 +107,7 @@ function prefsToRow(userId: string): PreferencesRow {
     sports: p.sports,
     leagues: p.leagues,
     teams: p.teams,
-    players: p.players,
+    players: playersToRow(p.players),
     onboarded: p.onboarded,
   };
 }
@@ -99,7 +125,7 @@ export async function loadUserData(supabase: SupabaseClient, userId: string) {
       sports: r.sports ?? [],
       leagues: r.leagues ?? [],
       teams: r.teams ?? [],
-      players: r.players ?? [],
+      players: playersFromRow(r.players),
       onboarded: r.onboarded ?? false,
     });
   }
