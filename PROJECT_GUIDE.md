@@ -309,26 +309,56 @@ Built as a sequence of small, single-purpose PRs (each squash-merged to `main`):
 
 ## 8. How the maintainer wants PRs handled
 
-These are firm working rules (some are persisted across sessions):
+These are firm working rules. The PR body follows `.github/pull_request_template.md`.
 
+**Opening and merging**
 - **Always open a PR.** After making a code change, open a PR by default — don't wait to be asked.
-- **Never merge without explicit say-so.** Open the PR and report it; the maintainer merges.
-- **Always include the Vercel preview URL** in the PR body.
+- **Never merge without explicit say-so.** Open the PR, report it with its checks, and wait.
+  Approval of one PR is not approval of the next.
+- **Branch fresh off `origin/main` for every change.** PRs are squash-merged and their branches
+  auto-deleted, so never reuse a merged branch name (doing so re-creates a stale remote branch).
+  Fetch `origin/main`, branch, commit, push, open the PR.
+- **Keep PRs small and single-purpose**, matching the existing history — unless the maintainer
+  asks for one big PR.
+- **Quality gate before opening a PR:** `npm run lint`, `npx tsc --noEmit`, `npm test`,
+  `npm run e2e` and `npm run build` — `main` is protected and nothing merges red.
 - **Authorship must be `germanndarian`**, never `ia24a-germannd`. Verify the commit/PR author.
-- **End commit messages with:**
-  ```
-  Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
-  ```
-- **End PR bodies with:**
+
+**The title — this is what the release notes print**
+- **Start with a conventional-commit type:** `feat: …` for something new, `fix: …` for a bug,
+  otherwise `chore:`, `docs:`, `ci:`, `refactor:`, `test:`, `perf:` or `style:`. Then say what
+  changed, for someone reading release notes: `feat: a week at a time on the dashboard`.
+- **Squash-merge with that title as the commit subject**, plus the PR number:
+  `gh pr merge N --squash --delete-branch --subject "feat: … (#N)" --body-file …`. The release
+  workflow reads commit subjects, so the type in the squash commit decides the section:
+  `feat` → Features, `fix` → Fixes & improvements, anything else → Other. The prefix itself is
+  stripped from the note.
+
+**The body** (`.github/pull_request_template.md`)
+- **What changed**, for a user first, then what a reviewer should know.
+- **The Vercel preview URL**, always: `https://frontrow-git-<branch>-germanndarians-projects.vercel.app`
+  with every `/` in the branch name turned into `-`, pointing at the route that changed.
+- **Checks** run, and any Supabase migration that has to be run by hand before it deploys.
+- **End with:**
   ```
   🤖 Generated with [Claude Code](https://claude.com/claude-code)
   ```
-- **Branch fresh off `origin/main` for every change.** PRs are squash-merged and their branches
-  auto-deleted, so never reuse a merged branch name (doing so re-creates a stale remote branch).
-  Pull/fetch `origin/main` first, branch, commit, push, open PR.
-- **Keep PRs small and single-purpose**, matching the existing history.
-- **Quality gate before opening a PR:** run `npm run lint`, `npx tsc --noEmit`, `npm test`,
-  `npm run e2e`, and `npm run build` — `main` is protected and nothing merges red.
+
+**Commits**
+- End every commit message with a `Co-Authored-By` trailer for the Claude model that wrote it,
+  e.g. `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
+
+**Releasing — release notes in Craft**
+- Merging a PR does not publish anything to Craft. A **version tag** does:
+  `git tag vX.Y.Z && git push origin vX.Y.Z` (on `main`, after the merge).
+- That runs `.github/workflows/release-notes.yml`: every non-merge commit since the previous `v*`
+  tag is grouped by its type, filled into the Craft template "Release Page Template", and
+  inserted at the top of "Frontrow > Patch Notes > Release Notes" as "Latest - Version X.Y.Z";
+  the previous "Latest" card becomes "Version X.Y.Z".
+- To look first, run the workflow by hand (Actions → Release notes → Run workflow) with
+  `dry_run` ticked and the tag to preview — it prints the card and the rename and writes nothing.
+- It needs the `CRAFT_API_BASE` and `CRAFT_API_KEY` repository secrets. Publishing the same
+  version twice fails on purpose; delete the card in Craft first.
 
 ---
 

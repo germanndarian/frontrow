@@ -66,3 +66,8 @@ apple/.swiftpm/
 /playwright-report
 /blob-report
 /playwright/.cache
+
+# Craft API docs and a snapshot of the Craft space — local reference only. The
+# snapshot names the API link, which is a secret (CRAFT_API_BASE).
+bundle.md
+document_instructions_to_agent.md
