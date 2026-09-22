@@ -1,0 +1,46 @@
+name: Release notes
+
+# Publishes a release's notes to Craft ("Frontrow > Patch Notes > Release
+# Notes") when a version tag is pushed. Run it by hand with dry_run to see
+# what it would insert and rename without changing anything in Craft.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Read everything and print what would change, without writing to Craft"
+        type: boolean
+        default: true
+      tag:
+        description: "Tag to publish notes for (default: the latest v* tag)"
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+# One release at a time, so two tags pushed together can't both claim "Latest".
+concurrency:
+  group: release-notes
+  cancel-in-progress: false
+
+jobs:
+  craft:
+    name: Publish to Craft
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Every commit and tag, to find the previous release.
+          fetch-depth: 0
+
+      - name: Publish release notes
+        env:
+          CRAFT_API_BASE: ${{ secrets.CRAFT_API_BASE }}
+          CRAFT_API_KEY: ${{ secrets.CRAFT_API_KEY }}
+          TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: bash .github/scripts/craft-release-notes.sh
