@@ -751,7 +751,7 @@ export default function Home() {
               Explore features
             </a>
           </div>
-          <p className="cta__fine">No credit card · Cancel anytime · 12+ leagues</p>
+          <p className="cta__fine">No credit card · 12+ leagues</p>
         </div>
       </section>
 
