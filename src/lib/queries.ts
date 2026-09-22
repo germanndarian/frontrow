@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query";
+import { useCallback, useState, useSyncExternalStore } from "react";
+import {
+  keepPreviousData,
+  useQueries,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import type {
   FollowedTeam,
   Game,
@@ -11,6 +17,8 @@ import type {
   ScheduleGame,
 } from "./types";
 import { LEAGUES } from "./leagues";
+import { now } from "./clock";
+import { firstDayOfWeek, weekQuery, weekWindow, type WeekWindow } from "./week";
 import {
   getCatalogTeams,
   getPlayer,
@@ -36,6 +44,41 @@ export function useScoreboard(leagues: LeagueId[]) {
     // Keep the last good board visible through a refetch / momentary ESPN hiccup.
     placeholderData: keepPreviousData,
     enabled: leagues.length > 0,
+  });
+}
+
+/**
+ * One week of the scoreboard for the leagues you follow — the dashboard's
+ * board. It refreshes only while it's showing this week and a game is live,
+ * and keeps the board on screen through a refresh, but never carries one
+ * week's games over to another week's heading: a new week shows placeholders
+ * until it arrives.
+ */
+export function useWeekScoreboard(leagues: LeagueId[], week: WeekWindow) {
+  const dates = weekQuery(week);
+  return useQuery({
+    queryKey: weekScoreboardKey(leagues, dates),
+    queryFn: () => getScoreboard(leagues, dates),
+    refetchInterval: (query) =>
+      week.offset === 0 && hasLiveGame(query.state.data) ? LIVE_POLL_MS : false,
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[2] === dates ? previous : undefined,
+    enabled: leagues.length > 0,
+  });
+}
+
+function weekScoreboardKey(leagues: LeagueId[], dates: string) {
+  return ["scoreboard", [...leagues].sort(), dates];
+}
+
+/** Fetch this week's board ahead of time — the Done screen warms it while it's
+    read, so the dashboard opens on games rather than placeholders. */
+export function prefetchThisWeek(client: QueryClient, leagues: LeagueId[]) {
+  if (leagues.length === 0) return;
+  const dates = weekQuery(weekWindow(new Date(now()), 0, firstDayOfWeek()));
+  void client.prefetchQuery({
+    queryKey: weekScoreboardKey(leagues, dates),
+    queryFn: () => getScoreboard(leagues, dates),
   });
 }
 
@@ -101,7 +144,7 @@ export function useTeamSlate(teams: FollowedTeam[]) {
 
   const followed = new Set(teams.map((t) => `${t.league}:${t.teamId}`));
   // Captured once at mount; the scoreboard refetch keeps live games current.
-  const [now] = useState(() => Date.now());
+  const [asOf] = useState(now);
   const byId = new Map<string, Game>();
 
   // Live / today's games from the scoreboard (skip finished ones), my teams only.
@@ -119,7 +162,7 @@ export function useTeamSlate(teams: FollowedTeam[]) {
     const team = teams[i];
     if (!team || !q.data) return;
     const upcoming = q.data
-      .filter((sg) => sg.state === "pre" && new Date(sg.date).getTime() > now)
+      .filter((sg) => sg.state === "pre" && new Date(sg.date).getTime() > asOf)
       .slice(0, 6);
     for (const sg of upcoming) {
       if (!byId.has(sg.id)) byId.set(sg.id, scheduleToGame(sg, team));
@@ -141,6 +184,40 @@ export function useTeamSlate(teams: FollowedTeam[]) {
       schedules.forEach((q) => q.refetch());
     },
   };
+}
+
+/** The freshest copy of a game any scoreboard query holds — whichever was
+    updated last — or null when none of them has it. */
+export function freshestGame(client: QueryClient, id: string): Game | null {
+  let best: Game | null = null;
+  let at = -1;
+  for (const query of client.getQueryCache().findAll({ queryKey: ["scoreboard"] })) {
+    const hit = (query.state.data as Game[] | undefined)?.find((g) => g.id === id);
+    if (hit && query.state.dataUpdatedAt > at) {
+      best = hit;
+      at = query.state.dataUpdatedAt;
+    }
+  }
+  return best;
+}
+
+/**
+ * A game kept up to date by whichever scoreboard the page is already
+ * refreshing, so an open sheet follows the same 30-second poll as the board
+ * beneath it without starting one of its own. Falls back to the copy the caller
+ * holds — a game from a team's schedule, say, which no scoreboard carries.
+ */
+export function useFreshGame(id: string | null | undefined, fallback: Game | null = null): Game | null {
+  const client = useQueryClient();
+  const subscribe = useCallback(
+    (onChange: () => void) => client.getQueryCache().subscribe(onChange),
+    [client],
+  );
+  const read = useCallback(
+    () => (id ? freshestGame(client, id) : null) ?? fallback,
+    [client, id, fallback],
+  );
+  return useSyncExternalStore(subscribe, read, () => fallback);
 }
 
 export function useTeamCard(league: LeagueId, teamId: string) {

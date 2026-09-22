@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
+import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "@/lib/auth";
 import { useSettings } from "@/lib/settings";
-import { useTeamSlate } from "@/lib/queries";
+import { prefetchThisWeek, useTeamSlate } from "@/lib/queries";
+import { DrawnCheck } from "./DrawnCheck";
 import { LEAGUES, LEAGUE_ORDER } from "@/lib/leagues";
 import type { FollowedPlayer, FollowedTeam, LeagueId } from "@/lib/types";
 
@@ -43,6 +46,12 @@ export function SetupDone({
   const name = (greeting || profile?.displayName || "").trim().split(/\s+/)[0];
   const { liveCount } = useTeamSlate(teams);
 
+  // Fetch the dashboard's first week while this screen is being read.
+  const client = useQueryClient();
+  useEffect(() => {
+    prefetchThisWeek(client, leagues);
+  }, [client, leagues]);
+
   const summary = `${plural(teams.length, "team", "teams")}, ${plural(players.length, "player", "players").toLowerCase()} and ${plural(leagues.length, "league", "leagues").toLowerCase()} are on your dashboard.`;
   const live = liveCount > 0 ? ` ${plural(liveCount, "game is", "games are")} live right now.` : "";
   const leagueNames = LEAGUE_ORDER.filter((l) => leagues.includes(l)).map((l) => LEAGUES[l].name).join(" ");
@@ -61,7 +70,7 @@ export function SetupDone({
       </div>
 
       <div className="px-6 pt-14">
-        <span className="grid h-14 w-14 place-items-center rounded-full bg-primary text-[26px] font-bold text-white">✓</span>
+        <DrawnCheck />
         <h1 className="mt-[26px] font-display text-[38px] font-black leading-[1.02] tracking-[-0.035em]">
           You&apos;re all set{name ? "," : "."}
           {name && (

@@ -1,5 +1,6 @@
 import type {
   Game,
+  GameSide,
   LeagueId,
   PlayoffBracket,
   PlayoffSide,
@@ -18,6 +19,8 @@ import {
   findCatalogTeam,
 } from "./catalog";
 import { sleep } from "./utils";
+import { now } from "./clock";
+import { easternStamp, windowEnds, withinWindow } from "./espn/window";
 
 /* Offline / demo data source. Selected via NEXT_PUBLIC_USE_MOCK=true. Mirrors
    the live facade's signatures so the app behaves identically without ESPN. */
@@ -27,19 +30,26 @@ function jitter() {
   return LATENCY[0] + Math.random() * (LATENCY[1] - LATENCY[0]);
 }
 
+/** A run in the period being played: the line score moves with the score. */
+function score(side: GameSide) {
+  side.score = (side.score ?? 0) + 1;
+  const periods = side.linescores;
+  if (periods?.length) periods[periods.length - 1] += 1;
+}
+
 function tickLiveGames(games: Game[]): Game[] {
   return games.map((g) => {
     if (g.state !== "in") return g;
     const roll = Math.random();
     const next: Game = structuredClone(g);
     if (roll < 0.18 && next.home.score != null) {
-      next.home.score += 1;
+      score(next.home);
       next.lastPlay =
         g.league === "nhl"
           ? `${next.home.shortName} score! Tip-in off the rush`
           : `${next.home.shortName} plate a run on a sac fly`;
     } else if (roll < 0.34 && next.away.score != null) {
-      next.away.score += 1;
+      score(next.away);
       next.lastPlay =
         g.league === "nhl"
           ? `${next.away.shortName} answer on the power play`
@@ -94,9 +104,15 @@ function synthPlayer(cp: CatalogPlayer): Player {
   };
 }
 
-export async function getScoreboard(leagues: LeagueId[]): Promise<Game[]> {
+/** Like the route: today's games, or a window's, sliced on the US Eastern day
+    ESPN files games under. "Today" is the demo evening's (see clock.ts). */
+export async function getScoreboard(leagues: LeagueId[], dates?: string): Promise<Game[]> {
   await sleep(jitter());
-  return tickLiveGames(GAMES.filter((g) => leagues.includes(g.league)));
+  const today = easternStamp(new Date(now()).toISOString());
+  const [start, end] = dates ? windowEnds(dates) : [today, today];
+  return tickLiveGames(
+    GAMES.filter((g) => leagues.includes(g.league) && withinWindow(g.date, start, end)),
+  );
 }
 
 export async function getTeamCard(_league: LeagueId, teamId: string): Promise<TeamCard | null> {

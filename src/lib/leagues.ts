@@ -1,8 +1,18 @@
 import type { LeagueId, LeagueMeta, SportId, SportMeta } from "./types";
+import { now } from "./clock";
+import { seasonAt } from "./seasons";
 
-/* June 2026 reality: MLB and NHL are mid-season; NFL and college football are
-   in the off-season. `inSeason` drives whether the dashboard shows live data or
-   a considered "season hasn't started" state. */
+/* `inSeason` drives whether the dashboard shows live data or a considered
+   "season hasn't started" state, and `seasonHint` is what that state says.
+   Both are worked out from the date when this module loads (see seasons.ts),
+   rather than written in by hand and left to go stale. */
+
+type LeagueBase = Omit<LeagueMeta, "inSeason" | "seasonHint">;
+
+function withSeason(meta: LeagueBase): LeagueMeta {
+  const season = seasonAt(meta.id, new Date(now()));
+  return { ...meta, inSeason: season.inSeason, seasonHint: season.label };
+}
 
 export const SPORTS: Record<SportId, SportMeta> = {
   football: {
@@ -18,15 +28,13 @@ export const SPORTS: Record<SportId, SportMeta> = {
 export const SPORT_ORDER: SportId[] = ["football", "basketball", "baseball", "hockey"];
 
 export const LEAGUES: Record<LeagueId, LeagueMeta> = {
-  mlb: {
+  mlb: withSeason({
     id: "mlb",
     sport: "baseball",
     espnSport: "baseball",
     espnLeague: "mlb",
     name: "MLB",
     fullName: "Major League Baseball",
-    inSeason: true,
-    seasonHint: "Regular season",
     groupNoun: "Division",
     standingsColumns: [
       { key: "wins", label: "W" },
@@ -35,16 +43,14 @@ export const LEAGUES: Record<LeagueId, LeagueMeta> = {
       { key: "gamesBehind", label: "GB" },
       { key: "streak", label: "STRK" },
     ],
-  },
-  nba: {
+  }),
+  nba: withSeason({
     id: "nba",
     sport: "basketball",
     espnSport: "basketball",
     espnLeague: "nba",
     name: "NBA",
     fullName: "National Basketball Association",
-    inSeason: true,
-    seasonHint: "Playoffs",
     groupNoun: "Division",
     standingsColumns: [
       { key: "wins", label: "W" },
@@ -53,16 +59,14 @@ export const LEAGUES: Record<LeagueId, LeagueMeta> = {
       { key: "gamesBehind", label: "GB" },
       { key: "streak", label: "STRK" },
     ],
-  },
-  nhl: {
+  }),
+  nhl: withSeason({
     id: "nhl",
     sport: "hockey",
     espnSport: "hockey",
     espnLeague: "nhl",
     name: "NHL",
     fullName: "National Hockey League",
-    inSeason: true,
-    seasonHint: "Regular season",
     groupNoun: "Division",
     standingsColumns: [
       { key: "gamesPlayed", label: "GP" },
@@ -71,16 +75,14 @@ export const LEAGUES: Record<LeagueId, LeagueMeta> = {
       { key: "otLosses", label: "OTL" },
       { key: "points", label: "PTS", emphasis: true },
     ],
-  },
-  nfl: {
+  }),
+  nfl: withSeason({
     id: "nfl",
     sport: "football",
     espnSport: "football",
     espnLeague: "nfl",
     name: "NFL",
     fullName: "National Football League",
-    inSeason: false,
-    seasonHint: "Kicks off Sep 2026",
     groupNoun: "Division",
     standingsColumns: [
       { key: "wins", label: "W" },
@@ -89,16 +91,14 @@ export const LEAGUES: Record<LeagueId, LeagueMeta> = {
       { key: "winPercent", label: "PCT", emphasis: true },
       { key: "streak", label: "STRK" },
     ],
-  },
-  "college-football": {
+  }),
+  "college-football": withSeason({
     id: "college-football",
     sport: "football",
     espnSport: "football",
     espnLeague: "college-football",
     name: "NCAAF",
     fullName: "College Football",
-    inSeason: false,
-    seasonHint: "Kicks off Aug 2026",
     groupNoun: "Conference",
     standingsColumns: [
       { key: "wins", label: "W" },
@@ -106,11 +106,18 @@ export const LEAGUES: Record<LeagueId, LeagueMeta> = {
       { key: "winPercent", label: "PCT", emphasis: true },
       { key: "streak", label: "STRK" },
     ],
-  },
+  }),
 };
 
 export const LEAGUE_ORDER: LeagueId[] = ["nba", "mlb", "nhl", "nfl", "college-football"];
 
 export function leaguesForSports(sports: SportId[]): LeagueId[] {
   return LEAGUE_ORDER.filter((id) => sports.includes(LEAGUES[id].sport));
+}
+
+/** Whether choosing leagues means anything for these sports: only when one of
+    them has more than one — football does, the rest don't. Setup only asks,
+    and Settings only offers the Leagues tab, when it does. */
+export function offersLeagueChoice(sports: SportId[]): boolean {
+  return sports.some((sport) => SPORTS[sport].leagues.length > 1);
 }

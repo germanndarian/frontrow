@@ -3,18 +3,19 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { now } from "@/lib/clock";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { AccountMenu } from "./AccountMenu";
 
 function todayLabel() {
-  return new Date().toLocaleDateString(undefined, {
+  return new Date(now()).toLocaleDateString(undefined, {
     weekday: "long",
     month: "short",
     day: "numeric",
   });
 }
 
-export function AppHeader({ liveCount }: { liveCount: number }) {
+export function AppHeader({ liveCount, onLive }: { liveCount: number; onLive?: () => void }) {
   const router = useRouter();
   const signOut = useAuth((s) => s.signOut);
 
@@ -32,11 +33,16 @@ export function AppHeader({ liveCount }: { liveCount: number }) {
         </Link>
 
         <div className="flex items-center gap-2.5 sm:gap-3.5">
+          {/* One live game opens it; several open the list to pick from. */}
           {liveCount > 0 && (
-            <span className="hidden items-center gap-1.5 rounded-full bg-live/12 px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.08em] text-live sm:inline-flex">
+            <button
+              type="button"
+              onClick={onLive}
+              className="inline-flex items-center gap-1.5 rounded-full bg-live/12 px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.08em] text-live transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-live/18 active:scale-[0.97]"
+            >
               <span className="live-dot" />
               {liveCount} live
-            </span>
+            </button>
           )}
           <span className="hidden text-[13px] font-medium text-faint md:inline">
             {todayLabel()}

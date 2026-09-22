@@ -9,7 +9,7 @@ import type {
   Preferences,
   SportId,
 } from "./types";
-import { LEAGUES } from "./leagues";
+import { LEAGUES, SPORTS } from "./leagues";
 
 interface PrefState extends Preferences {
   setSports: (sports: SportId[]) => void;
@@ -40,12 +40,15 @@ export const usePreferences = create<PrefState>()((set) => ({
   setLeagues: (leagues) => set({ leagues }),
   setTeams: (teams) => set({ teams }),
   setPlayers: (players) => set({ players }),
-  // Removing a sport prunes its leagues, and removing leagues prunes any
-  // followed teams/players in them — so the dashboard never shows orphans.
+  // Adding a sport follows its leagues — where a sport has only one there's
+  // nothing to choose, and Settings doesn't even ask. Removing a sport prunes
+  // its leagues, and removing leagues prunes any followed teams/players in
+  // them — so the dashboard never shows orphans.
   toggleSport: (sport) =>
     set((s) => {
       if (!s.sports.includes(sport)) {
-        return { sports: [...s.sports, sport] };
+        const added = SPORTS[sport].leagues.filter((l) => !s.leagues.includes(l));
+        return { sports: [...s.sports, sport], leagues: [...s.leagues, ...added] };
       }
       const leagues = s.leagues.filter((l) => LEAGUES[l].sport !== sport);
       const kept = new Set(leagues);

@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { now as clockNow } from "./clock";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -12,7 +13,7 @@ export function hex(color?: string | null, fallback = "64748b"): string {
 }
 
 /** Relative time for kickoffs and finals: "in 2h", "3h ago", "Sat 1:00 PM". */
-export function relativeTime(iso: string, now = Date.now()): string {
+export function relativeTime(iso: string, now = clockNow()): string {
   const t = new Date(iso).getTime();
   const diffMin = Math.round((t - now) / 60_000);
   const abs = Math.abs(diffMin);

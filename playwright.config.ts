@@ -36,6 +36,11 @@ export default defineConfig({
 
   use: {
     baseURL: HOST,
+    // The demo evening is 7:30 PM in New York (src/lib/clock.ts). Pinning the
+    // browser there, in a US locale, keeps "today" and where a week starts —
+    // Sunday — the same on every machine that runs these.
+    locale: "en-US",
+    timezoneId: "America/New_York",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",

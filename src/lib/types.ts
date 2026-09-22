@@ -25,9 +25,11 @@ export interface LeagueMeta {
   espnLeague: string;
   name: string; // "MLB"
   fullName: string; // "Major League Baseball"
-  /** Whether the league is currently mid-season (drives empty-state copy). */
+  /** Whether the league is mid-season today (drives empty-state copy). Worked
+      out from the date — see seasons.ts. */
   inSeason: boolean;
-  /** Off-season hint, e.g. "Kicks off Sep 2026". */
+  /** Where the season stands: "Regular season", "Playoffs" — or, out of
+      season, when it comes back: "Kicks off in September". */
   seasonHint: string;
   /** Columns to render in the standings table for this league. */
   standingsColumns: { key: string; label: string; emphasis?: boolean }[];

@@ -11,12 +11,10 @@ function Row({
   side,
   game,
   leading,
-  followed,
 }: {
   side: GameSide;
   game: Game;
   leading: boolean;
-  followed: boolean;
 }) {
   const showScore = game.state !== "pre";
   const dim = game.state === "post" && side.score != null && !leading;
@@ -43,11 +41,6 @@ function Row({
           >
             {side.shortName}
           </span>
-          {followed && (
-            <svg className="h-3 w-3 shrink-0 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-label="Following">
-              <path d="m12 2 2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
-            </svg>
-          )}
         </div>
         {side.record && (
           <div className="truncate text-[11px] text-faint">{side.record}</div>
@@ -68,17 +61,35 @@ function Row({
   );
 }
 
+/** What a screen reader hears for the card: who, the score and the clock, or
+    who and when. */
+function cardLabel(game: Game): string {
+  if (game.state === "pre") {
+    return `${game.away.shortName} at ${game.home.shortName}, ${relativeTime(game.date)}`;
+  }
+  const status = game.state === "in" ? game.shortDetail || "live" : game.shortDetail || "final";
+  return `${game.away.shortName} ${game.away.score ?? 0}, ${game.home.shortName} ${game.home.score ?? 0}, ${status}`;
+}
+
+/** One game. The whole card is a button that opens the game's sheet.
+
+    `mine` marks one of your teams' games — a star, a tint, an edge down the
+    left and a stronger border — and `pinned` a game held at the front of its
+    row. The board only sets them in a league's view, where they mean something. */
 export function GameCard({
   game,
-  followedKeys,
+  onOpen,
+  mine = false,
+  pinned = false,
+  className,
 }: {
   game: Game;
-  followedKeys: Set<string>;
+  onOpen?: (game: Game) => void;
+  mine?: boolean;
+  pinned?: boolean;
+  className?: string;
 }) {
   const league = LEAGUES[game.league];
-  const homeFollowed = followedKeys.has(`${game.league}:${game.home.teamId}`);
-  const awayFollowed = followedKeys.has(`${game.league}:${game.away.teamId}`);
-  const isFollowed = homeFollowed || awayFollowed;
 
   const homeLeads =
     game.home.score != null && game.away.score != null
@@ -90,16 +101,37 @@ export function GameCard({
       : false;
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => onOpen?.(game)}
+      aria-label={cardLabel(game)}
       className={cn(
-        "flex w-[270px] shrink-0 snap-start flex-col rounded-md border bg-surface/70 p-3.5",
-        "transition-colors duration-200",
-        isFollowed ? "border-primary/35" : "border-line/60",
+        "relative flex w-[270px] shrink-0 snap-start flex-col overflow-hidden rounded-md p-3.5 text-left",
+        "transition-[border-color,background-color,transform] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.99]",
+        mine
+          ? "border-2 border-primary bg-primary/[0.07] pl-[18px] shadow-[0_12px_28px_-18px_var(--color-primary)] before:absolute before:inset-y-0 before:left-0 before:w-[5px] before:bg-primary"
+          : "border border-line/60 bg-surface/70 hover:border-line hover:bg-surface",
+        className,
       )}
     >
-      <div className="mb-2.5 flex items-center justify-between">
-        <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-faint">
+      <div className="mb-2.5 flex items-center justify-between gap-2">
+        <span className="flex min-w-0 items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-faint">
+          {mine && (
+            <svg className="h-3 w-3 shrink-0 text-primary" viewBox="0 0 24 24" fill="currentColor" aria-label="Your team">
+              <path d="m12 2 2.9 6.3 6.9.7-5.1 4.6 1.4 6.8L12 17.8 5.9 20.4l1.4-6.8L2.2 9l6.9-.7z" />
+            </svg>
+          )}
+          {pinned && (
+            <svg className="h-3 w-3 shrink-0 text-gold" viewBox="0 0 24 24" fill="currentColor" aria-label="Pinned">
+              <path d="M16 3a1 1 0 0 1 .7 1.7L15 6.4v4.2l2.7 2.7a1 1 0 0 1-.7 1.7H13v5a1 1 0 0 1-2 0v-5H7a1 1 0 0 1-.7-1.7L9 10.6V6.4L7.3 4.7A1 1 0 0 1 8 3h8Z" />
+            </svg>
+          )}
           {league.name}
+          {game.week != null && (
+            <span className="rounded-full bg-bg-2 px-1.5 py-px font-mono text-[9.5px] tracking-[0.06em] text-muted">
+              WEEK {game.week}
+            </span>
+          )}
         </span>
         <StatusTag
           state={game.state}
@@ -108,8 +140,8 @@ export function GameCard({
       </div>
 
       <div className="space-y-2">
-        <Row side={game.away} game={game} leading={awayLeads} followed={awayFollowed} />
-        <Row side={game.home} game={game} leading={homeLeads} followed={homeFollowed} />
+        <Row side={game.away} game={game} leading={awayLeads} />
+        <Row side={game.home} game={game} leading={homeLeads} />
       </div>
 
       <div className="mt-3 border-t border-line-soft/70 pt-2.5">
@@ -161,6 +193,6 @@ export function GameCard({
           </div>
         )}
       </div>
-    </div>
+    </button>
   );
 }
