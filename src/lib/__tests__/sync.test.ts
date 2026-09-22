@@ -144,3 +144,53 @@ describe("pushPreferences", () => {
     });
   });
 });
+
+/* ── Followed players, from either client ─────────────────────────────── */
+
+describe("followed players across the website and the iPhone app", () => {
+  const phonePlayer = {
+    league: "mlb",
+    playerId: "33192",
+    fullName: "Aaron Judge",
+    teamAbbr: "NYY",
+    headshot: "https://a.espncdn.com/i/headshots/mlb/players/full/33192.png",
+    position: "RF",
+  };
+
+  it("reads a player the phone saved, under its playerId", async () => {
+    const { client } = fakeSupabase({
+      preferences: { user_id: "u1", sports: ["baseball"], leagues: ["mlb"], teams: [], players: [phonePlayer], onboarded: true },
+    });
+    await loadUserData(client, "u1");
+    const [judge] = usePreferences.getState().players;
+    expect(judge.id).toBe("33192");
+    expect(judge).not.toHaveProperty("playerId");
+  });
+
+  it("still reads a player the website saved, under its id", async () => {
+    const { client } = fakeSupabase({
+      preferences: { user_id: "u1", sports: [], leagues: ["mlb"], teams: [], players: [{ ...phonePlayer, playerId: undefined, id: "33192" }], onboarded: true },
+    });
+    await loadUserData(client, "u1");
+    expect(usePreferences.getState().players.map((p) => p.id)).toEqual(["33192"]);
+  });
+
+  it("leaves out a player saved with no id at all, rather than asking for 'undefined'", async () => {
+    const { client } = fakeSupabase({
+      preferences: { user_id: "u1", sports: [], leagues: ["mlb"], teams: [], players: [{ ...phonePlayer, playerId: undefined }], onboarded: true },
+    });
+    await loadUserData(client, "u1");
+    expect(usePreferences.getState().players).toEqual([]);
+  });
+
+  it("saves players under both keys, so the phone can read them too", async () => {
+    usePreferences.setState({
+      players: [{ league: "mlb", id: "33192", fullName: "Aaron Judge", teamAbbr: "NYY", headshot: "", position: "RF" }],
+    });
+    const { client, upserts } = fakeSupabase({});
+    await pushPreferences(client, "u1");
+    const saved = (upserts[0].row.players as Record<string, string>[])[0];
+    expect(saved.id).toBe("33192");
+    expect(saved.playerId).toBe("33192");
+  });
+});
