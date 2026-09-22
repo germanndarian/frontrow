@@ -57,6 +57,8 @@ uri() { jq -rn --arg v "$1" '$v | @uri'; }
 # ── The release ──────────────────────────────────────────────────────────
 
 TAG="${TAG:-}"
+TAG="${TAG#"${TAG%%[![:space:]]*}"}"   # trim leading and trailing spaces
+TAG="${TAG%"${TAG##*[![:space:]]}"}"
 if [[ -z "$TAG" ]]; then
   TAG="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null)" ||
     fail "No v* tag found and none was given. For a dry run, name the tag to preview, e.g. v1.0.0."
@@ -69,6 +71,8 @@ if ! git rev-parse --verify --quiet "$ref" >/dev/null; then
   ref="HEAD"
   echo "Tag $TAG doesn't exist yet: previewing it as if the current commit were tagged $TAG."
 fi
+[[ "$TAG" =~ ^v[0-9]+(\.[0-9]+)*([-+][0-9A-Za-z.-]+)?$ ]] ||
+  fail "\"$TAG\" doesn't look like a version tag. Use v1.2.0 — the workflow triggers on v* tags."
 version="${TAG#v}"
 date="$(date -u +%F)"
 
@@ -97,27 +101,48 @@ jq -r '"  features: \(.features | length)   fixes: \(.fixes | length)   other: \
 
 # ── Where it goes in Craft ───────────────────────────────────────────────
 
+# Names are matched without regard to case or surrounding spaces, so a title
+# typed with a stray space in Craft still matches.
+pick_id() { # TITLE < {"items":[{id,title}]}
+  jq -r --arg t "$1" '[ .items[]
+    | select((.title // "" | ascii_downcase | gsub("^\\s+|\\s+$"; "")) == ($t | ascii_downcase))
+    | .id ] | first // empty'
+}
+titles() { jq -r '[ .items[] | "\"" + (.title // "(untitled)") + "\"" ] | if length == 0 then "(none)" else join(", ") end'; }
+
 folders="$(craft GET /folders)"
 folder_id="$(jq -r --arg parent "$NOTES_FOLDER_PARENT" --arg name "$NOTES_FOLDER" '
+  def clean: (. // "") | ascii_downcase | gsub("^\\s+|\\s+$"; "");
   def walk_folders($parent): .[] | . as $f
     | ({ id: $f.id, name: $f.name, parent: $parent }, ($f.folders // [] | walk_folders($f.name)));
-  [ .items | walk_folders(null) | select(.name == $name and .parent == $parent) | .id ] | first // empty
+  [ .items | walk_folders(null)
+    | select((.name | clean) == ($name | clean) and (.parent | clean) == ($parent | clean))
+    | .id ] | first // empty
 ' <<<"$folders")"
-[[ -n "$folder_id" ]] || fail "Craft folder \"$NOTES_FOLDER_PARENT > $NOTES_FOLDER\" not found."
+if [[ -z "$folder_id" ]]; then
+  fail "Craft folder \"$NOTES_FOLDER_PARENT > $NOTES_FOLDER\" not found. Folders in the space: $(jq -r '
+    def walk_folders($path): .[] | . as $f | (($path + [$f.name]) | join(" > ")),
+      ($f.folders // [] | walk_folders($path + [$f.name]));
+    [ .items | walk_folders([]) ] | join(", ")' <<<"$folders")"
+fi
 
-notes_id="$(craft GET "/documents?folderId=$(uri "$folder_id")" |
-  jq -r --arg t "$NOTES_DOC" '[ .items[] | select(.title == $t) | .id ] | first // empty')"
-[[ -n "$notes_id" ]] || fail "Craft document \"$NOTES_DOC\" not found in \"$NOTES_FOLDER_PARENT > $NOTES_FOLDER\"."
+notes_docs="$(craft GET "/documents?folderId=$(uri "$folder_id")")"
+notes_id="$(pick_id "$NOTES_DOC" <<<"$notes_docs")"
+[[ -n "$notes_id" ]] ||
+  fail "Craft document \"$NOTES_DOC\" not found in \"$NOTES_FOLDER_PARENT > $NOTES_FOLDER\". Documents there: $(titles <<<"$notes_docs"). Rename the document to \"$NOTES_DOC\", or set NOTES_DOC in this script to its name."
 
 # Templates live in the Templates location, but the template may sit in any
 # folder, so fall back to every document.
-template_id="$(craft GET "/documents?location=templates" |
-  jq -r --arg t "$TEMPLATE_DOC" '[ .items[] | select(.title == $t) | .id ] | first // empty')"
+template_docs="$(craft GET "/documents?location=templates")"
+template_id="$(pick_id "$TEMPLATE_DOC" <<<"$template_docs")"
 if [[ -z "$template_id" ]]; then
-  template_id="$(craft GET /documents |
-    jq -r --arg t "$TEMPLATE_DOC" '[ .items[] | select(.title == $t) | .id ] | first // empty')"
+  all_docs="$(craft GET /documents)"
+  template_id="$(pick_id "$TEMPLATE_DOC" <<<"$all_docs")"
+  [[ -n "$template_id" ]] ||
+    fail "Craft template document \"$TEMPLATE_DOC\" not found. Templates: $(titles <<<"$template_docs"). Everywhere else: $(titles <<<"$all_docs")."
 fi
-[[ -n "$template_id" ]] || fail "Craft template document \"$TEMPLATE_DOC\" not found."
+
+echo "Craft: folder $folder_id, document \"$NOTES_DOC\" $notes_id, template \"$TEMPLATE_DOC\" $template_id"
 
 # The release cards already in the document: the one to rename, and a guard
 # against publishing the same version twice.
