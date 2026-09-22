@@ -58,19 +58,27 @@ uri() { jq -rn --arg v "$1" '$v | @uri'; }
 
 TAG="${TAG:-}"
 if [[ -z "$TAG" ]]; then
-  TAG="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null)" || fail "No v* tag found, and none was given."
+  TAG="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null)" ||
+    fail "No v* tag found and none was given. For a dry run, name the tag to preview, e.g. v1.0.0."
 fi
-git rev-parse --verify --quiet "refs/tags/$TAG" >/dev/null || fail "Tag $TAG doesn't exist in this checkout."
+# A dry run may preview a tag that doesn't exist yet: the release as it would
+# be if the current commit were tagged now.
+ref="refs/tags/$TAG"
+if ! git rev-parse --verify --quiet "$ref" >/dev/null; then
+  [[ "$DRY_RUN" == "true" ]] || fail "Tag $TAG doesn't exist in this checkout."
+  ref="HEAD"
+  echo "Tag $TAG doesn't exist yet: previewing it as if the current commit were tagged $TAG."
+fi
 version="${TAG#v}"
 date="$(date -u +%F)"
 
-if prev_tag="$(git describe --tags --abbrev=0 --match 'v*' "$TAG^" 2>/dev/null)"; then
-  range="$prev_tag..$TAG"
+if prev_tag="$(git describe --tags --abbrev=0 --match 'v*' "$ref^" 2>/dev/null)"; then
+  range="$prev_tag..$ref"
   compare_url="$REPO_URL/compare/$prev_tag...$TAG"
 else
   # The first release: everything up to the tag.
   prev_tag=""
-  range="$TAG"
+  range="$ref"
   compare_url="$REPO_URL/commits/$TAG"
 fi
 

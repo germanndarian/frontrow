@@ -14,7 +14,7 @@ on:
         type: boolean
         default: true
       tag:
-        description: "Tag to publish notes for (default: the latest v* tag)"
+        description: "Tag to publish notes for (default: the latest v* tag). A dry run can name a tag that doesn't exist yet to preview it at the current commit."
         type: string
         required: false
 
