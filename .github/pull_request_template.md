@@ -25,10 +25,14 @@ the line that appears in the release notes. Write it for a reader of those.
 
 ## Release
 
-Merging doesn't publish release notes. After merging, a version tag does:
-`git tag vX.Y.Z && git push origin vX.Y.Z` — the "Release notes" workflow then
-adds a card for every commit since the previous tag to Craft
-(Frontrow > Patch Notes > Release Notes).
+Merging publishes the release notes. Once CI passes on `main`, the "Release
+notes" workflow bumps the version from the commits it finds — the minor for a
+`feat:`, the major for a `feat!:` or a `BREAKING CHANGE:` footer, otherwise the
+patch — tags it, and adds the card to Craft
+(Frontrow > Patch Notes > Release Notes). The title above is the line that
+shows up there, so write it for whoever reads the patch notes.
+
+To cut a release by hand anyway, push a tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 
 <!-- Written by Claude Code? End the body with:
 🤖 Generated with [Claude Code](https://claude.com/claude-code) -->

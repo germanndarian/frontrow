@@ -349,12 +349,19 @@ These are firm working rules. The PR body follows `.github/pull_request_template
   e.g. `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
 **Releasing — release notes in Craft**
-- Merging a PR does not publish anything to Craft. A **version tag** does:
-  `git tag vX.Y.Z && git push origin vX.Y.Z` (on `main`, after the merge).
-- That runs `.github/workflows/release-notes.yml`: every non-merge commit since the previous `v*`
-  tag is grouped by its type, filled into the Craft template "Release Page Template", and
-  inserted at the top of "Frontrow > Patch Notes > Release Notes" as "Latest - Version X.Y.Z";
-  the previous "Latest" card becomes "Version X.Y.Z".
+- **Merging publishes them; nobody tags by hand.** When CI goes green on `main`,
+  `.github/workflows/release-notes.yml` works out the next version with
+  `.github/scripts/next-version.sh`, tags the commit, and adds its card to Craft. A red `main`
+  publishes nothing, and a CI run with no new commits since the last tag skips quietly.
+- **The commit types decide the number:** a `feat!:` or a `BREAKING CHANGE:` footer bumps the
+  major, a `feat:` the minor, anything else the patch. Run `.github/scripts/next-version.sh`
+  to see what the next merge would be called.
+- The card itself: every non-merge commit since the previous `v*` tag, grouped by its type,
+  filled into the Craft template "Release Page Template", and inserted at the top of
+  "Frontrow > Patch Notes > Release Notes" as "Latest - Version X.Y.Z"; the previous "Latest"
+  card becomes "Version X.Y.Z".
+- **Releasing by hand still works** — `git tag vX.Y.Z && git push origin vX.Y.Z` publishes that
+  version — and the automatic run carries on from whatever tag it finds.
 - To look first, run the workflow by hand (Actions → Release notes → Run workflow) with
   `dry_run` ticked and the tag to preview — it prints the card and the rename and writes nothing.
 - It needs the `CRAFT_API_BASE` and `CRAFT_API_KEY` repository secrets. Publishing the same
