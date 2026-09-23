@@ -1,10 +1,17 @@
 name: Release notes
 
 # Publishes a release's notes to Craft ("Frontrow > Patch Notes > Release
-# Notes") when a version tag is pushed. Run it by hand with dry_run to see
-# what it would insert and rename without changing anything in Craft.
+# Notes"). Nobody has to start this: when CI goes green on main after a merge,
+# the next version is worked out from the commits, tagged, and its card is
+# added to Craft. Pushing a v* tag by hand publishes that version instead, and
+# a manual run with dry_run prints what it would do without writing anything.
 
 on:
+  # A merge, once it has passed CI. A red main publishes nothing.
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
   push:
     tags: ["v*"]
   workflow_dispatch:
@@ -19,9 +26,11 @@ on:
         required: false
 
 permissions:
-  contents: read
+  # To push the version tag it creates for a merge.
+  contents: write
 
-# One release at a time, so two tags pushed together can't both claim "Latest".
+# One release at a time, so two merges landing together can't both claim
+# "Latest" or pick the same version number.
 concurrency:
   group: release-notes
   cancel-in-progress: false
@@ -29,18 +38,45 @@ concurrency:
 jobs:
   craft:
     name: Publish to Craft
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # The commit CI just tested — not whatever main has moved on to.
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
           # Every commit and tag, to find the previous release.
           fetch-depth: 0
 
+      - name: Work out the next version
+        id: next
+        if: github.event_name == 'workflow_run'
+        run: echo "tag=$(.github/scripts/next-version.sh)" >>"$GITHUB_OUTPUT"
+
+      - name: Nothing to release
+        if: github.event_name == 'workflow_run' && steps.next.outputs.tag == ''
+        run: echo "No commits since the last version tag — nothing to publish."
+
+      # Locally first: a failure in Craft leaves no tag behind, so re-running
+      # the job publishes the same version again instead of skipping it.
+      - name: Tag the release
+        if: steps.next.outputs.tag != ''
+        env:
+          TAG: ${{ steps.next.outputs.tag }}
+        run: git tag "$TAG"
+
       - name: Publish release notes
+        if: github.event_name != 'workflow_run' || steps.next.outputs.tag != ''
         env:
           CRAFT_API_BASE: ${{ secrets.CRAFT_API_BASE }}
           CRAFT_API_KEY: ${{ secrets.CRAFT_API_KEY }}
-          TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+          TAG: ${{ steps.next.outputs.tag || (github.event_name == 'push' && github.ref_name) || inputs.tag }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
         run: bash .github/scripts/craft-release-notes.sh
+
+      - name: Push the tag
+        if: steps.next.outputs.tag != ''
+        env:
+          TAG: ${{ steps.next.outputs.tag }}
+        run: git push origin "refs/tags/$TAG"
