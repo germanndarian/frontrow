@@ -50,6 +50,7 @@ def writable:
           elif .key == "cells" then .value |= map(rich_text)
           else . end)
       | if (.icon.type // "") | IN("file", "custom_emoji", "file_upload") then del(.icon) else . end
+      | with_entries(select(.value != null))
     ) as $body
   | { object: "block", type: $t, ($t): ($body + (if ($kids | length) > 0 then { children: $kids } else {} end)) };
 
@@ -84,11 +85,15 @@ def fill_section($name; $items):
       | [ $blocks | to_entries[] | select(.key as $k | ($drop | index($k)) == null) | .value ]
     end;
 
+# A placeholder typed as a link's URL comes back mangled into a path
+# ("/{/{compare_url/}/}") or percent-encoded ("%7B%7Bcompare_url%7D%7D").
+def tag($name): "/?(\\{|%7B)/?(\\{|%7B)" + $name + "/?(\\}|%7D)/?(\\}|%7D)";
+
 def fill: walk(
   if type == "string" then
-    gsub("\\{\\{version\\}\\}"; $version)
-    | gsub("\\{\\{date\\}\\}"; $date)
-    | gsub("\\{\\{compare_url\\}\\}"; $compare_url)
+    gsub(tag("version"); $version; "i")
+    | gsub(tag("date"); $date; "i")
+    | gsub(tag("compare_url"); $compare_url; "i")
   else . end);
 
 ([ .[] | select(.type == "child_page" and (.child_page.title | contains("{{version}}"))) ] | first) as $card
