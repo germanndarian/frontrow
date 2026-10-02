@@ -1,9 +1,8 @@
 name: Release notes
 
-# Publishes a release's notes to Craft ("Frontrow > Patch Notes > Release
-# Notes"). Nobody has to start this: when CI goes green on main after a merge,
-# the next version is worked out from the commits, tagged, and its card is
-# added to Craft. Pushing a v* tag by hand publishes that version instead, and
+# Publishes a release's notes to Notion (a page under "Release Notes"). Nobody
+# has to start this: when CI goes green on main after a merge, the next version
+# is worked out from the commits, tagged, and its page is added to Notion. Pushing a v* tag by hand publishes that version instead, and
 # a manual run with dry_run prints what it would do without writing anything.
 
 on:
@@ -17,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Read everything and print what would change, without writing to Craft"
+        description: "Read everything and print what would change, without writing to Notion"
         type: boolean
         default: true
       tag:
@@ -36,8 +35,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  craft:
-    name: Publish to Craft
+  notion:
+    name: Publish to Notion
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
@@ -58,7 +57,7 @@ jobs:
         if: github.event_name == 'workflow_run' && steps.next.outputs.tag == ''
         run: echo "No commits since the last version tag — nothing to publish."
 
-      # Locally first: a failure in Craft leaves no tag behind, so re-running
+      # Locally first: a failure in Notion leaves no tag behind, so re-running
       # the job publishes the same version again instead of skipping it.
       - name: Tag the release
         if: steps.next.outputs.tag != ''
@@ -69,11 +68,13 @@ jobs:
       - name: Publish release notes
         if: github.event_name != 'workflow_run' || steps.next.outputs.tag != ''
         env:
-          CRAFT_API_BASE: ${{ secrets.CRAFT_API_BASE }}
-          CRAFT_API_KEY: ${{ secrets.CRAFT_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          # Optional: pin the pages by id if looking them up by name ever finds the wrong one.
+          NOTION_NOTES_PAGE_ID: ${{ vars.NOTION_NOTES_PAGE_ID }}
+          NOTION_TEMPLATE_PAGE_ID: ${{ vars.NOTION_TEMPLATE_PAGE_ID }}
           TAG: ${{ steps.next.outputs.tag || (github.event_name == 'push' && github.ref_name) || inputs.tag }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
-        run: bash .github/scripts/craft-release-notes.sh
+        run: bash .github/scripts/notion-release-notes.sh
 
       - name: Push the tag
         if: steps.next.outputs.tag != ''
