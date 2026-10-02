@@ -348,24 +348,27 @@ These are firm working rules. The PR body follows `.github/pull_request_template
 - End every commit message with a `Co-Authored-By` trailer for the Claude model that wrote it,
   e.g. `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
 
-**Releasing — release notes in Craft**
+**Releasing — release notes in Notion**
 - **Merging publishes them; nobody tags by hand.** When CI goes green on `main`,
   `.github/workflows/release-notes.yml` works out the next version with
-  `.github/scripts/next-version.sh`, tags the commit, and adds its card to Craft. A red `main`
+  `.github/scripts/next-version.sh`, tags the commit, and adds its page to Notion. A red `main`
   publishes nothing, and a CI run with no new commits since the last tag skips quietly.
 - **The commit types decide the number:** a `feat!:` or a `BREAKING CHANGE:` footer bumps the
   major, a `feat:` the minor, anything else the patch. Run `.github/scripts/next-version.sh`
   to see what the next merge would be called.
-- The card itself: every non-merge commit since the previous `v*` tag, grouped by its type,
-  filled into the Craft template "Release Page Template", and inserted at the top of
-  "Frontrow > Patch Notes > Release Notes" as "Latest - Version X.Y.Z"; the previous "Latest"
-  card becomes "Version X.Y.Z".
+- The page itself: every non-merge commit since the previous `v*` tag, grouped by its type,
+  filled into the Notion page "Release Page Template" (its `{{features}}`, `{{fixes}}`,
+  `{{other}}`, `{{version}}`, `{{date}}` and `{{compare_url}}` placeholders), and added at the
+  top of the Notion page "Release Notes" as the sub-page "Latest - Version X.Y.Z"; the previous
+  "Latest" page becomes "Version X.Y.Z".
 - **Releasing by hand still works** — `git tag vX.Y.Z && git push origin vX.Y.Z` publishes that
   version — and the automatic run carries on from whatever tag it finds.
 - To look first, run the workflow by hand (Actions → Release notes → Run workflow) with
-  `dry_run` ticked and the tag to preview — it prints the card and the rename and writes nothing.
-- It needs the `CRAFT_API_BASE` and `CRAFT_API_KEY` repository secrets. Publishing the same
-  version twice fails on purpose; delete the card in Craft first.
+  `dry_run` ticked and the tag to preview — it prints the page and the rename and writes nothing.
+- It needs the `NOTION_TOKEN` repository secret: an internal integration's secret, with both
+  pages shared with the integration (page ⋯ → Connections). The pages are found by name; the
+  `NOTION_NOTES_PAGE_ID` and `NOTION_TEMPLATE_PAGE_ID` repository variables pin them by id
+  instead. Publishing the same version twice fails on purpose; delete the page in Notion first.
 
 ---
 
