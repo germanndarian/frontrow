@@ -29,6 +29,8 @@ fail() {
 }
 
 : "${NOTION_TOKEN:?NOTION_TOKEN is not set}"
+# A token pasted with a line break or a stray space would break the header.
+NOTION_TOKEN="${NOTION_TOKEN//[[:space:]]/}"
 DRY_RUN="${DRY_RUN:-false}"
 REPO_URL="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is not set}"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
