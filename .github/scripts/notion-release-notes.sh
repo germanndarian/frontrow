@@ -14,6 +14,8 @@
 #      DRY_RUN  — "true" reads everything and prints what would change
 #      GITHUB_SERVER_URL, GITHUB_REPOSITORY — set by GitHub Actions
 set -euo pipefail
+# A failed call inside $(...) ends the job too, not just that subshell.
+shopt -s inherit_errexit
 
 NOTES_PAGE="Release Notes"
 NOTES_PARENT="Patch Notes"
