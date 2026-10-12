@@ -11,10 +11,12 @@ name: Upstream watch
 # moved, go look" — never "this pull request is bad". Someone else's outage
 # must not be able to block a release.
 
+# The schedule is paused: it only runs when started by hand (Actions → Upstream
+# watch → Run workflow). docs/upstream-watch.md says how to turn it back on.
 on:
-  schedule:
-    # Twice a day, offset off the hour to avoid the cron stampede.
-    - cron: "17 7,19 * * *"
+  # schedule:
+  #   # Twice a day, offset off the hour to avoid the cron stampede.
+  #   - cron: "17 7,19 * * *"
   workflow_dispatch:
 
 concurrency:
