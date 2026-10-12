@@ -244,9 +244,11 @@ That is what lets them block a merge.
 
 **`e2e:upstream` is the one that calls ESPN**, and it exists because of the
 September 2026 outage: 137 unit tests stayed green while the iOS Scores tab was
-dead, because nothing in CI ever talked to ESPN. It runs twice a day from
+dead, because nothing in CI ever talked to ESPN. It lives in
 `.github/workflows/upstream.yml`, where a failure means "the contract moved, go
-look" rather than "this PR is bad".
+look" rather than "this PR is bad". Its twice-a-day schedule is **paused**: it
+runs only when started by hand. `docs/upstream-watch.md` has how it works and
+how to turn the schedule back on.
 
 **Browser tests run on the demo dataset** (`NEXT_PUBLIC_USE_MOCK=true`) with a
 Supabase URL that points nowhere, and get past the auth gate through **guest

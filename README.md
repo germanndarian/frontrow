@@ -156,8 +156,9 @@ npm run build       #  production build
 
 Both suites are hermetic — the browser tests drive the real app against the bundled
 demo dataset, so no ESPN and no Supabase. A separate `npm run e2e:upstream` calls
-ESPN for real and runs twice a day on a schedule rather than in the merge gate, so
-an upstream change gets noticed without a third party being able to block a release.
+ESPN for real and stays out of the merge gate, so a third party can't block a
+release. Its twice-a-day schedule is paused for now; see
+[docs/upstream-watch.md](docs/upstream-watch.md) to run it or turn it back on.
 
 <div align="center">
 <br/>
