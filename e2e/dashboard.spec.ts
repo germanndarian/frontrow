@@ -55,7 +55,7 @@ test.describe("dashboard", () => {
   });
 
   test("the Home button signs you out, on purpose", async ({ page }) => {
-    // "When I click home I want it to log me out, for security" — PROJECT_GUIDE §5.
+    // "When I click home I want it to log me out, for security" — see CLAUDE.md.
     await page.getByRole("button", { name: "Home" }).click();
     await page.waitForURL(/\/$/);
     // And the session really is gone, not just the page changed.

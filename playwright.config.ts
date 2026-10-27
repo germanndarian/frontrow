@@ -12,8 +12,8 @@ import { defineConfig, devices } from "@playwright/test";
    `upstream` is the opposite trade — it calls ESPN for real, to catch the
    day their API changes under us. It is deliberately NOT part of the merge
    gate, because a third party's outage must not stop a release. It runs from
-   .github/workflows/upstream.yml instead (schedule paused for now — see
-   docs/upstream-watch.md), where a failure is a warning that the contract
+   .github/workflows/upstream.yml instead (schedule paused for now; it runs
+   when started by hand), where a failure is a warning that the contract
    moved.
 
    The mock build is a separate `distDir` so running these never clobbers the
