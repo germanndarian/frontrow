@@ -1,12 +1,13 @@
 @AGENTS.md
 
-The full project guide (what the app is, infrastructure, structure, feature
-history), the security notes, the upstream-watch runbook, plans and design
-specs live outside this repo, in the maintainer's personal OS:
-`~/Documents/Projects/personal-os/projects/Frontrow/`. Read
-`Frontrow project guide.md` there when you need more than this file. If you
-can't reach that folder, the rules that matter are below. Keep docs out of this
-repo: README.md, CLAUDE.md and AGENTS.md only.
+Before starting, read the project note in the maintainer's personal OS:
+`~/Documents/Projects/personal-os/projects/Frontrow/Frontrow.md`, with the
+current state, what's next and the rules. The full project guide, the security
+notes, the upstream-watch runbook, plans and design specs are in the same
+folder. Read `Frontrow project guide.md` when you need more than this file. New
+docs go there too: this repo keeps only README.md, CLAUDE.md and AGENTS.md.
+Leave the sections marked `<!-- auto -->` alone, because the sync agent
+rewrites them. If you can't reach that folder, the rules that matter are below.
 
 # Pull requests and releases
 
