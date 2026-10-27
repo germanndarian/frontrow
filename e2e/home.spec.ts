@@ -28,7 +28,7 @@ test.describe("homepage", () => {
   test("never offers a way into the dashboard", async ({ page }) => {
     await page.goto("/");
     // Deliberate: the nav link was removed so the homepage can't hand a shared
-    // screen to someone else's account (see PROJECT_GUIDE §5).
+    // screen to someone else's account (see CLAUDE.md).
     const nav = page.locator("header").first();
     await expect(nav.getByRole("link", { name: /dashboard/i })).toHaveCount(0);
   });

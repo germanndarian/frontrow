@@ -12,7 +12,8 @@ name: Upstream watch
 # must not be able to block a release.
 
 # The schedule is paused: it only runs when started by hand (Actions → Upstream
-# watch → Run workflow). docs/upstream-watch.md says how to turn it back on.
+# watch → Run workflow). To turn it back on, uncomment the schedule block below
+# and delete this comment. Schedules only run from main.
 on:
   # schedule:
   #   # Twice a day, offset off the hour to avoid the cron stampede.
