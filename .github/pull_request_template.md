@@ -5,34 +5,23 @@ Title: start with a conventional-commit type, then say what changed.
   anything else (chore:, docs:, ci:, refactor:, test:, perf:, style:) → "Other"
 PRs are squash-merged, and the squash commit takes this title, so the title is
 the line that appears in the release notes. Write it for a reader of those.
+
+Keep the body short: up to three bullets, the preview link and the Checked
+line. Add For you and Open only when needed. Nothing else.
 -->
 
-## What changed
-
-<!-- What a person using the site will notice, then anything a reviewer should know. -->
+- <!-- What a person using the site will notice, in plain words. -->
 
 **Preview:** https://frontrow-git-BRANCH-germanndarians-projects.vercel.app/
 <!-- The branch name with every "/" turned into "-"; point at the route that changed. -->
 
-## Checks
+**Checked:** lint, types, unit, e2e, build.
 
-- [ ] `npm run lint`
-- [ ] `npx tsc --noEmit`
-- [ ] `npm test`
-- [ ] `npm run e2e`
-- [ ] `npm run build`
-- [ ] Needs a Supabase migration run by hand (say which, in `supabase/migrations/`)
+<!-- Only when the maintainer has to do something, such as a Supabase migration to run by hand:
+**For you:** run `supabase/migrations/000N_….sql` in the SQL Editor before it deploys. -->
 
-## Release
-
-Merging publishes the release notes. Once CI passes on `main`, the "Release
-notes" workflow bumps the version from the commits it finds — the minor for a
-`feat:`, the major for a `feat!:` or a `BREAKING CHANGE:` footer, otherwise the
-patch — tags it, and adds the page to Notion (under Release Notes). The title
-above is the line that shows up there, so write it for whoever reads the patch
-notes.
-
-To cut a release by hand anyway, push a tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+<!-- Only when something is unfinished or not checked:
+**Open:** … -->
 
 <!-- Written by Claude Code? End the body with:
 🤖 Generated with [Claude Code](https://claude.com/claude-code) -->
