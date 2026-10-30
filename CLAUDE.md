@@ -24,11 +24,14 @@ rewrites them. If you can't reach that folder, the rules that matter are below.
   says what changed for a reader of the release notes. Squash-merge with that
   title plus the PR number:
   `gh pr merge N --squash --delete-branch --subject "feat: … (#N)"`.
-- The body follows `.github/pull_request_template.md`: what changed, the
-  Vercel preview URL
+- The body is short and follows `.github/pull_request_template.md`: up to
+  three bullets of what changed, in plain words; the Vercel preview URL
   (`https://frontrow-git-<branch>-germanndarians-projects.vercel.app`, every
-  `/` in the branch name turned into `-`), the checks run and any Supabase
-  migration to run by hand. It ends with the Claude Code line.
+  `/` in the branch name turned into `-`); one **Checked** line; a **For
+  you** line only when the maintainer has to do something, such as a Supabase
+  migration to run by hand; an **Open** line only when something is
+  unfinished or not checked. It ends with the Claude Code line. Nothing else:
+  no why, no how it works, no step-by-step test plan.
 - Merging publishes the release notes by itself: CI green on `main` bumps the
   version from the commit types (`feat!:` or `BREAKING CHANGE:` the major,
   `feat:` the minor, anything else the patch), tags it, and adds the page to
